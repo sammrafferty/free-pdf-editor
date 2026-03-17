@@ -1,15 +1,86 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PDF Tool — Split, Merge, Compress",
-  description: "Free PDF tools: split, merge, compress, rotate pages.",
+  title: "PDF Tools — Free Browser-Based PDF Suite",
+  description: "Free browser-based PDF tools. Split, merge, compress, convert, rotate, edit, watermark, sign, and redact PDFs — all in your browser. Nothing gets uploaded. 100% private.",
+  keywords: "PDF tools, split PDF, merge PDF, compress PDF, convert PDF, PDF to Word, PDF to Excel, PDF to PowerPoint, image to PDF, rotate PDF, watermark PDF, sign PDF, free PDF tools, online PDF editor, browser PDF tools",
+  icons: {
+    icon: "/favicon.svg",
+  },
+  metadataBase: new URL("https://pdf-tool-pi.vercel.app"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "PDF Tools — Free Browser-Based PDF Suite",
+    description: "Split, merge, compress, convert, edit, and sign PDFs — all free, all in your browser. Nothing gets uploaded.",
+    url: "https://pdf-tool-pi.vercel.app",
+    siteName: "PDF Tools",
+    type: "website",
+    locale: "en_US",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "PDF Tools — Free Browser-Based PDF Suite",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PDF Tools — Free Browser-Based PDF Suite",
+    description: "Split, merge, compress, convert, edit, and sign PDFs — all free, all in your browser.",
+    images: ["/og-image.png"],
+  },
+  other: {
+    "theme-color": "#ffffff",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#ffffff",
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "PDF Tools",
+  description: "Free browser-based PDF tools. Split, merge, compress, convert, edit, and sign PDFs — all in your browser.",
+  applicationCategory: "UtilityApplication",
+  operatingSystem: "Any",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  browserRequirements: "Requires JavaScript. Works in Chrome, Firefox, Safari, Edge.",
+  url: "https://pdf-tool-pi.vercel.app",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3111610108271548"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
+      <body className="min-h-screen bg-white">{children}</body>
     </html>
   );
 }

@@ -21,7 +21,7 @@ export default function DeletePagesTool() {
 
   const parsePages = (input: string, max: number): Set<number> => {
     const pages = new Set<number>();
-    for (const part of input.split(",").map(s => s.trim())) {
+    for (const part of input.split(",").map((s) => s.trim())) {
       if (part.includes("-")) {
         const [a, b] = part.split("-").map(Number);
         for (let i = a; i <= Math.min(b, max); i++) pages.add(i - 1);
@@ -44,9 +44,11 @@ export default function DeletePagesTool() {
       const buf = await file.arrayBuffer();
       const srcPdf = await PDFDocument.load(buf);
       const newPdf = await PDFDocument.create();
-      const keepIndices = Array.from({ length: pageCount }, (_, i) => i).filter(i => !toDelete.has(i));
+      const keepIndices = Array.from({ length: pageCount }, (_, i) => i).filter(
+        (i) => !toDelete.has(i)
+      );
       const copied = await newPdf.copyPages(srcPdf, keepIndices);
-      copied.forEach(p => newPdf.addPage(p));
+      copied.forEach((p) => newPdf.addPage(p));
 
       const bytes = await newPdf.save();
       const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
@@ -63,36 +65,56 @@ export default function DeletePagesTool() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">🗑️ Delete Pages</h2>
       {!file ? (
         <Dropzone onFiles={handleFile} />
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
-            <div>
-              <p className="font-medium">{file.name}</p>
-              <p className="text-sm text-white/50">{pageCount} pages</p>
+        <div className="space-y-5">
+          {/* File card */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
+                <p className="text-xs text-gray-400">{pageCount} pages</p>
+              </div>
             </div>
-            <button onClick={() => { setFile(null); setPageCount(0); }} className="text-white/40 hover:text-white text-sm">Remove</button>
+            <button
+              onClick={() => { setFile(null); setPageCount(0); }}
+              className="text-gray-400 hover:text-gray-600 text-sm font-medium"
+            >
+              Remove
+            </button>
           </div>
 
+          {/* Pages input */}
           <div>
-            <label className="block text-sm text-white/70 mb-2">Pages to delete (e.g. 2, 4-6, 8)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Pages to delete
+            </label>
             <input
               type="text"
               value={pagesInput}
-              onChange={e => setPagesInput(e.target.value)}
-              placeholder="e.g. 1, 3-5"
-              className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-white/30 focus:outline-none focus:border-blue-400"
+              onChange={(e) => setPagesInput(e.target.value)}
+              placeholder="e.g. 2, 4-6, 8"
+              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 text-sm"
             />
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
+              {error}
+            </div>
+          )}
 
           <button
             onClick={handleDelete}
             disabled={loading || !pagesInput}
-            className="w-full py-3 bg-red-600 hover:bg-red-500 disabled:bg-white/10 disabled:text-white/30 rounded-xl font-semibold transition"
+            className="w-full py-3.5 bg-red-500 hover:bg-red-600 disabled:bg-gray-100 disabled:text-gray-400 text-white rounded-xl font-semibold text-sm transition-colors"
           >
             {loading ? "Processing..." : "Delete Pages & Download"}
           </button>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <!-- Document body -->
+  <path d="M8 4C8 2.89543 8.89543 2 10 2H24L32 10V36C32 37.1046 31.1046 38 30 38H10C8.89543 38 8 37.1046 8 36V4Z" fill="#e5322d"/>
+  <!-- Folded corner -->
+  <path d="M24 2L32 10H26C24.8954 10 24 9.10457 24 8V2Z" fill="#c4251f"/>
+  <!-- Lightning bolt motif -->
+  <path d="M21 15L16 23H20L18 30L25 21H21L23 15H21Z" fill="white" opacity="0.95"/>
+</svg>

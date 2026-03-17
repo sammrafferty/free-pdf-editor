@@ -25,7 +25,6 @@ export default function CompressTool() {
     try {
       const buf = await file.arrayBuffer();
       const pdf = await PDFDocument.load(buf, { ignoreEncryption: true });
-      // Re-save with compression options
       const bytes = await pdf.save({ useObjectStreams: true, addDefaultPage: false });
       const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
       setResult({ original: file.size, compressed: bytes.length });
@@ -34,38 +33,71 @@ export default function CompressTool() {
       a.href = url;
       a.download = `compressed_${file.name}`;
       a.click();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
     setLoading(false);
   };
 
+  const pct = result ? ((1 - result.compressed / result.original) * 100).toFixed(1) : null;
+
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">🗜️ Compress PDF</h2>
-      <p className="text-white/50 text-sm mb-4">Reduces file size by optimizing the PDF structure. Best for PDFs with redundant data.</p>
       {!file ? (
         <Dropzone onFiles={handleFile} />
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
-            <div>
-              <p className="font-medium">{file.name}</p>
-              <p className="text-sm text-white/50">{fmt(file.size)}</p>
+        <div className="space-y-5">
+          {/* File card */}
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
+                <p className="text-xs text-gray-400">{fmt(file.size)}</p>
+              </div>
             </div>
-            <button onClick={() => { setFile(null); setResult(null); }} className="text-white/40 hover:text-white text-sm">Remove</button>
+            <button
+              onClick={() => { setFile(null); setResult(null); }}
+              className="text-gray-400 hover:text-gray-600 text-sm font-medium"
+            >
+              Remove
+            </button>
           </div>
 
+          {/* Result */}
           {result && (
-            <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl text-sm">
-              <p className="text-green-400 font-medium mb-1">✓ Compressed!</p>
-              <p className="text-white/60">Original: {fmt(result.original)} → Compressed: {fmt(result.compressed)}</p>
-              <p className="text-white/40">{((1 - result.compressed / result.original) * 100).toFixed(1)}% reduction</p>
+            <div className="p-5 bg-emerald-50 border border-emerald-100 rounded-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <span className="font-semibold text-emerald-700 text-sm">Compressed successfully!</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-gray-500">{fmt(result.original)}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+                <span className="font-semibold text-emerald-700">{fmt(result.compressed)}</span>
+                <span className="ml-auto text-emerald-600 font-semibold bg-emerald-100 px-2.5 py-0.5 rounded-full text-xs">
+                  {pct}% smaller
+                </span>
+              </div>
             </div>
           )}
 
           <button
             onClick={handleCompress}
             disabled={loading}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-white/10 rounded-xl font-semibold transition"
+            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-100 disabled:text-gray-400 text-white rounded-xl font-semibold text-sm transition-colors"
           >
             {loading ? "Compressing..." : "Compress PDF"}
           </button>
