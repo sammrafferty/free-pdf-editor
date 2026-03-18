@@ -17,12 +17,20 @@ export default function RedactTool() {
   const [regions, setRegions] = useState<RedactRegion[]>([{ page: 1, x: 10, y: 80, width: 30, height: 5 }]);
   const [loading, setLoading] = useState(false);
 
+  const [error, setError] = useState("");
+
   const handleFile = async (files: File[]) => {
     const f = files[0];
-    setFile(f);
-    const buf = await f.arrayBuffer();
-    const pdf = await PDFDocument.load(buf);
-    setPageCount(pdf.getPageCount());
+    setError("");
+    try {
+      const buf = await f.arrayBuffer();
+      const pdf = await PDFDocument.load(buf);
+      setFile(f);
+      setPageCount(pdf.getPageCount());
+    } catch {
+      setError("Could not read this PDF. It may be corrupted or password-protected.");
+      setFile(null);
+    }
   };
 
   const updateRegion = (idx: number, field: keyof RedactRegion, value: number) => {
@@ -108,7 +116,7 @@ export default function RedactTool() {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);
-      alert("Failed to redact PDF. Please try again.");
+      setError(e instanceof Error ? e.message : "Failed to redact PDF. Please try again.");
     }
     setLoading(false);
   };
@@ -116,7 +124,14 @@ export default function RedactTool() {
   return (
     <div>
       {!file ? (
-        <Dropzone onFiles={handleFile} />
+        <div>
+          <Dropzone onFiles={handleFile} />
+          {error && (
+            <div className="mt-4 p-3 theme-error rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-5">
           <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
@@ -172,6 +187,12 @@ export default function RedactTool() {
               ))}
             </div>
           </div>
+
+          {error && (
+            <div className="p-3 theme-error rounded-xl text-sm">
+              {error}
+            </div>
+          )}
 
           <button
             onClick={handleRedact}

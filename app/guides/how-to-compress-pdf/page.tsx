@@ -1,19 +1,57 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "How to Compress a PDF — Free Online PDF Compressor | PDF Tools",
   description: "Reduce PDF file size for free. Learn how to compress PDFs in your browser without uploading files. Step-by-step guide with compression tips.",
   keywords: "compress PDF, reduce PDF size, PDF compressor, shrink PDF, make PDF smaller",
+  alternates: {
+    canonical: "https://pdf-tool-pi.vercel.app/guides/how-to-compress-pdf",
+  },
+  openGraph: {
+    title: "How to Compress a PDF — Free Online PDF Compressor | PDF Tools",
+    description: "Reduce PDF file size for free. Learn how to compress PDFs in your browser without uploading files.",
+    url: "https://pdf-tool-pi.vercel.app/guides/how-to-compress-pdf",
+    siteName: "PDF Tools",
+    type: "article",
+    locale: "en_US",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "How to Compress a PDF" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "How to Compress a PDF — Free Online PDF Compressor | PDF Tools",
+    description: "Reduce PDF file size for free. Compress PDFs in your browser without uploading files.",
+    images: ["/og-image.png"],
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to Compress a PDF",
+  description: "Reduce PDF file size for free. Learn how to compress PDFs in your browser without uploading files.",
+  step: [
+    { "@type": "HowToStep", name: "Open the Compress PDF tool", text: "Select \"Compress PDF\" from the homepage." },
+    { "@type": "HowToStep", name: "Upload your PDF", text: "Drag and drop your file or click to browse. The file is loaded into your browser's memory." },
+    { "@type": "HowToStep", name: "Select compression level", text: "Choose between light, medium, or heavy compression depending on your needs." },
+    { "@type": "HowToStep", name: "Click Compress", text: "The tool processes your PDF locally, reducing the file size." },
+    { "@type": "HowToStep", name: "Download the compressed file", text: "Compare the original and compressed file sizes, then download your smaller PDF." },
+  ],
+  tool: { "@type": "HowToTool", name: "PDF Tools - Compress PDF" },
 };
 
 export default function CompressGuide() {
   return (
     <main className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="theme-header sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 hover:opacity-80">
-            <img src="/logo.svg" alt="PDF Tools" className="w-8 h-8 sm:w-9 sm:h-9" />
+            <Image src="/logo.svg" alt="PDF Tools" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9" />
             <span className="font-bold text-lg tracking-tight" style={{ color: "var(--text-primary)" }}>PDF Tools</span>
           </Link>
           <Link href="/guides" className="flex items-center gap-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
@@ -102,7 +140,7 @@ export default function CompressGuide() {
           </div>
 
           <div className="pt-4 flex items-center gap-4">
-            <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white" style={{ backgroundColor: "#10b981", borderRadius: "8px" }}>
+            <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white" style={{ backgroundColor: "#059669", borderRadius: "8px" }}>
               Try Compress PDF Now
             </Link>
             <Link href="/guides" className="text-sm theme-link hover:underline">View all guides</Link>
@@ -115,6 +153,8 @@ export default function CompressGuide() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
             <span>All processing happens locally in your browser.</span>
             <div className="flex items-center gap-4">
+              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
+              <Link href="/faq" className="hover:opacity-80 transition-opacity">FAQ</Link>
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy</Link>
               <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms</Link>
               <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>

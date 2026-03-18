@@ -146,7 +146,7 @@ export default function PptxToPdfTool() {
           const x = off ? emuToPoints(parseInt(off.getAttribute("x") || "0")) : 0;
           const y = off ? emuToPoints(parseInt(off.getAttribute("y") || "0")) : 0;
           const w = ext ? emuToPoints(parseInt(ext.getAttribute("cx") || "0")) : slideW;
-          const h = ext ? emuToPoints(parseInt(ext.getAttribute("cy") || "0")) : 50;
+          const _h = ext ? emuToPoints(parseInt(ext.getAttribute("cy") || "0")) : 50;
 
           // Extract text runs
           const paragraphs = sp.querySelectorAll("a\\:p, p");
@@ -297,7 +297,7 @@ export default function PptxToPdfTool() {
           </div>
 
           {error && (
-            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
+            <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10">
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}

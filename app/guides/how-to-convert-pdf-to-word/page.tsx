@@ -1,19 +1,56 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "How to Convert PDF to Word — Free Online Converter | PDF Tools",
   description: "Convert PDF files to editable Word documents for free. Browser-based, no upload required. Learn step-by-step how to convert PDF to DOCX.",
   keywords: "PDF to Word, convert PDF to DOCX, PDF to Word converter, edit PDF text, PDF to editable document",
+  alternates: {
+    canonical: "https://pdf-tool-pi.vercel.app/guides/how-to-convert-pdf-to-word",
+  },
+  openGraph: {
+    title: "How to Convert PDF to Word — Free Online Converter | PDF Tools",
+    description: "Convert PDF files to editable Word documents for free. Browser-based, no upload required.",
+    url: "https://pdf-tool-pi.vercel.app/guides/how-to-convert-pdf-to-word",
+    siteName: "PDF Tools",
+    type: "article",
+    locale: "en_US",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "How to Convert PDF to Word" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "How to Convert PDF to Word — Free Online Converter | PDF Tools",
+    description: "Convert PDF files to editable Word documents for free. Browser-based, no upload required.",
+    images: ["/og-image.png"],
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to Convert PDF to Word",
+  description: "Convert PDF files to editable Word documents for free. Browser-based, no upload required.",
+  step: [
+    { "@type": "HowToStep", name: "Open the PDF to Word tool", text: "Find \"PDF to Word\" in the Convert section of the PDF Tools homepage." },
+    { "@type": "HowToStep", name: "Upload your PDF", text: "Drag and drop the file or click to browse. The PDF is processed entirely in your browser." },
+    { "@type": "HowToStep", name: "Wait for conversion", text: "The tool extracts text, formatting, and layout information and reconstructs it as a Word document." },
+    { "@type": "HowToStep", name: "Download the DOCX file", text: "Your converted document is ready to download and open in any word processor." },
+  ],
+  tool: { "@type": "HowToTool", name: "PDF Tools - PDF to Word" },
 };
 
 export default function ConvertGuide() {
   return (
     <main className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="theme-header sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 hover:opacity-80">
-            <img src="/logo.svg" alt="PDF Tools" className="w-8 h-8 sm:w-9 sm:h-9" />
+            <Image src="/logo.svg" alt="PDF Tools" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9" />
             <span className="font-bold text-lg tracking-tight" style={{ color: "var(--text-primary)" }}>PDF Tools</span>
           </Link>
           <Link href="/guides" className="flex items-center gap-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
@@ -121,6 +158,8 @@ export default function ConvertGuide() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
             <span>All processing happens locally in your browser.</span>
             <div className="flex items-center gap-4">
+              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
+              <Link href="/faq" className="hover:opacity-80 transition-opacity">FAQ</Link>
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy</Link>
               <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms</Link>
               <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>

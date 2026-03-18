@@ -7,10 +7,12 @@ export default function CompressTool() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ original: number; compressed: number } | null>(null);
+  const [error, setError] = useState("");
 
   const handleFile = (files: File[]) => {
     setFile(files[0]);
     setResult(null);
+    setError("");
   };
 
   const fmt = (bytes: number) => {
@@ -38,12 +40,13 @@ export default function CompressTool() {
       URL.revokeObjectURL(url);
     } catch (e: unknown) {
       console.error(e);
-      alert(e instanceof Error ? e.message : "Compression failed");
+      setError(e instanceof Error ? e.message : "Compression failed");
     }
     setLoading(false);
   };
 
-  const pct = result ? ((1 - result.compressed / result.original) * 100).toFixed(1) : null;
+  const pctNum = result ? (1 - result.compressed / result.original) * 100 : 0;
+  const pct = result ? Math.abs(pctNum).toFixed(1) : null;
 
   return (
     <div>
@@ -91,10 +94,16 @@ export default function CompressTool() {
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
                 <span className="font-semibold text-emerald-700">{fmt(result.compressed)}</span>
-                <span className="ml-auto text-emerald-600 font-semibold bg-emerald-100 px-2.5 py-0.5 rounded-full text-xs">
-                  {pct}% smaller
+                <span className={`ml-auto font-semibold px-2.5 py-0.5 rounded-full text-xs ${pctNum >= 0 ? "text-emerald-600 bg-emerald-100" : "text-amber-600 bg-amber-100"}`}>
+                  {pctNum >= 0 ? `${pct}% smaller` : `${pct}% larger (already optimized)`}
                 </span>
               </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="p-3 theme-error rounded-xl text-sm">
+              {error}
             </div>
           )}
 

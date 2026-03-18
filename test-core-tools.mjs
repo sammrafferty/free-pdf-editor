@@ -178,7 +178,7 @@ async function testDeletePages() {
 
   // Edge: delete all but one
   const srcPdf2 = await PDFDocument.load(srcBytes);
-  const del2 = new Set([0, 1, 2, 3]);
+  const _del2 = new Set([0, 1, 2, 3]);
   const keep2 = [4];
   const np2 = await PDFDocument.create();
   const cp2 = await np2.copyPages(srcPdf2, keep2);

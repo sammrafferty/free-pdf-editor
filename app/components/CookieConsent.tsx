@@ -23,6 +23,8 @@ export default function CookieConsent() {
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-[100]"
+      role="dialog"
+      aria-label="Cookie consent"
       style={{ animation: "slideUp 0.5s ease-out" }}
     >
       <div

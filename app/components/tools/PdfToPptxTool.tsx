@@ -173,7 +173,7 @@ export default function PdfToPptxTool() {
           </label>
 
           {error && (
-            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
+            <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10">
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}

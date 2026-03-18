@@ -44,6 +44,7 @@ export default function ImageToPdfTool() {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
+        URL.revokeObjectURL(img.src);
         const canvas = document.createElement("canvas");
         canvas.width = img.naturalWidth;
         canvas.height = img.naturalHeight;
@@ -57,7 +58,10 @@ export default function ImageToPdfTool() {
           "image/png"
         );
       };
-      img.onerror = () => reject(new Error(`Failed to load image: ${file.name}`));
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        reject(new Error(`Failed to load image: ${file.name}`));
+      };
       img.src = URL.createObjectURL(file);
     });
   };
@@ -141,7 +145,7 @@ export default function ImageToPdfTool() {
           ))}
 
           {error && (
-            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
+            <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10">
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}

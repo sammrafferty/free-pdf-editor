@@ -11,12 +11,20 @@ export default function NumberPagesTool() {
   const [fontSize, setFontSize] = useState(12);
   const [loading, setLoading] = useState(false);
 
+  const [error, setError] = useState("");
+
   const handleFile = async (files: File[]) => {
     const f = files[0];
-    setFile(f);
-    const buf = await f.arrayBuffer();
-    const pdf = await PDFDocument.load(buf);
-    setPageCount(pdf.getPageCount());
+    setError("");
+    try {
+      const buf = await f.arrayBuffer();
+      const pdf = await PDFDocument.load(buf);
+      setFile(f);
+      setPageCount(pdf.getPageCount());
+    } catch {
+      setError("Could not read this PDF. It may be corrupted or password-protected.");
+      setFile(null);
+    }
   };
 
   const handleNumber = async () => {
@@ -59,7 +67,7 @@ export default function NumberPagesTool() {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);
-      alert("Failed to add page numbers. Please try again.");
+      setError(e instanceof Error ? e.message : "Failed to add page numbers. Please try again.");
     }
     setLoading(false);
   };
@@ -67,7 +75,14 @@ export default function NumberPagesTool() {
   return (
     <div>
       {!file ? (
-        <Dropzone onFiles={handleFile} />
+        <div>
+          <Dropzone onFiles={handleFile} />
+          {error && (
+            <div className="mt-4 p-3 theme-error rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-5">
           <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
@@ -114,6 +129,12 @@ export default function NumberPagesTool() {
               <input type="number" value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} min={8} max={36} className="w-full theme-input rounded-xl px-4 py-3 theme-text text-sm focus:outline-none focus:ring-1 focus:ring-white/20" />
             </div>
           </div>
+
+          {error && (
+            <div className="p-3 theme-error rounded-xl text-sm">
+              {error}
+            </div>
+          )}
 
           <button
             onClick={handleNumber}

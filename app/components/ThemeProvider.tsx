@@ -21,22 +21,23 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
   const [theme, setTheme] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("pdf-tools-theme") as Theme | null;
-    const initial = stored || "dark";
-    setTheme(initial);
-    applyTheme(initial);
-    setMounted(true);
-  }, []);
-
-  const applyTheme = (t: Theme) => {
+  const applyTheme = useCallback((t: Theme) => {
     const html = document.documentElement;
     if (t === "light") {
       html.classList.add("light");
     } else {
       html.classList.remove("light");
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("pdf-tools-theme") as Theme | null;
+    const initial = stored || "dark";
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initialization on mount
+    setTheme(initial);
+    applyTheme(initial);
+    setMounted(true);
+  }, [applyTheme]);
 
   const toggle = useCallback(() => {
     setTheme((prev) => {
@@ -45,7 +46,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
       applyTheme(next);
       return next;
     });
-  }, []);
+  }, [applyTheme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>

@@ -1,10 +1,29 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "FAQ — Frequently Asked Questions | PDF Tools",
   description: "Answers to common questions about PDF Tools. Learn about privacy, file processing, supported formats, browser compatibility, and more.",
   keywords: "PDF tools FAQ, PDF questions, browser PDF processing, PDF privacy, PDF file formats",
+  alternates: {
+    canonical: "https://pdf-tool-pi.vercel.app/faq",
+  },
+  openGraph: {
+    title: "FAQ — Frequently Asked Questions | PDF Tools",
+    description: "Answers to common questions about PDF Tools. Learn about privacy, file processing, supported formats, and more.",
+    url: "https://pdf-tool-pi.vercel.app/faq",
+    siteName: "PDF Tools",
+    type: "website",
+    locale: "en_US",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "PDF Tools — FAQ" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FAQ — Frequently Asked Questions | PDF Tools",
+    description: "Answers to common questions about PDF Tools. Privacy, formats, compatibility, and more.",
+    images: ["/og-image.png"],
+  },
 };
 
 const faqs = [
@@ -82,13 +101,30 @@ const faqs = [
   },
 ];
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.a,
+    },
+  })),
+};
+
 export default function FAQ() {
   return (
     <main className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <header className="theme-header sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 hover:opacity-80">
-            <img src="/logo.svg" alt="PDF Tools" className="w-8 h-8 sm:w-9 sm:h-9" />
+            <Image src="/logo.svg" alt="PDF Tools" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9" />
             <span className="font-bold text-lg tracking-tight" style={{ color: "var(--text-primary)" }}>PDF Tools</span>
           </Link>
           <Link href="/" className="flex items-center gap-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
@@ -108,7 +144,7 @@ export default function FAQ() {
           Frequently Asked Questions
         </h1>
         <p className="text-lg mb-10" style={{ color: "var(--text-secondary)" }}>
-          Everything you need to know about using PDF Tools. Can&apos;t find your answer? Reach out through our contact page.
+          Everything you need to know about using PDF Tools.
         </p>
 
         <div className="space-y-6">
@@ -128,7 +164,7 @@ export default function FAQ() {
           <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
             Ready to get started?
           </p>
-          <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white" style={{ backgroundColor: "#e5322d", borderRadius: "8px" }}>
+          <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white" style={{ backgroundColor: "var(--accent-primary)", borderRadius: "8px" }}>
             Try PDF Tools — It&apos;s Free
           </Link>
         </div>
@@ -139,6 +175,7 @@ export default function FAQ() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
             <span>All processing happens locally in your browser.</span>
             <div className="flex items-center gap-4">
+              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy</Link>
               <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms</Link>
               <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>

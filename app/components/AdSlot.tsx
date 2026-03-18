@@ -15,7 +15,7 @@ export default function AdSlot({ slot, format = "auto", responsive = true, class
   useEffect(() => {
     if (pushed.current) return;
     try {
-      // @ts-ignore
+      // @ts-expect-error adsbygoogle is injected by the AdSense script
       (window.adsbygoogle = window.adsbygoogle || []).push({});
       pushed.current = true;
     } catch (e) {

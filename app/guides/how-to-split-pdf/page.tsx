@@ -1,19 +1,57 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "How to Split a PDF — Free Online PDF Splitter | PDF Tools",
   description: "Learn how to split a PDF into individual pages or extract specific page ranges. Free, browser-based, no upload required. Step-by-step guide with tips.",
   keywords: "split PDF, extract PDF pages, PDF splitter, separate PDF pages, break up PDF",
+  alternates: {
+    canonical: "https://pdf-tool-pi.vercel.app/guides/how-to-split-pdf",
+  },
+  openGraph: {
+    title: "How to Split a PDF — Free Online PDF Splitter | PDF Tools",
+    description: "Learn how to split a PDF into individual pages or extract specific page ranges. Free, browser-based, no upload required.",
+    url: "https://pdf-tool-pi.vercel.app/guides/how-to-split-pdf",
+    siteName: "PDF Tools",
+    type: "article",
+    locale: "en_US",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "How to Split a PDF" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "How to Split a PDF — Free Online PDF Splitter | PDF Tools",
+    description: "Learn how to split a PDF into individual pages or extract specific page ranges.",
+    images: ["/og-image.png"],
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to Split a PDF File",
+  description: "Learn how to split a PDF into individual pages or extract specific page ranges. Free, browser-based, no upload required.",
+  step: [
+    { "@type": "HowToStep", name: "Open the Split PDF tool", text: "Navigate to PDF Tools and select \"Split PDF\" from the tool grid." },
+    { "@type": "HowToStep", name: "Upload your PDF", text: "Drag and drop your file into the upload area, or click to browse. Your file stays on your device." },
+    { "@type": "HowToStep", name: "Enter page ranges", text: "Specify which pages to extract using commas for individual pages or dashes for ranges (e.g., \"1-5, 10-15\")." },
+    { "@type": "HowToStep", name: "Click Split", text: "The tool processes your PDF locally and generates a new file containing only the selected pages." },
+    { "@type": "HowToStep", name: "Download your result", text: "Your split PDF is ready to download immediately. The original file remains unchanged." },
+  ],
+  tool: { "@type": "HowToTool", name: "PDF Tools - Split PDF" },
 };
 
 export default function SplitGuide() {
   return (
     <main className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="theme-header sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 hover:opacity-80">
-            <img src="/logo.svg" alt="PDF Tools" className="w-8 h-8 sm:w-9 sm:h-9" />
+            <Image src="/logo.svg" alt="PDF Tools" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9" />
             <span className="font-bold text-lg tracking-tight" style={{ color: "var(--text-primary)" }}>PDF Tools</span>
           </Link>
           <Link href="/guides" className="flex items-center gap-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
@@ -105,6 +143,8 @@ export default function SplitGuide() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
             <span>All processing happens locally in your browser.</span>
             <div className="flex items-center gap-4">
+              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
+              <Link href="/faq" className="hover:opacity-80 transition-opacity">FAQ</Link>
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy</Link>
               <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms</Link>
               <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>

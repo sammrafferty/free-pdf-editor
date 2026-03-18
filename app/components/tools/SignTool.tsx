@@ -13,12 +13,20 @@ export default function SignTool() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawingRef = useRef(false);
 
+  const [error, setError] = useState("");
+
   const handleFile = async (files: File[]) => {
     const f = files[0];
-    setFile(f);
-    const buf = await f.arrayBuffer();
-    const pdf = await PDFDocument.load(buf);
-    setPageCount(pdf.getPageCount());
+    setError("");
+    try {
+      const buf = await f.arrayBuffer();
+      const pdf = await PDFDocument.load(buf);
+      setFile(f);
+      setPageCount(pdf.getPageCount());
+    } catch {
+      setError("Could not read this PDF. It may be corrupted or password-protected.");
+      setFile(null);
+    }
   };
 
   const getPos = (e: React.MouseEvent | React.TouchEvent, canvas: HTMLCanvasElement) => {
@@ -71,8 +79,13 @@ export default function SignTool() {
   }, []);
 
   useEffect(() => {
-    if (file && canvasRef.current) clearCanvas();
-  }, [file, clearCanvas]);
+    if (!file || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- need to reset drawn state when file changes
+    setHasDrawn(false);
+  }, [file]);
 
   const handleSign = async () => {
     if (!file || !canvasRef.current || !hasDrawn) return;
@@ -110,7 +123,7 @@ export default function SignTool() {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);
-      alert("Failed to sign PDF. Please try again.");
+      setError(e instanceof Error ? e.message : "Failed to sign PDF. Please try again.");
     }
     setLoading(false);
   };
@@ -118,7 +131,14 @@ export default function SignTool() {
   return (
     <div>
       {!file ? (
-        <Dropzone onFiles={handleFile} />
+        <div>
+          <Dropzone onFiles={handleFile} />
+          {error && (
+            <div className="mt-4 p-3 theme-error rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-5">
           <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
@@ -175,6 +195,12 @@ export default function SignTool() {
               </select>
             </div>
           </div>
+
+          {error && (
+            <div className="p-3 theme-error rounded-xl text-sm">
+              {error}
+            </div>
+          )}
 
           <button
             onClick={handleSign}

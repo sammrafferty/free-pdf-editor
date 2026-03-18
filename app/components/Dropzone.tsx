@@ -28,18 +28,18 @@ export default function Dropzone({ onFiles, multiple = false, label, accept }: P
         isDragActive ? "theme-dropzone-active" : "theme-dropzone"
       }`}
     >
-      <input {...getInputProps()} />
+      <input {...getInputProps()} aria-label={label || (multiple ? "Upload PDF files" : "Upload a PDF file")} />
       <div className="flex flex-col items-center">
         <div
-          className="w-16 h-16 flex items-center justify-center mb-4 transition-colors"
-          style={{ backgroundColor: isDragActive ? "var(--accent-red-muted)" : "var(--bg-tertiary)" }}
+          className="w-16 h-16 flex items-center justify-center mb-4 rounded-xl transition-colors"
+          style={{ backgroundColor: isDragActive ? "var(--accent-primary-muted)" : "var(--bg-tertiary)" }}
         >
           <svg
             width="28"
             height="28"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="var(--accent-red)"
+            stroke="var(--accent-primary)"
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -53,7 +53,7 @@ export default function Dropzone({ onFiles, multiple = false, label, accept }: P
           {label || (multiple ? "Drop PDFs here" : "Drop a PDF here")}
         </p>
         <p className="text-sm mt-1.5" style={{ color: "var(--text-muted)" }}>
-          or <span style={{ color: "var(--accent-red)" }} className="font-medium">browse files</span>
+          or <span style={{ color: "var(--accent-primary)" }} className="font-medium">browse files</span>
         </p>
       </div>
     </div>

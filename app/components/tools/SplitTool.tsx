@@ -12,11 +12,16 @@ export default function SplitTool() {
 
   const handleFile = async (files: File[]) => {
     const f = files[0];
-    setFile(f);
     setError("");
-    const buf = await f.arrayBuffer();
-    const pdf = await PDFDocument.load(buf);
-    setPageCount(pdf.getPageCount());
+    try {
+      const buf = await f.arrayBuffer();
+      const pdf = await PDFDocument.load(buf);
+      setFile(f);
+      setPageCount(pdf.getPageCount());
+    } catch {
+      setError("Could not read this PDF. It may be corrupted or password-protected.");
+      setFile(null);
+    }
   };
 
   const parseRange = (r: string, max: number): number[] => {
@@ -58,8 +63,8 @@ export default function SplitTool() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Split failed");
     }
     setLoading(false);
   };
@@ -67,7 +72,14 @@ export default function SplitTool() {
   return (
     <div>
       {!file ? (
-        <Dropzone onFiles={handleFile} />
+        <div>
+          <Dropzone onFiles={handleFile} />
+          {error && (
+            <div className="mt-4 p-3 theme-error rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-5">
           {/* File card */}

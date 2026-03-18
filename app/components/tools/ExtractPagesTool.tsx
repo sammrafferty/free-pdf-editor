@@ -12,12 +12,17 @@ export default function ExtractPagesTool() {
 
   const handleFile = async (files: File[]) => {
     const f = files[0];
-    setFile(f);
     setError("");
     setSelected(new Set());
-    const buf = await f.arrayBuffer();
-    const pdf = await PDFDocument.load(buf);
-    setPageCount(pdf.getPageCount());
+    try {
+      const buf = await f.arrayBuffer();
+      const pdf = await PDFDocument.load(buf);
+      setFile(f);
+      setPageCount(pdf.getPageCount());
+    } catch {
+      setError("Could not read this PDF. It may be corrupted or password-protected.");
+      setFile(null);
+    }
   };
 
   const togglePage = (p: number) => {
@@ -57,7 +62,7 @@ export default function ExtractPagesTool() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (e: unknown) {
+    } catch (e) {
       setError(e instanceof Error ? e.message : "Extraction failed");
     }
     setLoading(false);
@@ -66,7 +71,14 @@ export default function ExtractPagesTool() {
   return (
     <div>
       {!file ? (
-        <Dropzone onFiles={handleFile} />
+        <div>
+          <Dropzone onFiles={handleFile} />
+          {error && (
+            <div className="mt-4 p-3 theme-error rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-5">
           <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">

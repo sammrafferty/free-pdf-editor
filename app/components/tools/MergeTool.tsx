@@ -6,6 +6,7 @@ import Dropzone from "../Dropzone";
 export default function MergeTool() {
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleFiles = (f: File[]) => setFiles((prev) => [...prev, ...f]);
   const removeFile = (i: number) => setFiles((prev) => prev.filter((_, idx) => idx !== i));
@@ -55,7 +56,7 @@ export default function MergeTool() {
       URL.revokeObjectURL(url);
     } catch (e: unknown) {
       console.error(e);
-      alert(e instanceof Error ? e.message : "Merge failed");
+      setError(e instanceof Error ? e.message : "Merge failed");
     }
     setLoading(false);
   };
@@ -107,6 +108,12 @@ export default function MergeTool() {
               </div>
             </div>
           ))}
+
+          {error && (
+            <div className="p-3 theme-error rounded-xl text-sm">
+              {error}
+            </div>
+          )}
 
           <button
             onClick={handleMerge}

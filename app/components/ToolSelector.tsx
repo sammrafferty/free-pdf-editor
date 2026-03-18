@@ -126,13 +126,6 @@ const slideIcon = icon(<>
   <line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
 </>);
 
-// Arrow icon for conversion direction
-const arrowRight = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-40">
-    <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
-  </svg>
-);
-
 /* ── Data ─────────────────────────────────────────────── */
 
 const popular: ToolDef[] = [

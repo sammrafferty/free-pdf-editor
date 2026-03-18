@@ -1,19 +1,57 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "How to Rotate PDF Pages — Free Online PDF Rotator | PDF Tools",
   description: "Rotate PDF pages 90, 180, or 270 degrees for free. Fix sideways or upside-down scans in your browser. Step-by-step guide.",
   keywords: "rotate PDF, turn PDF pages, fix sideways PDF, PDF rotator, rotate PDF online free",
+  alternates: {
+    canonical: "https://pdf-tool-pi.vercel.app/guides/how-to-rotate-pdf",
+  },
+  openGraph: {
+    title: "How to Rotate PDF Pages — Free Online PDF Rotator | PDF Tools",
+    description: "Rotate PDF pages 90, 180, or 270 degrees for free. Fix sideways or upside-down scans in your browser.",
+    url: "https://pdf-tool-pi.vercel.app/guides/how-to-rotate-pdf",
+    siteName: "PDF Tools",
+    type: "article",
+    locale: "en_US",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "How to Rotate PDF Pages" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "How to Rotate PDF Pages — Free Online PDF Rotator | PDF Tools",
+    description: "Rotate PDF pages 90, 180, or 270 degrees for free. Fix sideways or upside-down scans.",
+    images: ["/og-image.png"],
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to Rotate PDF Pages",
+  description: "Rotate PDF pages 90, 180, or 270 degrees for free. Fix sideways or upside-down scans in your browser.",
+  step: [
+    { "@type": "HowToStep", name: "Open the Rotate Pages tool", text: "Find it in the \"Organize\" section on the PDF Tools homepage." },
+    { "@type": "HowToStep", name: "Upload your PDF", text: "Drag and drop or click to browse. Your file is loaded locally in the browser." },
+    { "@type": "HowToStep", name: "Choose rotation angle", text: "Select 90 degrees clockwise, 90 degrees counterclockwise, or 180 degrees." },
+    { "@type": "HowToStep", name: "Apply rotation", text: "Click the rotate button. The pages are transformed instantly in your browser." },
+    { "@type": "HowToStep", name: "Download the corrected PDF", text: "Your fixed document is ready to download with the correct page orientation." },
+  ],
+  tool: { "@type": "HowToTool", name: "PDF Tools - Rotate PDF" },
 };
 
 export default function RotateGuide() {
   return (
     <main className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className="theme-header sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 hover:opacity-80">
-            <img src="/logo.svg" alt="PDF Tools" className="w-8 h-8 sm:w-9 sm:h-9" />
+            <Image src="/logo.svg" alt="PDF Tools" width={36} height={36} className="w-8 h-8 sm:w-9 sm:h-9" />
             <span className="font-bold text-lg tracking-tight" style={{ color: "var(--text-primary)" }}>PDF Tools</span>
           </Link>
           <Link href="/guides" className="flex items-center gap-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
@@ -99,7 +137,7 @@ export default function RotateGuide() {
           </div>
 
           <div className="pt-4 flex items-center gap-4">
-            <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white" style={{ backgroundColor: "#f59e0b", borderRadius: "8px" }}>
+            <Link href="/" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold" style={{ backgroundColor: "#f59e0b", borderRadius: "8px", color: "#1c1917" }}>
               Try Rotate PDF Now
             </Link>
             <Link href="/guides" className="text-sm theme-link hover:underline">View all guides</Link>
@@ -112,6 +150,8 @@ export default function RotateGuide() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
             <span>All processing happens locally in your browser.</span>
             <div className="flex items-center gap-4">
+              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
+              <Link href="/faq" className="hover:opacity-80 transition-opacity">FAQ</Link>
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy</Link>
               <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms</Link>
               <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>
