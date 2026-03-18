@@ -209,6 +209,8 @@ function HomeContent() {
 
             {/* Links */}
             <div className="flex items-center gap-6 text-sm" style={{ color: "var(--text-muted)" }}>
+              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
+              <Link href="/faq" className="hover:opacity-80 transition-opacity">FAQ</Link>
               <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>
               <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy Policy</Link>
               <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms of Service</Link>
