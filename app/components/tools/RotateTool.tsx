@@ -1,14 +1,15 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { PDFDocument, degrees } from "pdf-lib";
 import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
+import PdfThumbnailGrid from "@/app/components/PdfThumbnailGrid";
 
 export default function RotateTool() {
   const [file, setFile] = useState<File | null>(null);
   const [pageCount, setPageCount] = useState(0);
   const [rotation, setRotation] = useState<90 | 180 | 270>(90);
-  const [pagesInput, setPagesInput] = useState("all");
+  const [rotations, setRotations] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,41 +20,104 @@ export default function RotateTool() {
       const buf = await f.arrayBuffer();
       const pdf = await PDFDocument.load(buf);
       setFile(f);
-      setPageCount(pdf.getPageCount());
+      const count = pdf.getPageCount();
+      setPageCount(count);
+      setRotations(new Map());
     } catch {
       setError("Could not read this PDF. It may be corrupted or password-protected.");
       setFile(null);
     }
   };
 
-  const parsePages = (input: string, max: number): number[] => {
-    if (input.trim().toLowerCase() === "all") return Array.from({ length: max }, (_, i) => i);
-    const pages: number[] = [];
-    for (const part of input.split(",").map((s) => s.trim())) {
-      if (part.includes("-")) {
-        const [a, b] = part.split("-").map(Number);
-        for (let i = Math.max(a, 1); i <= Math.min(b, max); i++) pages.push(i - 1);
+  const handleThumbnailClick = useCallback((pageNum: number) => {
+    setRotations((prev) => {
+      const next = new Map(prev);
+      const current = prev.get(pageNum) || 0;
+      const newAngle = (current + 90) % 360;
+      if (newAngle === 0) {
+        next.delete(pageNum);
       } else {
-        const n = parseInt(part);
-        if (!isNaN(n) && n >= 1 && n <= max) pages.push(n - 1);
+        next.set(pageNum, newAngle);
       }
+      return next;
+    });
+  }, []);
+
+  const applyToAll = useCallback(() => {
+    setRotations((prev) => {
+      const next = new Map(prev);
+      for (let i = 1; i <= pageCount; i++) {
+        next.set(i, rotation);
+      }
+      return next;
+    });
+  }, [pageCount, rotation]);
+
+  const applyToSelected = useCallback(() => {
+    setRotations((prev) => {
+      const next = new Map(prev);
+      for (const [pageNum] of prev) {
+        if (prev.get(pageNum) !== 0) {
+          next.set(pageNum, rotation);
+        }
+      }
+      return next;
+    });
+  }, [rotation]);
+
+  const resetAll = useCallback(() => {
+    setRotations(new Map());
+  }, []);
+
+  const selectedPages = useMemo(() => {
+    const s = new Set<number>();
+    for (const [k, v] of rotations) {
+      if (v !== 0) s.add(k);
     }
-    return [...new Set(pages)];
-  };
+    return s;
+  }, [rotations]);
+
+  const hasRotations = selectedPages.size > 0;
+
+  const renderOverlay = useCallback(
+    (pageNum: number) => {
+      const deg = rotations.get(pageNum);
+      if (!deg || deg === 0) return null;
+      return (
+        <div
+          style={{
+            position: "absolute",
+            top: 4,
+            right: 4,
+            background: "#f59e0b",
+            color: "#fff",
+            fontSize: "0.6rem",
+            fontWeight: 700,
+            padding: "2px 6px",
+            borderRadius: 9999,
+            lineHeight: 1.4,
+            pointerEvents: "none",
+          }}
+        >
+          {deg}°
+        </div>
+      );
+    },
+    [rotations]
+  );
 
   const handleRotate = async () => {
-    if (!file) return;
+    if (!file || !hasRotations) return;
     setLoading(true);
     setError("");
     try {
       const buf = await file.arrayBuffer();
       const pdf = await PDFDocument.load(buf);
-      const pagesToRotate = parsePages(pagesInput, pageCount);
-      if (pagesToRotate.length === 0) throw new Error("No valid pages selected");
-      pagesToRotate.forEach((i) => {
-        const page = pdf.getPage(i);
-        page.setRotation(degrees((page.getRotation().angle + rotation) % 360));
-      });
+      for (const [pageNum, deg] of rotations) {
+        if (deg === 0) continue;
+        const page = pdf.getPage(pageNum - 1);
+        page.setRotation(degrees((page.getRotation().angle + deg) % 360));
+      }
       const bytes = await pdf.save();
       const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
       downloadBlob(blob, `rotated_${file.name}`);
@@ -91,24 +155,24 @@ export default function RotateTool() {
               </div>
             </div>
             <button
-              onClick={() => setFile(null)}
+              onClick={() => { setFile(null); setRotations(new Map()); }}
               className="theme-text-muted  text-sm font-medium"
             >
               Remove
             </button>
           </div>
 
-          {/* Pages input */}
+          {/* Page thumbnail grid */}
           <div>
             <label className="block text-sm font-medium theme-text-secondary mb-2">
-              Pages to rotate
+              Click a page to cycle rotation (0 → 90 → 180 → 270)
             </label>
-            <input
-              type="text"
-              value={pagesInput}
-              onChange={(e) => setPagesInput(e.target.value)}
-              placeholder='e.g. "all", "1-3", "1, 4, 7"'
-              className="w-full theme-input rounded-xl px-4 py-3 theme-text placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 text-sm"
+            <PdfThumbnailGrid
+              file={file}
+              pageCount={pageCount}
+              selected={selectedPages}
+              onToggle={handleThumbnailClick}
+              renderOverlay={renderOverlay}
             />
           </div>
 
@@ -135,6 +199,30 @@ export default function RotateTool() {
             </div>
           </div>
 
+          {/* Bulk actions */}
+          <div className="flex gap-2">
+            <button
+              onClick={applyToAll}
+              className="flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors theme-bg-secondary theme-border theme-text-secondary hover:border-amber-300 hover:bg-amber-500/10"
+            >
+              Apply {rotation}° to all
+            </button>
+            <button
+              onClick={applyToSelected}
+              disabled={!hasRotations}
+              className="flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors theme-bg-secondary theme-border theme-text-secondary hover:border-amber-300 hover:bg-amber-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Apply {rotation}° to selected
+            </button>
+            <button
+              onClick={resetAll}
+              disabled={!hasRotations}
+              className="flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors theme-bg-secondary theme-border theme-text-secondary hover:border-amber-300 hover:bg-amber-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Reset all
+            </button>
+          </div>
+
           {error && (
             <div className="p-3 theme-error rounded-xl text-sm">
               {error}
@@ -143,10 +231,10 @@ export default function RotateTool() {
 
           <button
             onClick={handleRotate}
-            disabled={loading}
+            disabled={loading || !hasRotations}
             className="w-full py-3.5 bg-amber-500/100 hover:bg-amber-600 theme-btn-disabled text-white rounded-xl font-semibold text-sm transition-colors"
           >
-            {loading ? "Rotating..." : "Rotate & Download"}
+            {loading ? "Rotating..." : `Rotate & Download${hasRotations ? ` (${selectedPages.size} page${selectedPages.size !== 1 ? "s" : ""})` : ""}`}
           </button>
         </div>
       )}
