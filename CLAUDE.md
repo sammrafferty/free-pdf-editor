@@ -1,43 +1,82 @@
-# CLAUDE.md — free-pdf-editor
+# CLAUDE.md
 
-## Project Overview
-Free, browser-based PDF editor suite at **free-pdf-editor.org**. All processing happens client-side (no server uploads). Built with Next.js 16 + React 19, deployed on Vercel.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
 - `npm run dev` — Start dev server
-- `npm run build` — Production build (must pass before pushing)
-- `npm run lint` — ESLint check (0 errors required, warnings ok)
+- `npm run build` — Production build (must pass with 0 errors before pushing)
+- `npm run lint` — ESLint check (0 errors required, warnings acceptable)
 
-## Tech Stack
-- **Framework:** Next.js 16 (App Router), React 19, TypeScript (strict)
-- **Styling:** Tailwind CSS 4, CSS variables for theming (dark/light)
-- **PDF libs:** pdf-lib (manipulation), pdfjs-dist (parsing/viewing), jspdf (generation)
-- **Conversion libs:** mammoth/docx (Word), xlsx (Excel), pptxgenjs (PowerPoint), html2canvas (images)
-- **Other:** react-dropzone, jszip
+## Project Overview
+Free, browser-based PDF editor suite at **free-pdf-editor.org** (also pdf-tool-pi.vercel.app). 19 PDF tools that run 100% client-side — files never leave the browser. Built with Next.js 16 (App Router), React 19, TypeScript (strict), Tailwind CSS 4. Deployed on Vercel.
 
 ## Architecture
-- `app/page.tsx` — Main page, tool selector + all 19 tool components
-- `app/components/tools/` — 19 tool components (one per PDF operation), all dynamically imported via `next/dynamic()`
-- `app/components/` — Shared components (Dropzone, ToolSelector, ThemeProvider, CookieConsent, AdSlot)
-- `app/*/page.tsx` — Content pages (about, faq, guides, privacy, terms)
-- `public/` — Static assets, sitemap.xml, robots.txt
 
-## Key Patterns
-- **All tools follow the same pattern:** Accept file via Dropzone → process client-side → download result via blob URL
-- **Error handling:** Use `setError()` state + in-UI error display. Never use `alert()`.
-- **Error styling:** Red border/background for errors (`border-red-500/30 bg-red-500/10`), not green.
-- **Theme colors:** Use CSS variables (`--accent-primary`, `--bg-primary`, etc.) from globals.css. Don't hardcode colors.
-- **Dynamic imports:** All tool components in page.tsx use `next/dynamic()` for code splitting. New tools must follow this pattern.
-- **SEO:** Every page needs metadata export with title, description, openGraph, twitter, and alternates.canonical.
+The app is a single-page tool suite. `app/page.tsx` renders a tool selector and dynamically loads the selected tool component. All 19 tools live in `app/components/tools/` and are imported via `next/dynamic()` for code splitting.
+
+**How tool selection works:**
+1. `ToolSelector` (categories: Popular, Organize, Edit, Sign, Convert) emits a tool type string
+2. `page.tsx` maps the type to a dynamically imported component via `toolComponents` object
+3. Selected tool renders in place, accepts files via shared `Dropzone` component
+
+**Key files:**
+- `app/page.tsx` — Main page with dynamic imports, tool mapping, header/footer
+- `app/components/ToolSelector.tsx` — Tool grid with 5 categories and tool metadata
+- `app/components/Dropzone.tsx` — Shared file upload (drag-and-drop via react-dropzone)
+- `app/components/ThemeProvider.tsx` — Dark/light theme context with localStorage persistence
+- `app/globals.css` — Theme system with CSS variables for both modes
+
+**Content pages:** about, faq, guides (5 how-to articles), privacy, terms — each with SEO metadata exports.
+
+## Tool Component Pattern
+
+Every tool in `app/components/tools/` follows this structure:
+1. `"use client"` directive
+2. `useState` for `file`, `loading`, `error` (and tool-specific state)
+3. `handleFile` loads PDF via `PDFDocument.load()` wrapped in try/catch
+4. Processing function runs client-side, creates output
+5. Download via: `Blob` → `URL.createObjectURL` → anchor click → `URL.revokeObjectURL`
+6. Errors displayed in-UI via `setError()` with red styling
+
+**Libraries by tool type:**
+- PDF manipulation (split, merge, rotate, crop, etc.): `pdf-lib`
+- PDF parsing/rendering (PDF→image, PDF→docx): `pdfjs-dist`
+- PDF generation (Excel→PDF, PPTX→PDF): `jspdf` + `jspdf-autotable`
+- Word conversion: `mammoth` (DOCX→HTML) + `docx` (HTML→DOCX)
+- Excel: `xlsx`
+- PowerPoint: `pptxgenjs`
+- Images: `html2canvas`
+- ZIP output: `jszip`
+
+## Theme System
+
+Dark mode is default (no class). Light mode adds `.light` to `<html>`. All colors use CSS variables defined in `globals.css`:
+- Backgrounds: `--bg-primary`, `--bg-secondary`, `--bg-tertiary`, `--bg-elevated`
+- Text: `--text-primary`, `--text-secondary`, `--text-muted`, `--text-dim`
+- Accent: `--accent-primary` (warm coral), `--accent-primary-muted`, `--accent-primary-hover`
+- Errors: `--error-bg`, `--error-border`, `--error-text`
+
+Component classes: `theme-card`, `theme-input`, `theme-error`, `theme-button-disabled`, etc.
+
+## SEO Requirements
+
+Every page must export `metadata` with: `title`, `description`, `alternates.canonical` (full URL), `openGraph` (title, description, url, siteName, type, locale, images), `twitter` (card, title, description, images). Sitemap at `public/sitemap.xml` must include all routes.
+
+## Build-Time Git Injection
+
+`next.config.ts` injects `NEXT_PUBLIC_COMMIT_HASH` and `NEXT_PUBLIC_COMMIT_DATE` from git at build time. The footer displays these as a subtle version watermark.
 
 ## Adding a New Tool
-1. Create component in `app/components/tools/NewTool.tsx`
-2. Add dynamic import in `app/page.tsx`
-3. Add to ToolSelector categories in `app/components/ToolSelector.tsx`
-4. Add route to `public/sitemap.xml`
+1. Create `app/components/tools/NewTool.tsx` following the tool component pattern above
+2. Add dynamic import in `app/page.tsx`: `const NewTool = dynamic(() => import("./components/tools/NewTool"))`
+3. Add to `toolMeta` and `toolComponents` in `app/page.tsx`
+4. Add to appropriate category in `app/components/ToolSelector.tsx`
+5. Add URL to `public/sitemap.xml`
 
-## Don'ts
-- Don't upload files to any server — everything must stay client-side
-- Don't use `alert()` for errors — use in-UI error state
-- Don't use `@ts-ignore` — use `@ts-expect-error` if absolutely needed
-- Don't statically import tool components — use `next/dynamic()`
+## Rules
+- All file processing must be client-side — never upload to a server
+- Use `setError()` + in-UI display for errors, never `alert()`
+- Use CSS variables for colors, never hardcode
+- Use `next/dynamic()` for tool imports, never static imports
+- Use `@ts-expect-error` over `@ts-ignore` when suppression is needed
+- Error containers use red styling (`border-red-500/30 bg-red-500/10`), not green
