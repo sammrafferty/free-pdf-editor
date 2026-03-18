@@ -99,14 +99,16 @@ export default function SignTool() {
       page.drawImage(sigImage, { x, y: 40, width: sigW, height: sigH });
 
       const bytes = await pdf.save();
-      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
+      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `signed_${file.name}`;
       a.click();
+      URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);
+      alert("Failed to sign PDF. Please try again.");
     }
     setLoading(false);
   };
@@ -117,28 +119,28 @@ export default function SignTool() {
         <Dropzone onFiles={handleFile} />
       ) : (
         <div className="space-y-5">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#fdf4ff" }}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--bg-tertiary)" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d946ef" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
-                <p className="text-xs text-gray-400">{pageCount} pages</p>
+                <p className="font-medium theme-text text-sm">{file.name}</p>
+                <p className="text-xs theme-text-muted">{pageCount} pages</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setHasDrawn(false); }} className="text-gray-400 hover:text-gray-600 text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setHasDrawn(false); }} className="theme-text-muted  text-sm font-medium">Remove</button>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">Draw your signature</label>
+              <label className="text-sm font-medium theme-text-secondary">Draw your signature</label>
               <button onClick={clearCanvas} className="text-xs font-medium text-fuchsia-500 hover:text-fuchsia-700">Clear</button>
             </div>
-            <div className="border-2 border-dashed border-gray-200 rounded-xl overflow-hidden bg-white" style={{ touchAction: "none" }}>
+            <div className="border-2 border-dashed theme-border rounded-xl overflow-hidden theme-bg-secondary" style={{ touchAction: "none" }}>
               <canvas
                 ref={canvasRef}
                 width={600}
@@ -154,17 +156,17 @@ export default function SignTool() {
                 onTouchEnd={stopDraw}
               />
             </div>
-            {!hasDrawn && <p className="text-xs text-gray-400 mt-1">Click and drag to draw your signature</p>}
+            {!hasDrawn && <p className="text-xs theme-text-muted mt-1">Click and drag to draw your signature</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Page</label>
-              <input type="number" value={pageNum} onChange={(e) => setPageNum(Number(e.target.value))} min={1} max={pageCount} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-400" />
+              <label className="block text-sm font-medium theme-text-secondary mb-2">Page</label>
+              <input type="number" value={pageNum} onChange={(e) => setPageNum(Number(e.target.value))} min={1} max={pageCount} className="w-full theme-input rounded-xl px-4 py-3 theme-text text-sm focus:outline-none focus:ring-1 focus:ring-white/20" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
-              <select value={position} onChange={(e) => setPosition(e.target.value as typeof position)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-400">
+              <label className="block text-sm font-medium theme-text-secondary mb-2">Position</label>
+              <select value={position} onChange={(e) => setPosition(e.target.value as typeof position)} className="w-full theme-input rounded-xl px-4 py-3 theme-text text-sm focus:outline-none focus:ring-1 focus:ring-white/20">
                 <option value="bottom-left">Bottom Left</option>
                 <option value="bottom-center">Bottom Center</option>
                 <option value="bottom-right">Bottom Right</option>
@@ -175,7 +177,7 @@ export default function SignTool() {
           <button
             onClick={handleSign}
             disabled={loading || !hasDrawn}
-            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors disabled:bg-gray-100 disabled:text-gray-400"
+            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
             style={!loading && hasDrawn ? { backgroundColor: "#d946ef" } : {}}
           >
             {loading ? "Signing..." : "Sign & Download"}

@@ -1,15 +1,116 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════
+   THEME SYSTEM — CSS Custom Properties
+   Dark mode (default) / Light mode toggle
+   ═══════════════════════════════════════════════════════ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #1a1a2e;
+  /* Dark mode — default */
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #111111;
+  --bg-tertiary: #161616;
+  --bg-elevated: #1A1A1A;
+  --bg-hover: #1E1E1E;
+  --bg-input: #111111;
+  --bg-overlay: rgba(0, 0, 0, 0.8);
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0A0;
+  --text-muted: #666666;
+  --text-dim: #444444;
+
+  --border-primary: #222222;
+  --border-secondary: #1A1A1A;
+  --border-hover: #333333;
+  --border-accent: #2A2A2A;
+
+  --accent-red: #e5322d;
+  --accent-red-muted: #3a1515;
+  --accent-red-hover: #ff4040;
+
+  --shadow-card: 0 0 0 1px var(--border-primary);
+  --shadow-card-hover: 0 0 20px rgba(255, 255, 255, 0.03), 0 0 0 1px var(--border-hover);
+  --glow-hover: 0 0 30px rgba(255, 255, 255, 0.04);
+
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: #333333;
+  --scrollbar-thumb-hover: #555555;
+
+  /* Error states */
+  --error-bg: #1a0a0a;
+  --error-border: #3a1515;
+  --error-text: #ff6b6b;
+
+  /* Success states */
+  --success-bg: #0a1a0a;
+  --success-border: #153a15;
+
+  /* Progress bar */
+  --progress-track: #1a1a1a;
 }
 
+.light {
+  --bg-primary: #FAFAFA;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F5F5F5;
+  --bg-elevated: #FFFFFF;
+  --bg-hover: #F0F0F0;
+  --bg-input: #FFFFFF;
+  --bg-overlay: rgba(255, 255, 255, 0.9);
+
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #999999;
+  --text-dim: #CCCCCC;
+
+  --border-primary: #E5E5E5;
+  --border-secondary: #EEEEEE;
+  --border-hover: #CCCCCC;
+  --border-accent: #DDDDDD;
+
+  --accent-red: #e5322d;
+  --accent-red-muted: #fef2f2;
+  --accent-red-hover: #cc2020;
+
+  --shadow-card: 0 0 0 1px var(--border-primary);
+  --shadow-card-hover: 0 1px 8px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--border-hover);
+  --glow-hover: 0 2px 12px rgba(0, 0, 0, 0.06);
+
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: #d1d5db;
+  --scrollbar-thumb-hover: #9ca3af;
+
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
+  --error-text: #dc2626;
+
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+
+  --progress-track: #e5e7eb;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════ */
+
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 /* Smooth transitions globally */
@@ -31,22 +132,190 @@ body {
   }
 }
 
-/* Custom scrollbar */
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════ */
+
 ::-webkit-scrollbar {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: var(--scrollbar-thumb-hover);
 }
 
-/* Ad containers */
+/* ═══════════════════════════════════════════════════════
+   THEME COMPONENT CLASSES
+   ═══════════════════════════════════════════════════════ */
+
+/* Main backgrounds */
+.theme-bg { background: var(--bg-primary); }
+.theme-bg-secondary { background: var(--bg-secondary); }
+.theme-bg-tertiary { background: var(--bg-tertiary); }
+.theme-bg-elevated { background: var(--bg-elevated); }
+.theme-bg-hover { background: var(--bg-hover); }
+
+/* Text */
+.theme-text { color: var(--text-primary); }
+.theme-text-secondary { color: var(--text-secondary); }
+.theme-text-muted { color: var(--text-muted); }
+
+/* Borders */
+.theme-border { border-color: var(--border-primary); }
+.theme-border-secondary { border-color: var(--border-secondary); }
+
+/* Header */
+.theme-header {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-primary);
+  backdrop-filter: blur(12px);
+}
+
+/* Cards */
+.theme-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  transition: all 0.2s ease;
+}
+
+.theme-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--glow-hover);
+}
+
+/* Featured cards */
+.theme-card-featured {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  transition: all 0.2s ease;
+}
+
+.theme-card-featured:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--glow-hover);
+}
+
+/* Input fields */
+.theme-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  transition: border-color 0.2s ease;
+}
+
+.theme-input:focus {
+  border-color: var(--border-hover);
+  outline: none;
+}
+
+.theme-input::placeholder {
+  color: var(--text-dim);
+}
+
+/* File info rows */
+.theme-file-row {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+}
+
+/* Dropzone */
+.theme-dropzone {
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border-primary);
+  transition: all 0.2s ease;
+}
+
+.theme-dropzone:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-tertiary);
+}
+
+.theme-dropzone-active {
+  border-color: var(--accent-red) !important;
+  background: var(--accent-red-muted) !important;
+}
+
+/* Error state */
+.theme-error {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+}
+
+/* Progress */
+.theme-progress-track {
+  background: var(--progress-track);
+}
+
+/* Section backgrounds (about, privacy, terms) */
+.theme-section {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+}
+
+/* Cookie consent */
+.theme-cookie-bar {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-primary);
+}
+
+/* Disabled buttons */
+.theme-btn-disabled {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-muted) !important;
+}
+
+/* Category header accent bars */
+.theme-category-label {
+  color: var(--text-muted);
+}
+
+/* Icon containers in dark mode */
+.theme-icon-bg {
+  opacity: 0.15;
+}
+
+/* Select/Checkbox controls */
+.theme-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+/* Tech badges */
+.theme-badge {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+}
+
+/* Link colors */
+.theme-link {
+  color: #60a5fa;
+}
+
+.theme-link:hover {
+  color: #93bbfc;
+}
+
+.light .theme-link {
+  color: #2563eb;
+}
+
+.light .theme-link:hover {
+  color: #1d4ed8;
+}
+
+/* ═══════════════════════════════════════════════════════
+   AD CONTAINERS
+   ═══════════════════════════════════════════════════════ */
+
 .ad-container {
   text-align: center;
   overflow: hidden;
@@ -61,7 +330,10 @@ body {
   display: none;
 }
 
-/* Cookie consent animation */
+/* ═══════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════ */
+
 @keyframes slideUp {
   from {
     transform: translateY(100%);
@@ -71,4 +343,47 @@ body {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Staggered card animations */
+.tool-card-enter {
+  animation: fadeIn 0.25s ease-out forwards;
+  opacity: 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PROSE OVERRIDES (for about/privacy/terms)
+   ═══════════════════════════════════════════════════════ */
+
+.theme-prose p {
+  color: var(--text-secondary);
+}
+
+.theme-prose strong {
+  color: var(--text-primary);
+}
+
+.theme-prose h2 {
+  color: var(--text-primary);
+}
+
+.theme-prose li {
+  color: var(--text-secondary);
+}
+
+.theme-prose a {
+  color: #60a5fa;
+}
+
+.light .theme-prose a {
+  color: #2563eb;
 }

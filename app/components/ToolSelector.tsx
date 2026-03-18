@@ -6,7 +6,6 @@ interface ToolDef {
   label: string;
   desc: string;
   color: string;
-  bgColor: string;
   icon: React.ReactNode;
 }
 
@@ -153,57 +152,49 @@ const imageInIcon = (
 /* ── Data ─────────────────────────────────────────────── */
 
 const popular: ToolDef[] = [
-  { id: "merge", label: "Merge PDFs", desc: "Combine multiple PDFs into one", color: "#3b82f6", bgColor: "#eff6ff", icon: mergeIcon },
-  { id: "split", label: "Split PDF", desc: "Extract specific pages or ranges", color: "#6366f1", bgColor: "#eef2ff", icon: splitIcon },
-  { id: "compress", label: "Compress PDF", desc: "Reduce file size", color: "#10b981", bgColor: "#ecfdf5", icon: compressIcon },
+  { id: "merge", label: "Merge PDFs", desc: "Combine multiple PDFs into one", color: "#3b82f6", icon: mergeIcon },
+  { id: "split", label: "Split PDF", desc: "Extract specific pages or ranges", color: "#6366f1", icon: splitIcon },
+  { id: "compress", label: "Compress PDF", desc: "Reduce file size", color: "#10b981", icon: compressIcon },
 ];
 
 const organize: ToolDef[] = [
-  { id: "rotate", label: "Rotate Pages", desc: "Rotate all or specific pages", color: "#f59e0b", bgColor: "#fffbeb", icon: rotateIcon },
-  { id: "delete", label: "Delete Pages", desc: "Remove unwanted pages", color: "#ef4444", bgColor: "#fef2f2", icon: deleteIcon },
-  { id: "extract", label: "Extract Pages", desc: "Pick pages into a new PDF", color: "#8b5cf6", bgColor: "#f5f3ff", icon: extractIcon },
+  { id: "rotate", label: "Rotate Pages", desc: "Rotate all or specific pages", color: "#f59e0b", icon: rotateIcon },
+  { id: "delete", label: "Delete Pages", desc: "Remove unwanted pages", color: "#ef4444", icon: deleteIcon },
+  { id: "extract", label: "Extract Pages", desc: "Pick pages into a new PDF", color: "#8b5cf6", icon: extractIcon },
 ];
 
 const edit: ToolDef[] = [
-  { id: "watermark", label: "Watermark", desc: "Add text watermark", color: "#0ea5e9", bgColor: "#f0f9ff", icon: watermarkIcon },
-  { id: "number", label: "Number Pages", desc: "Add page numbers", color: "#6366f1", bgColor: "#eef2ff", icon: numberIcon },
-  { id: "crop", label: "Crop PDF", desc: "Trim margins", color: "#14b8a6", bgColor: "#f0fdfa", icon: cropIcon },
-  { id: "redact", label: "Redact", desc: "Black out sensitive areas", color: "#64748b", bgColor: "#f8fafc", icon: redactIcon },
+  { id: "watermark", label: "Watermark", desc: "Add text watermark", color: "#0ea5e9", icon: watermarkIcon },
+  { id: "number", label: "Number Pages", desc: "Add page numbers", color: "#6366f1", icon: numberIcon },
+  { id: "crop", label: "Crop PDF", desc: "Trim margins", color: "#14b8a6", icon: cropIcon },
+  { id: "redact", label: "Redact", desc: "Black out sensitive areas", color: "#64748b", icon: redactIcon },
 ];
 
 const sign: ToolDef[] = [
-  { id: "sign", label: "Sign PDF", desc: "Draw and embed your signature", color: "#d946ef", bgColor: "#fdf4ff", icon: signIcon },
+  { id: "sign", label: "Sign PDF", desc: "Draw and embed your signature", color: "#d946ef", icon: signIcon },
 ];
 
 interface ConvertPair {
-  labelA: string;
-  labelB: string;
   a: ToolDef;
   b: ToolDef;
-  color: string;
-  bgColor: string;
 }
 
 const convertPairs: ConvertPair[] = [
   {
-    labelA: "PDF → Word", labelB: "Word → PDF", color: "#2563eb", bgColor: "#eff6ff",
-    a: { id: "pdftodocx", label: "PDF → Word", desc: "Convert to editable DOCX", color: "#2563eb", bgColor: "#eff6ff", icon: docIcon },
-    b: { id: "docxtopdf", label: "Word → PDF", desc: "Convert DOCX to PDF", color: "#2563eb", bgColor: "#eff6ff", icon: pdfIcon },
+    a: { id: "pdftodocx", label: "PDF → Word", desc: "Convert to editable DOCX", color: "#2563eb", icon: docIcon },
+    b: { id: "docxtopdf", label: "Word → PDF", desc: "Convert DOCX to PDF", color: "#2563eb", icon: pdfIcon },
   },
   {
-    labelA: "PDF → Excel", labelB: "Excel → PDF", color: "#16a34a", bgColor: "#f0fdf4",
-    a: { id: "pdftoexcel", label: "PDF → Excel", desc: "Extract tables to spreadsheet", color: "#16a34a", bgColor: "#f0fdf4", icon: excelIcon },
-    b: { id: "exceltopdf", label: "Excel → PDF", desc: "Convert spreadsheet to PDF", color: "#16a34a", bgColor: "#f0fdf4", icon: pdfIcon },
+    a: { id: "pdftoexcel", label: "PDF → Excel", desc: "Extract tables to spreadsheet", color: "#16a34a", icon: excelIcon },
+    b: { id: "exceltopdf", label: "Excel → PDF", desc: "Convert spreadsheet to PDF", color: "#16a34a", icon: pdfIcon },
   },
   {
-    labelA: "PDF → PowerPoint", labelB: "PowerPoint → PDF", color: "#dc2626", bgColor: "#fef2f2",
-    a: { id: "pdftopptx", label: "PDF → PPT", desc: "Convert to presentation slides", color: "#dc2626", bgColor: "#fef2f2", icon: slideIcon },
-    b: { id: "pptxtopdf", label: "PPT → PDF", desc: "Convert slides to PDF", color: "#dc2626", bgColor: "#fef2f2", icon: pdfIcon },
+    a: { id: "pdftopptx", label: "PDF → PPT", desc: "Convert to presentation slides", color: "#dc2626", icon: slideIcon },
+    b: { id: "pptxtopdf", label: "PPT → PDF", desc: "Convert slides to PDF", color: "#dc2626", icon: pdfIcon },
   },
   {
-    labelA: "PDF → Image", labelB: "Image → PDF", color: "#ec4899", bgColor: "#fdf2f8",
-    a: { id: "pdftoimage", label: "PDF → Image", desc: "Convert pages to PNG", color: "#ec4899", bgColor: "#fdf2f8", icon: imageOutIcon },
-    b: { id: "imagetopdf", label: "Image → PDF", desc: "Combine images into PDF", color: "#f97316", bgColor: "#fff7ed", icon: imageInIcon },
+    a: { id: "pdftoimage", label: "PDF → Image", desc: "Convert pages to PNG", color: "#ec4899", icon: imageOutIcon },
+    b: { id: "imagetopdf", label: "Image → PDF", desc: "Combine images into PDF", color: "#f97316", icon: imageInIcon },
   },
 ];
 
@@ -212,46 +203,52 @@ const convertPairs: ConvertPair[] = [
 function CategoryHeader({ label, color }: { label: string; color: string }) {
   return (
     <div className="flex items-center gap-3 mb-4">
-      <div className="w-0.5 h-5 rounded-full" style={{ backgroundColor: color }} />
-      <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</h2>
+      <div className="w-0.5 h-5" style={{ backgroundColor: color }} />
+      <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}>{label}</h2>
     </div>
   );
 }
 
-function ToolCard({ tool, onSelect }: { tool: ToolDef; onSelect: (t: Tool) => void }) {
+function ToolCard({ tool, onSelect, index = 0 }: { tool: ToolDef; onSelect: (t: Tool) => void; index?: number }) {
   return (
     <button
       onClick={() => onSelect(tool.id)}
-      className="group flex items-center gap-3.5 p-3 sm:p-5 rounded-xl border border-gray-100 bg-white hover:shadow-lg hover:shadow-gray-100/80 hover:border-gray-200 hover:-translate-y-0.5 transition-all duration-200 text-left w-full"
+      className="group flex items-center gap-3.5 p-3 sm:p-5 text-left w-full tool-card-enter theme-card"
+      style={{
+        animationDelay: `${index * 30}ms`,
+      }}
     >
       <div
-        className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200"
-        style={{ backgroundColor: tool.bgColor, color: tool.color }}
+        className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200"
+        style={{ backgroundColor: tool.color + "18", color: tool.color }}
       >
         {tool.icon}
       </div>
       <div className="min-w-0">
-        <div className="font-semibold text-gray-900 text-sm sm:text-base leading-tight">{tool.label}</div>
-        <div className="text-xs sm:text-sm text-gray-400 leading-snug mt-0.5 truncate">{tool.desc}</div>
+        <div className="font-semibold text-sm sm:text-base leading-tight" style={{ color: "var(--text-primary)" }}>{tool.label}</div>
+        <div className="text-xs sm:text-sm leading-snug mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{tool.desc}</div>
       </div>
     </button>
   );
 }
 
-function FeaturedCard({ tool, onSelect }: { tool: ToolDef; onSelect: (t: Tool) => void }) {
+function FeaturedCard({ tool, onSelect, index = 0 }: { tool: ToolDef; onSelect: (t: Tool) => void; index?: number }) {
   return (
     <button
       onClick={() => onSelect(tool.id)}
-      className="group flex flex-col items-center text-center p-5 sm:p-7 rounded-2xl border border-gray-100 bg-white hover:shadow-lg hover:shadow-gray-100/80 hover:border-gray-200 hover:-translate-y-0.5 transition-all duration-200"
+      className="group flex flex-col items-center text-center p-5 sm:p-7 tool-card-enter theme-card-featured"
+      style={{
+        animationDelay: `${index * 30}ms`,
+      }}
     >
       <div
-        className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-200"
-        style={{ backgroundColor: tool.bgColor, color: tool.color }}
+        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-200"
+        style={{ backgroundColor: tool.color + "18", color: tool.color }}
       >
         {tool.icon}
       </div>
-      <div className="font-semibold text-gray-900 text-sm sm:text-base mb-0.5">{tool.label}</div>
-      <div className="text-xs sm:text-sm text-gray-400 leading-snug">{tool.desc}</div>
+      <div className="font-semibold text-sm sm:text-base mb-0.5" style={{ color: "var(--text-primary)" }}>{tool.label}</div>
+      <div className="text-xs sm:text-sm leading-snug" style={{ color: "var(--text-muted)" }}>{tool.desc}</div>
     </button>
   );
 }
@@ -265,8 +262,8 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
       <div>
         <CategoryHeader label="Most Popular" color="#e5322d" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          {popular.map((t) => (
-            <FeaturedCard key={t.id} tool={t} onSelect={onSelect} />
+          {popular.map((t, i) => (
+            <FeaturedCard key={t.id} tool={t} onSelect={onSelect} index={i} />
           ))}
         </div>
       </div>
@@ -275,8 +272,8 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
       <div>
         <CategoryHeader label="Organize" color="#f59e0b" />
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {organize.map((t) => (
-            <ToolCard key={t.id} tool={t} onSelect={onSelect} />
+          {organize.map((t, i) => (
+            <ToolCard key={t.id} tool={t} onSelect={onSelect} index={i} />
           ))}
         </div>
       </div>
@@ -285,8 +282,8 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
       <div>
         <CategoryHeader label="Edit" color="#0ea5e9" />
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {edit.map((t) => (
-            <ToolCard key={t.id} tool={t} onSelect={onSelect} />
+          {edit.map((t, i) => (
+            <ToolCard key={t.id} tool={t} onSelect={onSelect} index={i} />
           ))}
         </div>
       </div>
@@ -295,8 +292,8 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
       <div>
         <CategoryHeader label="Sign" color="#d946ef" />
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {sign.map((t) => (
-            <ToolCard key={t.id} tool={t} onSelect={onSelect} />
+          {sign.map((t, i) => (
+            <ToolCard key={t.id} tool={t} onSelect={onSelect} index={i} />
           ))}
         </div>
       </div>
@@ -305,10 +302,10 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
       <div>
         <CategoryHeader label="Convert" color="#2563eb" />
         <div className="space-y-3">
-          {convertPairs.map((pair) => (
+          {convertPairs.map((pair, pi) => (
             <div key={pair.a.id} className="grid grid-cols-2 gap-3 sm:gap-4">
-              <ToolCard tool={pair.a} onSelect={onSelect} />
-              <ToolCard tool={pair.b} onSelect={onSelect} />
+              <ToolCard tool={pair.a} onSelect={onSelect} index={pi * 2} />
+              <ToolCard tool={pair.b} onSelect={onSelect} index={pi * 2 + 1} />
             </div>
           ))}
         </div>

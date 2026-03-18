@@ -57,14 +57,16 @@ export default function WatermarkTool() {
       }
 
       const bytes = await pdf.save();
-      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
+      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `watermarked_${file.name}`;
       a.click();
+      URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);
+      alert("Failed to add watermark. Please try again.");
     }
     setLoading(false);
   };
@@ -75,47 +77,47 @@ export default function WatermarkTool() {
         <Dropzone onFiles={handleFile} />
       ) : (
         <div className="space-y-5">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#f0f9ff" }}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--bg-tertiary)" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
-                <p className="text-xs text-gray-400">{pageCount} pages</p>
+                <p className="font-medium theme-text text-sm">{file.name}</p>
+                <p className="text-xs theme-text-muted">{pageCount} pages</p>
               </div>
             </div>
-            <button onClick={() => setFile(null)} className="text-gray-400 hover:text-gray-600 text-sm font-medium">Remove</button>
+            <button onClick={() => setFile(null)} className="theme-text-muted  text-sm font-medium">Remove</button>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Watermark text</label>
-            <input type="text" value={text} onChange={(e) => setText(e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400" />
+            <label className="block text-sm font-medium theme-text-secondary mb-2">Watermark text</label>
+            <input type="text" value={text} onChange={(e) => setText(e.target.value)} className="w-full theme-input rounded-xl px-4 py-3 theme-text text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Font size</label>
-              <input type="number" value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} min={12} max={120} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400" />
+              <label className="block text-sm font-medium theme-text-secondary mb-2">Font size</label>
+              <input type="number" value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} min={12} max={120} className="w-full theme-input rounded-xl px-4 py-3 theme-text text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Opacity ({Math.round(opacity * 100)}%)</label>
+              <label className="block text-sm font-medium theme-text-secondary mb-2">Opacity ({Math.round(opacity * 100)}%)</label>
               <input type="range" value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} min={0.05} max={1} step={0.05} className="w-full mt-3 accent-sky-500" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+            <label className="block text-sm font-medium theme-text-secondary mb-2">Position</label>
             <div className="flex gap-2">
               {(["center", "diagonal"] as const).map((p) => (
                 <button
                   key={p}
                   onClick={() => setPosition(p)}
                   className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
-                    position === p ? "text-white border-sky-500" : "bg-white border-gray-200 text-gray-600 hover:border-sky-300"
+                    position === p ? "text-white border-sky-500" : "theme-bg-secondary theme-border theme-text-secondary hover:border-sky-300"
                   }`}
                   style={position === p ? { backgroundColor: "#0ea5e9" } : {}}
                 >
@@ -128,7 +130,7 @@ export default function WatermarkTool() {
           <button
             onClick={handleWatermark}
             disabled={loading || !text}
-            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors disabled:bg-gray-100 disabled:text-gray-400"
+            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
             style={!loading && text ? { backgroundColor: "#0ea5e9" } : {}}
           >
             {loading ? "Adding watermark..." : "Add Watermark & Download"}

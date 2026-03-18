@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import ThemeProvider, { ThemeToggle } from "./components/ThemeProvider";
 import ToolSelector from "./components/ToolSelector";
 import AdSlot from "./components/AdSlot";
 import CookieConsent from "./components/CookieConsent";
@@ -48,7 +49,7 @@ const toolMeta: Record<Tool, { label: string; desc: string; color: string }> = {
   pptxtopdf: { label: "PowerPoint to PDF", desc: "Convert presentation slides to PDF", color: "#dc2626" },
 };
 
-export default function Home() {
+function HomeContent() {
   const [tool, setTool] = useState<Tool | null>(null);
 
   const reset = () => setTool(null);
@@ -56,24 +57,28 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       {/* Header */}
-      <header className="border-b border-gray-100 bg-white/95 backdrop-blur-sm sticky top-0 z-50">
+      <header className="theme-header sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <button onClick={reset} className="flex items-center gap-2 sm:gap-2.5 hover:opacity-80">
             <img src="/logo.svg" alt="PDF Tools" className="w-8 h-8 sm:w-9 sm:h-9" />
-            <span className="font-bold text-lg text-gray-900 tracking-tight">PDF Tools</span>
+            <span className="font-bold text-lg tracking-tight" style={{ color: "var(--text-primary)" }}>PDF Tools</span>
           </button>
-          {tool && (
-            <button
-              onClick={reset}
-              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 font-medium"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-              <span className="hidden sm:inline">All Tools</span>
-              <span className="sm:hidden">Back</span>
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {tool && (
+              <button
+                onClick={reset}
+                className="flex items-center gap-1.5 text-sm font-medium transition-colors"
+                style={{ color: "var(--text-muted)" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                <span className="hidden sm:inline">All Tools</span>
+                <span className="sm:hidden">Back</span>
+              </button>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -83,10 +88,13 @@ export default function Home() {
           <div className="py-10 sm:py-16">
             {/* Hero */}
             <div className="text-center mb-8 sm:mb-14">
-              <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight">
+              <h1
+                className="text-3xl sm:text-5xl font-bold mb-3 sm:mb-4 tracking-tight"
+                style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}
+              >
                 We Make PDF Easy.
               </h1>
-              <p className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg max-w-xl mx-auto leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                 All the tools you need to work with PDFs. Free, fast, and entirely in your browser — nothing gets uploaded.
               </p>
             </div>
@@ -98,7 +106,7 @@ export default function Home() {
 
             {/* Trust banner */}
             <div className="mt-10 sm:mt-16 text-center">
-              <div className="inline-flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-sm text-gray-400">
+              <div className="inline-flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-sm" style={{ color: "var(--text-muted)" }}>
                 <span className="flex items-center gap-1.5">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -128,26 +136,31 @@ export default function Home() {
         ) : (
           <div className="py-8 sm:py-12 max-w-2xl mx-auto">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-sm text-gray-400 mb-4 sm:mb-6">
-              <button onClick={reset} className="hover:text-gray-600 transition-colors">All Tools</button>
+            <div className="flex items-center gap-2 text-sm mb-4 sm:mb-6" style={{ color: "var(--text-muted)" }}>
+              <button onClick={reset} className="hover:opacity-80 transition-opacity">All Tools</button>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
-              <span className="text-gray-600 font-medium">{toolMeta[tool].label}</span>
+              <span className="font-medium" style={{ color: "var(--text-secondary)" }}>{toolMeta[tool].label}</span>
             </div>
 
             {/* Accent bar */}
             <div className="flex justify-center mb-6">
               <div
-                className="h-1 w-16 rounded-full"
+                className="h-1 w-16"
                 style={{ backgroundColor: toolMeta[tool].color }}
               />
             </div>
 
             {/* Tool header */}
             <div className="text-center mb-6 sm:mb-8">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{toolMeta[tool].label}</h1>
-              <p className="text-gray-500 text-sm sm:text-base">{toolMeta[tool].desc}</p>
+              <h1
+                className="text-2xl sm:text-3xl font-bold mb-2"
+                style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                {toolMeta[tool].label}
+              </h1>
+              <p style={{ color: "var(--text-secondary)" }} className="text-sm sm:text-base">{toolMeta[tool].desc}</p>
             </div>
 
             {tool === "split" && <SplitTool />}
@@ -180,30 +193,30 @@ export default function Home() {
       <AdSlot slot="footer-banner" format="horizontal" className="my-6 sm:my-8 max-w-3xl mx-auto px-4" />
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 mt-4">
+      <footer style={{ borderTop: "1px solid var(--border-primary)" }} className="mt-4">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
           <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
             {/* Brand */}
             <div className="text-center sm:text-left">
               <div className="flex items-center gap-2 justify-center sm:justify-start mb-2">
                 <img src="/logo.svg" alt="PDF Tools" className="w-6 h-6" />
-                <span className="font-semibold text-gray-900 text-sm">PDF Tools</span>
+                <span className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>PDF Tools</span>
               </div>
-              <p className="text-xs text-gray-400 max-w-xs">
+              <p className="text-xs max-w-xs" style={{ color: "var(--text-muted)" }}>
                 Free, browser-based PDF tools. All processing happens locally — your files never leave your device.
               </p>
             </div>
 
             {/* Links */}
-            <div className="flex items-center gap-6 text-sm text-gray-400">
-              <Link href="/about" className="hover:text-gray-600 transition-colors">About</Link>
-              <Link href="/privacy" className="hover:text-gray-600 transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-gray-600 transition-colors">Terms of Service</Link>
+            <div className="flex items-center gap-6 text-sm" style={{ color: "var(--text-muted)" }}>
+              <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>
+              <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy Policy</Link>
+              <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms of Service</Link>
             </div>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-50 text-center">
-            <p className="text-xs text-gray-300">© {new Date().getFullYear()} PDF Tools. All rights reserved.</p>
+          <div className="mt-6 pt-6 text-center" style={{ borderTop: "1px solid var(--border-secondary)" }}>
+            <p className="text-xs" style={{ color: "var(--text-dim)" }}>© {new Date().getFullYear()} PDF Tools. All rights reserved.</p>
           </div>
         </div>
       </footer>
@@ -211,5 +224,13 @@ export default function Home() {
       {/* Cookie Consent */}
       <CookieConsent />
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <ThemeProvider>
+      <HomeContent />
+    </ThemeProvider>
   );
 }

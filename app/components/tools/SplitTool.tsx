@@ -25,7 +25,7 @@ export default function SplitTool() {
     for (const part of parts) {
       if (part.includes("-")) {
         const [a, b] = part.split("-").map(Number);
-        for (let i = a; i <= Math.min(b, max); i++) pages.push(i);
+        for (let i = Math.max(a, 1); i <= Math.min(b, max); i++) pages.push(i);
       } else {
         const n = parseInt(part);
         if (!isNaN(n) && n >= 1 && n <= max) pages.push(n);
@@ -49,12 +49,13 @@ export default function SplitTool() {
       copied.forEach((p) => newPdf.addPage(p));
 
       const bytes = await newPdf.save();
-      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
+      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `split_pages_${range.replace(/,/g, "_")}.pdf`;
       a.click();
+      URL.revokeObjectURL(url);
     } catch (e: any) {
       setError(e.message);
     }
@@ -68,22 +69,22 @@ export default function SplitTool() {
       ) : (
         <div className="space-y-5">
           {/* File card */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
-                <p className="text-xs text-gray-400">{pageCount} pages</p>
+                <p className="font-medium theme-text text-sm">{file.name}</p>
+                <p className="text-xs theme-text-muted">{pageCount} pages</p>
               </div>
             </div>
             <button
               onClick={() => { setFile(null); setPageCount(0); }}
-              className="text-gray-400 hover:text-gray-600 text-sm font-medium"
+              className="theme-text-muted  text-sm font-medium"
             >
               Remove
             </button>
@@ -91,7 +92,7 @@ export default function SplitTool() {
 
           {/* Page range input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium theme-text-secondary mb-2">
               Pages to extract
             </label>
             <input
@@ -99,12 +100,12 @@ export default function SplitTool() {
               value={range}
               onChange={(e) => setRange(e.target.value)}
               placeholder={`e.g. 1-3, 5, 7-9`}
-              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 text-sm"
+              className="w-full theme-input rounded-xl px-4 py-3 theme-text placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-white/20 text-sm"
             />
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
+            <div className="p-3 theme-error rounded-xl text-sm">
               {error}
             </div>
           )}
@@ -112,7 +113,7 @@ export default function SplitTool() {
           <button
             onClick={handleSplit}
             disabled={loading || !range}
-            className="w-full py-3.5 bg-indigo-500 hover:bg-indigo-600 disabled:bg-gray-100 disabled:text-gray-400 text-white rounded-xl font-semibold text-sm transition-colors"
+            className="w-full py-3.5 bg-indigo-500/100 hover:bg-indigo-600 theme-btn-disabled text-white rounded-xl font-semibold text-sm transition-colors"
           >
             {loading ? "Processing..." : "Extract Pages"}
           </button>

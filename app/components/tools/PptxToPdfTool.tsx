@@ -265,7 +265,7 @@ export default function PptxToPdfTool() {
   };
 
   const accentColor = "#dc2626";
-  const bgTint = "#fef2f2";
+  const bgTint = "var(--bg-tertiary)";
 
   return (
     <div>
@@ -280,7 +280,7 @@ export default function PptxToPdfTool() {
       ) : (
         <div className="space-y-5">
           {/* File info */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: bgTint }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -289,27 +289,27 @@ export default function PptxToPdfTool() {
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
-                <p className="text-xs text-gray-400">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                <p className="font-medium theme-text text-sm">{file.name}</p>
+                <p className="text-xs theme-text-muted">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setError(""); setStatus(""); }} className="text-gray-400 hover:text-gray-600 text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setError(""); setStatus(""); }} className="theme-text-muted  text-sm font-medium">Remove</button>
           </div>
 
           {error && (
-            <div className="p-4 rounded-xl border border-red-200 bg-red-50">
+            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
           {loading && (
-            <div className="p-4 rounded-xl border border-gray-100" style={{ backgroundColor: bgTint }}>
+            <div className="p-4 rounded-xl border theme-border" style={{ backgroundColor: bgTint }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium" style={{ color: accentColor }}>{status}</span>
-                {totalSlides > 0 && <span className="text-xs text-gray-500">{progress} / {totalSlides}</span>}
+                {totalSlides > 0 && <span className="text-xs theme-text-secondary">{progress} / {totalSlides}</span>}
               </div>
               {totalSlides > 0 && (
-                <div className="w-full bg-red-100 rounded-full h-2">
+                <div className="w-full theme-progress-track rounded-full h-2">
                   <div className="h-2 rounded-full transition-all" style={{ backgroundColor: accentColor, width: `${(progress / totalSlides) * 100}%` }} />
                 </div>
               )}
@@ -317,7 +317,7 @@ export default function PptxToPdfTool() {
           )}
 
           {!loading && status && !error && (
-            <div className="p-4 rounded-xl border border-green-200 bg-green-50">
+            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
               <p className="text-sm text-green-700">{status}</p>
             </div>
           )}
@@ -325,13 +325,13 @@ export default function PptxToPdfTool() {
           <button
             onClick={handleConvert}
             disabled={loading}
-            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors disabled:bg-gray-100 disabled:text-gray-400"
+            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
             style={!loading ? { backgroundColor: accentColor } : {}}
           >
             {loading ? `Converting slide ${progress} of ${totalSlides}...` : "Convert to PDF"}
           </button>
 
-          <p className="text-xs text-gray-400 text-center leading-relaxed">
+          <p className="text-xs theme-text-muted text-center leading-relaxed">
             Extracts text and images from slides. Complex animations and effects may not be preserved.
           </p>
         </div>

@@ -115,7 +115,7 @@ export default function ExcelToPdfTool() {
   };
 
   const accentColor = "#16a34a";
-  const bgTint = "#f0fdf4";
+  const bgTint = "var(--bg-tertiary)";
 
   return (
     <div>
@@ -132,7 +132,7 @@ export default function ExcelToPdfTool() {
       ) : (
         <div className="space-y-5">
           {/* File info */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: bgTint }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -141,27 +141,27 @@ export default function ExcelToPdfTool() {
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
-                <p className="text-xs text-gray-400">{sheetNames.length} sheet{sheetNames.length !== 1 ? "s" : ""} &middot; {(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                <p className="font-medium theme-text text-sm">{file.name}</p>
+                <p className="text-xs theme-text-muted">{sheetNames.length} sheet{sheetNames.length !== 1 ? "s" : ""} &middot; {(file.size / 1024 / 1024).toFixed(1)} MB</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setSheetNames([]); setSelectedSheets([]); setError(""); setStatus(""); }} className="text-gray-400 hover:text-gray-600 text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setSheetNames([]); setSelectedSheets([]); setError(""); setStatus(""); }} className="theme-text-muted  text-sm font-medium">Remove</button>
           </div>
 
           {/* Sheet selector */}
           {sheetNames.length > 1 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sheets to Include</label>
+              <label className="block text-sm font-medium theme-text-secondary mb-2">Sheets to Include</label>
               <div className="space-y-2">
                 {sheetNames.map((name) => (
-                  <label key={name} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors">
+                  <label key={name} className="flex items-center gap-3 p-3 theme-file-row rounded-xl cursor-pointer hover:opacity-90 transition-colors">
                     <input
                       type="checkbox"
                       checked={selectedSheets.includes(name)}
                       onChange={() => toggleSheet(name)}
                       className="w-4 h-4 rounded accent-green-600"
                     />
-                    <span className="text-sm font-medium text-gray-700">{name}</span>
+                    <span className="text-sm font-medium theme-text-secondary">{name}</span>
                   </label>
                 ))}
               </div>
@@ -169,19 +169,19 @@ export default function ExcelToPdfTool() {
           )}
 
           {error && (
-            <div className="p-4 rounded-xl border border-red-200 bg-red-50">
+            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
           {loading && (
-            <div className="p-4 rounded-xl border border-gray-100" style={{ backgroundColor: bgTint }}>
+            <div className="p-4 rounded-xl border theme-border" style={{ backgroundColor: bgTint }}>
               <p className="text-sm font-medium" style={{ color: accentColor }}>{status}</p>
             </div>
           )}
 
           {!loading && status && !error && (
-            <div className="p-4 rounded-xl border border-green-200 bg-green-50">
+            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
               <p className="text-sm text-green-700">{status}</p>
             </div>
           )}
@@ -189,13 +189,13 @@ export default function ExcelToPdfTool() {
           <button
             onClick={handleConvert}
             disabled={loading || selectedSheets.length === 0}
-            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors disabled:bg-gray-100 disabled:text-gray-400"
+            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
             style={!loading && selectedSheets.length > 0 ? { backgroundColor: accentColor } : {}}
           >
             {loading ? status : `Convert ${selectedSheets.length} Sheet${selectedSheets.length !== 1 ? "s" : ""} to PDF`}
           </button>
 
-          <p className="text-xs text-gray-400 text-center leading-relaxed">
+          <p className="text-xs theme-text-muted text-center leading-relaxed">
             Renders spreadsheet data as formatted tables in PDF. Uses landscape orientation for wide tables.
           </p>
         </div>

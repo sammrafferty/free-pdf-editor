@@ -319,32 +319,60 @@ export default function PdfToDocxTool() {
         ) {
           const imgName = ops.argsArray[i][0];
           try {
-            const imgData = await new Promise<{
+            // pdfjs-dist v5: objs.get() can work as sync (returns value if resolved)
+            // or with callback. Try both patterns for compatibility.
+            let imgData: {
               width: number;
               height: number;
               data?: Uint8ClampedArray;
               src?: string;
               kind?: number;
-            }>((resolve, reject) => {
-              // Try page.objs first, then commonObjs
-              page.objs.get(imgName, (data: unknown) => {
-                if (data) resolve(data as { width: number; height: number; data?: Uint8ClampedArray; src?: string; kind?: number });
-                else reject(new Error("No image data"));
-              });
-            }).catch(() => {
-              return new Promise<{
-                width: number;
-                height: number;
-                data?: Uint8ClampedArray;
-                src?: string;
-                kind?: number;
-              }>((resolve, reject) => {
-                page.commonObjs.get(imgName, (data: unknown) => {
-                  if (data) resolve(data as { width: number; height: number; data?: Uint8ClampedArray; src?: string; kind?: number });
-                  else reject(new Error("No image data"));
+            } | null = null;
+
+            // Try direct/promise-based access first (pdfjs v5+)
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const obj = page.objs as any;
+              const result = obj.get(imgName);
+              // If it returns a promise, await it with a timeout
+              if (result && typeof result.then === "function") {
+                imgData = await Promise.race([
+                  result,
+                  new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+                ]);
+              } else if (result && typeof result === "object" && "width" in result) {
+                imgData = result;
+              }
+            } catch {
+              // Direct access failed, try callback pattern
+            }
+
+            // Fallback: try callback-based access
+            if (!imgData) {
+              try {
+                imgData = await new Promise<{
+                  width: number;
+                  height: number;
+                  data?: Uint8ClampedArray;
+                  src?: string;
+                  kind?: number;
+                } | null>((resolve) => {
+                  const timeout = setTimeout(() => resolve(null), 2000);
+                  try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (page.objs as any).get(imgName, (data: unknown) => {
+                      clearTimeout(timeout);
+                      resolve(data as { width: number; height: number; data?: Uint8ClampedArray; src?: string; kind?: number } | null);
+                    });
+                  } catch {
+                    clearTimeout(timeout);
+                    resolve(null);
+                  }
                 });
-              });
-            });
+              } catch {
+                // Skip
+              }
+            }
 
             if (!imgData || imgData.width < 10 || imgData.height < 10) continue;
 
@@ -703,7 +731,7 @@ export default function PdfToDocxTool() {
   };
 
   const accentColor = "#2563eb";
-  const bgTint = "#eff6ff";
+  const bgTint = "var(--bg-tertiary)";
 
   return (
     <div>
@@ -712,7 +740,7 @@ export default function PdfToDocxTool() {
       ) : (
         <div className="space-y-5">
           {/* File info */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
             <div className="flex items-center gap-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -733,8 +761,8 @@ export default function PdfToDocxTool() {
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
-                <p className="text-xs text-gray-400">
+                <p className="font-medium theme-text text-sm">{file.name}</p>
+                <p className="text-xs theme-text-muted">
                   {pageCount} page{pageCount !== 1 ? "s" : ""} &middot;{" "}
                   {(file.size / 1024 / 1024).toFixed(1)} MB
                 </p>
@@ -747,7 +775,7 @@ export default function PdfToDocxTool() {
                 setError("");
                 setStatus("");
               }}
-              className="text-gray-400 hover:text-gray-600 text-sm font-medium"
+              className="theme-text-muted  text-sm font-medium"
             >
               Remove
             </button>
@@ -755,7 +783,7 @@ export default function PdfToDocxTool() {
 
           {/* Quality selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium theme-text-secondary mb-2">
               Conversion Quality
             </label>
             <div className="flex gap-2">
@@ -771,7 +799,7 @@ export default function PdfToDocxTool() {
                   className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
                     quality === opt.key
                       ? "text-white"
-                      : "bg-white border-gray-200 text-gray-600 hover:border-blue-300"
+                      : "theme-bg-secondary theme-border theme-text-secondary hover:border-blue-300"
                   }`}
                   style={
                     quality === opt.key
@@ -782,7 +810,7 @@ export default function PdfToDocxTool() {
                   <div>{opt.label}</div>
                   <div
                     className={`text-xs mt-0.5 ${
-                      quality === opt.key ? "text-blue-100" : "text-gray-400"
+                      quality === opt.key ? "text-blue-100" : "theme-text-muted"
                     }`}
                   >
                     {opt.desc}
@@ -794,19 +822,19 @@ export default function PdfToDocxTool() {
 
           {/* Error message */}
           {error && (
-            <div className="p-4 rounded-xl border border-red-200 bg-red-50">
+            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
           {/* Progress */}
           {loading && (
-            <div className="p-4 rounded-xl border border-gray-100" style={{ backgroundColor: bgTint }}>
+            <div className="p-4 rounded-xl border theme-border" style={{ backgroundColor: bgTint }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium" style={{ color: accentColor }}>
                   {status}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs theme-text-secondary">
                   {progress} / {pageCount}
                 </span>
               </div>
@@ -824,7 +852,7 @@ export default function PdfToDocxTool() {
 
           {/* Success status */}
           {!loading && status && !error && (
-            <div className="p-4 rounded-xl border border-green-200 bg-green-50">
+            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
               <p className="text-sm text-green-700">{status}</p>
             </div>
           )}
@@ -833,7 +861,7 @@ export default function PdfToDocxTool() {
           <button
             onClick={handleConvert}
             disabled={loading}
-            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors disabled:bg-gray-100 disabled:text-gray-400"
+            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
             style={!loading ? { backgroundColor: accentColor } : {}}
           >
             {loading
@@ -842,7 +870,7 @@ export default function PdfToDocxTool() {
           </button>
 
           {/* Info note */}
-          <p className="text-xs text-gray-400 text-center leading-relaxed">
+          <p className="text-xs theme-text-muted text-center leading-relaxed">
             Works best with text-based PDFs. Scanned documents (image-only PDFs) require OCR which
             isn&apos;t available in the browser.
           </p>

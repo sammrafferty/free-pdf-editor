@@ -24,26 +24,22 @@ export default function Dropzone({ onFiles, multiple = false, label, accept }: P
   return (
     <div
       {...getRootProps()}
-      className={`relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-200
-        ${
-          isDragActive
-            ? "border-red-400 bg-red-50"
-            : "border-gray-200 hover:border-red-300 hover:bg-red-50/30 bg-gray-50/50"
-        }`}
+      className={`relative p-12 text-center cursor-pointer transition-all duration-200 ${
+        isDragActive ? "theme-dropzone-active" : "theme-dropzone"
+      }`}
     >
       <input {...getInputProps()} />
       <div className="flex flex-col items-center">
         <div
-          className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-colors ${
-            isDragActive ? "bg-red-100" : "bg-red-50"
-          }`}
+          className="w-16 h-16 flex items-center justify-center mb-4 transition-colors"
+          style={{ backgroundColor: isDragActive ? "var(--accent-red-muted)" : "var(--bg-tertiary)" }}
         >
           <svg
             width="28"
             height="28"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#e5322d"
+            stroke="var(--accent-red)"
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -53,11 +49,11 @@ export default function Dropzone({ onFiles, multiple = false, label, accept }: P
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
         </div>
-        <p className="font-semibold text-gray-700 text-base">
+        <p className="font-semibold text-base" style={{ color: "var(--text-primary)" }}>
           {label || (multiple ? "Drop PDFs here" : "Drop a PDF here")}
         </p>
-        <p className="text-sm text-gray-400 mt-1.5">
-          or <span className="text-red-500 font-medium">browse files</span>
+        <p className="text-sm mt-1.5" style={{ color: "var(--text-muted)" }}>
+          or <span style={{ color: "var(--accent-red)" }} className="font-medium">browse files</span>
         </p>
       </div>
     </div>

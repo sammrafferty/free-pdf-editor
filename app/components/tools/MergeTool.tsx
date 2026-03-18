@@ -44,14 +44,16 @@ export default function MergeTool() {
         pages.forEach((p) => merged.addPage(p));
       }
       const bytes = await merged.save();
-      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
+      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = "merged.pdf";
       a.click();
-    } catch (e) {
+      URL.revokeObjectURL(url);
+    } catch (e: unknown) {
       console.error(e);
+      alert(e instanceof Error ? e.message : "Merge failed");
     }
     setLoading(false);
   };
@@ -65,19 +67,19 @@ export default function MergeTool() {
           {files.map((f, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 p-3.5 bg-gray-50 rounded-xl border border-gray-100"
+              className="flex items-center gap-3 p-3.5 theme-file-row rounded-xl"
             >
-              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-bold text-blue-500">{i + 1}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{f.name}</p>
-                <p className="text-xs text-gray-400">{fmt(f.size)}</p>
+                <p className="text-sm font-medium theme-text truncate">{f.name}</p>
+                <p className="text-xs theme-text-muted">{fmt(f.size)}</p>
               </div>
               <div className="flex items-center gap-0.5">
                 <button
                   onClick={() => moveUp(i)}
-                  className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  className="w-7 h-7 flex items-center justify-center rounded-md theme-text-muted  hover:opacity-80"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="18 15 12 9 6 15" />
@@ -85,7 +87,7 @@ export default function MergeTool() {
                 </button>
                 <button
                   onClick={() => moveDown(i)}
-                  className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  className="w-7 h-7 flex items-center justify-center rounded-md theme-text-muted  hover:opacity-80"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="6 9 12 15 18 9" />
@@ -93,7 +95,7 @@ export default function MergeTool() {
                 </button>
                 <button
                   onClick={() => removeFile(i)}
-                  className="w-7 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50"
+                  className="w-7 h-7 flex items-center justify-center rounded-md theme-text-muted hover:text-red-500 hover:bg-red-500/10"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -107,7 +109,7 @@ export default function MergeTool() {
           <button
             onClick={handleMerge}
             disabled={loading || files.length < 2}
-            className="w-full py-3.5 mt-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-100 disabled:text-gray-400 text-white rounded-xl font-semibold text-sm transition-colors"
+            className="w-full py-3.5 mt-3 bg-blue-500 hover:bg-blue-600 theme-btn-disabled text-white rounded-xl font-semibold text-sm transition-colors"
           >
             {loading ? "Merging..." : `Merge ${files.length} PDFs`}
           </button>

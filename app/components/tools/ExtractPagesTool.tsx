@@ -48,12 +48,13 @@ export default function ExtractPagesTool() {
       copied.forEach((p) => newPdf.addPage(p));
 
       const bytes = await newPdf.save();
-      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
+      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `extracted_${selected.size}_pages.pdf`;
       a.click();
+      URL.revokeObjectURL(url);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Extraction failed");
     }
@@ -66,28 +67,28 @@ export default function ExtractPagesTool() {
         <Dropzone onFiles={handleFile} />
       ) : (
         <div className="space-y-5">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#f5f3ff" }}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--bg-tertiary)" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
-                <p className="text-xs text-gray-400">{pageCount} pages</p>
+                <p className="font-medium theme-text text-sm">{file.name}</p>
+                <p className="text-xs theme-text-muted">{pageCount} pages</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setPageCount(0); setSelected(new Set()); }} className="text-gray-400 hover:text-gray-600 text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setPageCount(0); setSelected(new Set()); }} className="theme-text-muted  text-sm font-medium">Remove</button>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-gray-700">Select pages to extract</label>
+              <label className="text-sm font-medium theme-text-secondary">Select pages to extract</label>
               <div className="flex gap-2">
                 <button onClick={selectAll} className="text-xs text-purple-600 hover:text-purple-800 font-medium">All</button>
-                <button onClick={selectNone} className="text-xs text-gray-400 hover:text-gray-600 font-medium">None</button>
+                <button onClick={selectNone} className="text-xs theme-text-muted  font-medium">None</button>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -96,7 +97,7 @@ export default function ExtractPagesTool() {
                   key={p}
                   onClick={() => togglePage(p)}
                   className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
-                    selected.has(p) ? "text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-purple-300"
+                    selected.has(p) ? "text-white" : "theme-bg-secondary border theme-border theme-text-secondary hover:border-purple-300"
                   }`}
                   style={selected.has(p) ? { backgroundColor: "#8b5cf6" } : {}}
                 >
@@ -106,12 +107,12 @@ export default function ExtractPagesTool() {
             </div>
           </div>
 
-          {error && <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">{error}</div>}
+          {error && <div className="p-3 theme-error rounded-xl text-sm">{error}</div>}
 
           <button
             onClick={handleExtract}
             disabled={loading || selected.size === 0}
-            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors disabled:bg-gray-100 disabled:text-gray-400"
+            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
             style={!loading && selected.size > 0 ? { backgroundColor: "#8b5cf6" } : {}}
           >
             {loading ? "Extracting..." : `Extract ${selected.size} Page${selected.size !== 1 ? "s" : ""}`}

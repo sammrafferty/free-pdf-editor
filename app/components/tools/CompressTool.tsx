@@ -25,16 +25,18 @@ export default function CompressTool() {
     try {
       const buf = await file.arrayBuffer();
       const pdf = await PDFDocument.load(buf, { ignoreEncryption: true });
-      const bytes = await pdf.save({ useObjectStreams: true, addDefaultPage: false });
-      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
+      const bytes = await pdf.save({ useObjectStreams: true });
+      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
       setResult({ original: file.size, compressed: bytes.length });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `compressed_${file.name}`;
       a.click();
-    } catch (e) {
+      URL.revokeObjectURL(url);
+    } catch (e: unknown) {
       console.error(e);
+      alert(e instanceof Error ? e.message : "Compression failed");
     }
     setLoading(false);
   };
@@ -48,22 +50,22 @@ export default function CompressTool() {
       ) : (
         <div className="space-y-5">
           {/* File card */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
-                <p className="text-xs text-gray-400">{fmt(file.size)}</p>
+                <p className="font-medium theme-text text-sm">{file.name}</p>
+                <p className="text-xs theme-text-muted">{fmt(file.size)}</p>
               </div>
             </div>
             <button
               onClick={() => { setFile(null); setResult(null); }}
-              className="text-gray-400 hover:text-gray-600 text-sm font-medium"
+              className="theme-text-muted  text-sm font-medium"
             >
               Remove
             </button>
@@ -71,9 +73,9 @@ export default function CompressTool() {
 
           {/* Result */}
           {result && (
-            <div className="p-5 bg-emerald-50 border border-emerald-100 rounded-xl">
+            <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-emerald-500/100 rounded-full flex items-center justify-center">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
@@ -81,7 +83,7 @@ export default function CompressTool() {
                 <span className="font-semibold text-emerald-700 text-sm">Compressed successfully!</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <span className="text-gray-500">{fmt(result.original)}</span>
+                <span className="theme-text-secondary">{fmt(result.original)}</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
@@ -97,7 +99,7 @@ export default function CompressTool() {
           <button
             onClick={handleCompress}
             disabled={loading}
-            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-100 disabled:text-gray-400 text-white rounded-xl font-semibold text-sm transition-colors"
+            className="w-full py-3.5 bg-emerald-500/100 hover:bg-emerald-600 theme-btn-disabled text-white rounded-xl font-semibold text-sm transition-colors"
           >
             {loading ? "Compressing..." : "Compress PDF"}
           </button>

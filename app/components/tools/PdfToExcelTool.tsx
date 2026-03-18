@@ -215,7 +215,7 @@ export default function PdfToExcelTool() {
   };
 
   const accentColor = "#16a34a";
-  const bgTint = "#f0fdf4";
+  const bgTint = "var(--bg-tertiary)";
 
   return (
     <div>
@@ -224,7 +224,7 @@ export default function PdfToExcelTool() {
       ) : (
         <div className="space-y-5">
           {/* File info */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+          <div className="flex items-center justify-between p-4 theme-file-row rounded-xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: bgTint }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -233,16 +233,16 @@ export default function PdfToExcelTool() {
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-gray-900 text-sm">{file.name}</p>
-                <p className="text-xs text-gray-400">{pageCount} page{pageCount !== 1 ? "s" : ""} &middot; {(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                <p className="font-medium theme-text text-sm">{file.name}</p>
+                <p className="text-xs theme-text-muted">{pageCount} page{pageCount !== 1 ? "s" : ""} &middot; {(file.size / 1024 / 1024).toFixed(1)} MB</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setPageCount(0); setError(""); setStatus(""); }} className="text-gray-400 hover:text-gray-600 text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setPageCount(0); setError(""); setStatus(""); }} className="theme-text-muted  text-sm font-medium">Remove</button>
           </div>
 
           {/* Mode selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Extraction Mode</label>
+            <label className="block text-sm font-medium theme-text-secondary mb-2">Extraction Mode</label>
             <div className="flex gap-2">
               {([
                 { key: "table" as ExtractionMode, label: "Table Detection", desc: "Smart grid analysis" },
@@ -252,28 +252,28 @@ export default function PdfToExcelTool() {
                   key={opt.key}
                   onClick={() => setMode(opt.key)}
                   className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
-                    mode === opt.key ? "text-white" : "bg-white border-gray-200 text-gray-600 hover:border-green-300"
+                    mode === opt.key ? "text-white" : "theme-bg-secondary theme-border theme-text-secondary hover:opacity-80"
                   }`}
                   style={mode === opt.key ? { backgroundColor: accentColor, borderColor: accentColor } : {}}
                 >
                   <div>{opt.label}</div>
-                  <div className={`text-xs mt-0.5 ${mode === opt.key ? "text-green-100" : "text-gray-400"}`}>{opt.desc}</div>
+                  <div className={`text-xs mt-0.5 ${mode === opt.key ? "text-green-100" : "theme-text-muted"}`}>{opt.desc}</div>
                 </button>
               ))}
             </div>
           </div>
 
           {error && (
-            <div className="p-4 rounded-xl border border-red-200 bg-red-50">
+            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
               <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
           {loading && (
-            <div className="p-4 rounded-xl border border-gray-100" style={{ backgroundColor: bgTint }}>
+            <div className="p-4 rounded-xl border theme-border" style={{ backgroundColor: bgTint }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium" style={{ color: accentColor }}>{status}</span>
-                <span className="text-xs text-gray-500">{progress} / {pageCount}</span>
+                <span className="text-xs theme-text-secondary">{progress} / {pageCount}</span>
               </div>
               <div className="w-full bg-green-100 rounded-full h-2">
                 <div className="h-2 rounded-full transition-all" style={{ backgroundColor: accentColor, width: `${(progress / pageCount) * 100}%` }} />
@@ -282,7 +282,7 @@ export default function PdfToExcelTool() {
           )}
 
           {!loading && status && !error && (
-            <div className="p-4 rounded-xl border border-green-200 bg-green-50">
+            <div className="p-4 rounded-xl border border-green-500/30 bg-green-500/10">
               <p className="text-sm text-green-700">{status}</p>
             </div>
           )}
@@ -290,13 +290,13 @@ export default function PdfToExcelTool() {
           <button
             onClick={handleConvert}
             disabled={loading}
-            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors disabled:bg-gray-100 disabled:text-gray-400"
+            className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
             style={!loading ? { backgroundColor: accentColor } : {}}
           >
             {loading ? `Extracting page ${progress} of ${pageCount}...` : "Convert to Excel"}
           </button>
 
-          <p className="text-xs text-gray-400 text-center leading-relaxed">
+          <p className="text-xs theme-text-muted text-center leading-relaxed">
             Table Detection works best with structured data. Use Raw Text for general text extraction.
           </p>
         </div>
