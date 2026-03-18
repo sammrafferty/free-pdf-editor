@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
 type QualityMode = "fast" | "full";
@@ -706,14 +707,7 @@ export default function PdfToDocxTool() {
       const blob = await buildDocx(pages);
 
       // Download
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.name.replace(/\.pdf$/i, "") + ".docx";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, file.name.replace(/\.pdf$/i, "") + ".docx");
 
       setStatus(
         `Done! Extracted ${totalParagraphs} paragraph${totalParagraphs !== 1 ? "s" : ""}${

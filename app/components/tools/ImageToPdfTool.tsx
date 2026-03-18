@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { PDFDocument } from "pdf-lib";
+import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
 export default function ImageToPdfTool() {
@@ -95,14 +96,7 @@ export default function ImageToPdfTool() {
 
       const pdfBytes = await pdf.save();
       const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "images_to_pdf.pdf";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, "images_to_pdf.pdf");
     } catch (e) {
       console.error(e);
       setError("Conversion failed: " + (e instanceof Error ? e.message : String(e)));

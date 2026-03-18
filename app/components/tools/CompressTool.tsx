@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { PDFDocument } from "pdf-lib";
+import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
 export default function CompressTool() {
@@ -30,14 +31,7 @@ export default function CompressTool() {
       const bytes = await pdf.save({ useObjectStreams: true });
       const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
       setResult({ original: file.size, compressed: bytes.length });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `compressed_${file.name}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `compressed_${file.name}`);
     } catch (e: unknown) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Compression failed");

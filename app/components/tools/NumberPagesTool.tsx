@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
 export default function NumberPagesTool() {
@@ -57,14 +58,7 @@ export default function NumberPagesTool() {
 
       const bytes = await pdf.save();
       const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `numbered_${file.name}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `numbered_${file.name}`);
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Failed to add page numbers. Please try again.");

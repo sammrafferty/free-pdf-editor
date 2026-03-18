@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
 type ExtractionMode = "table" | "raw";
@@ -199,14 +200,7 @@ export default function PdfToExcelTool() {
       const blob = new Blob([wbout], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.name.replace(/\.pdf$/i, "") + ".xlsx";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, file.name.replace(/\.pdf$/i, "") + ".xlsx");
 
       setStatus(`Done! Extracted ${totalCells} cells across ${doc.numPages} sheet${doc.numPages > 1 ? "s" : ""}.`);
     } catch (e: unknown) {

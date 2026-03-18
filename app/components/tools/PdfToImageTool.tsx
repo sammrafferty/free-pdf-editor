@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
 export default function PdfToImageTool() {
@@ -72,14 +73,7 @@ export default function PdfToImageTool() {
 
       if (images.length === 1) {
         // Single page: download directly
-        const url = URL.createObjectURL(images[0].blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = images[0].name;
-        document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadBlob(images[0].blob, images[0].name);
       } else {
         // Multiple pages: bundle into a ZIP using JSZip
         const JSZip = (await import("jszip")).default;
@@ -88,14 +82,7 @@ export default function PdfToImageTool() {
           zip.file(img.name, img.blob);
         }
         const zipBlob = await zip.generateAsync({ type: "blob" });
-        const url = URL.createObjectURL(zipBlob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = file.name.replace(/\.pdf$/i, "") + "_pages.zip";
-        document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadBlob(zipBlob, file.name.replace(/\.pdf$/i, "") + "_pages.zip");
       }
     } catch (e) {
       console.error(e);

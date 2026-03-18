@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { PDFDocument } from "pdf-lib";
+import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
 export default function SignTool() {
@@ -113,14 +114,7 @@ export default function SignTool() {
 
       const bytes = await pdf.save();
       const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `signed_${file.name}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `signed_${file.name}`);
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Failed to sign PDF. Please try again.");

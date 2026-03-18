@@ -75,7 +75,13 @@ const toolComponents: Record<Tool, React.ComponentType> = {
 
 function HomeContent() {
   const [tool, setTool] = useState<Tool | null>(null);
-  const reset = () => setTool(null);
+  const reset = () => {
+    if (tool === null) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setTool(null);
+    }
+  };
 
   const ActiveTool = tool ? toolComponents[tool] : null;
 
@@ -108,6 +114,13 @@ function HomeContent() {
                 </svg>
                 All Tools
               </button>
+            )}
+            {!tool && (
+              <nav className="flex items-center gap-3 mr-1">
+                <Link href="/about" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "var(--text-muted)" }}>About</Link>
+                <Link href="/faq" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "var(--text-muted)" }}>FAQ</Link>
+                <Link href="/guides" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "var(--text-muted)" }}>Guides</Link>
+              </nav>
             )}
             <ThemeToggle />
           </div>

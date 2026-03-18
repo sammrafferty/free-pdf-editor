@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { PDFDocument } from "pdf-lib";
+import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
 export default function SplitTool() {
@@ -55,14 +56,7 @@ export default function SplitTool() {
 
       const bytes = await newPdf.save();
       const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `split_pages_${range.replace(/,/g, "_")}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `split_pages_${range.replace(/,/g, "_")}.pdf`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Split failed");
     }

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { PDFDocument } from "pdf-lib";
+import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
 export default function ExtractPagesTool() {
@@ -54,14 +55,7 @@ export default function ExtractPagesTool() {
 
       const bytes = await newPdf.save();
       const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `extracted_${selected.size}_pages.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `extracted_${selected.size}_pages.pdf`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Extraction failed");
     }
