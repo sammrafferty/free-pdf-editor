@@ -36,14 +36,14 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
   other: {
-    "theme-color": "#0A0A0A",
+    "theme-color": "#1a1a1a",
   },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0A0A0A",
+  themeColor: "#1a1a1a",
 };
 
 const jsonLd = {

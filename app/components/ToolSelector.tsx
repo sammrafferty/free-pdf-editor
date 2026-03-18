@@ -9,169 +9,153 @@ interface ToolDef {
   icon: React.ReactNode;
 }
 
-/* ── Icon helpers ─────────────────────────────────────── */
+/* ── SVG Icon helpers ─────────────────────────────────── */
 
-const mergeIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="7" width="8" height="14" rx="1" />
-    <rect x="14" y="3" width="8" height="14" rx="1" />
-    <path d="M10 14h4" />
-    <path d="M12 12v4" />
+const icon = (children: React.ReactNode) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    {children}
   </svg>
 );
 
-const splitIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <line x1="12" y1="11" x2="12" y2="17" strokeDasharray="2 2" />
-  </svg>
-);
+// Merge: two documents converging into one
+const mergeIcon = icon(<>
+  <path d="M4 4h6v16H4z" /><path d="M14 4h6v16h-6z" /><path d="M10 12h4" />
+</>);
 
-const compressIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3v6" />
-    <path d="M8 6l4 3 4-3" />
-    <path d="M12 21v-6" />
-    <path d="M8 18l4-3 4 3" />
-    <rect x="4" y="9" width="16" height="6" rx="1" />
-  </svg>
-);
+// Split: scissors cutting a page
+const splitIcon = icon(<>
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+  <polyline points="14 2 14 8 20 8" />
+  <line x1="4" y1="13" x2="20" y2="13" strokeDasharray="3 2" />
+</>);
 
-const rotateIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21.5 2v6h-6" />
-    <path d="M21.34 15.57a10 10 0 1 1-.57-8.38L21.5 8" />
-  </svg>
-);
+// Compress: arrows pushing inward
+const compressIcon = icon(<>
+  <path d="M4 14l4-4" /><path d="M4 10h4v4" />
+  <path d="M20 10l-4 4" /><path d="M20 14h-4v-4" />
+  <rect x="8" y="6" width="8" height="12" rx="1" />
+</>);
 
-const deleteIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <line x1="9" y1="13" x2="15" y2="13" />
-  </svg>
-);
+// Rotate: circular arrow
+const rotateIcon = icon(<>
+  <path d="M21 12a9 9 0 1 1-3-6.7" /><path d="M21 3v6h-6" />
+</>);
 
-const extractIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <path d="M9 15l3-3 3 3" />
-    <line x1="12" y1="12" x2="12" y2="18" />
-  </svg>
-);
+// Delete pages: page with X
+const deleteIcon = icon(<>
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+  <polyline points="14 2 14 8 20 8" />
+  <line x1="9" y1="13" x2="15" y2="19" /><line x1="15" y1="13" x2="9" y2="19" />
+</>);
 
-const watermarkIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-    <path d="M2 17l10 5 10-5" />
-    <path d="M2 12l10 5 10-5" />
-  </svg>
-);
+// Extract pages: page with arrow coming out
+const extractIcon = icon(<>
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+  <polyline points="14 2 14 8 20 8" />
+  <path d="M12 18v-6" /><path d="M9 15l3-3 3 3" />
+</>);
 
-const numberIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <text x="8" y="17" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">123</text>
-  </svg>
-);
+// Watermark: layers
+const watermarkIcon = icon(<>
+  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+  <path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+</>);
 
-const cropIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6.13 1L6 16a2 2 0 0 0 2 2h15" />
-    <path d="M1 6.13L16 6a2 2 0 0 1 2 2v15" />
-  </svg>
-);
+// Number pages: hash/number sign
+const numberIcon = icon(<>
+  <line x1="4" y1="9" x2="20" y2="9" /><line x1="4" y1="15" x2="20" y2="15" />
+  <line x1="10" y1="3" x2="8" y2="21" /><line x1="16" y1="3" x2="14" y2="21" />
+</>);
 
-const redactIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <rect x="7" y="7" width="10" height="4" rx="1" fill="currentColor" />
-  </svg>
-);
+// Crop: crop marks
+const cropIcon = icon(<>
+  <path d="M6.13 1L6 16a2 2 0 0 0 2 2h15" />
+  <path d="M1 6.13L16 6a2 2 0 0 1 2 2v15" />
+</>);
 
-const signIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-  </svg>
-);
+// Redact: eye-off (hidden content)
+const redactIcon = icon(<>
+  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+  <line x1="1" y1="1" x2="23" y2="23" />
+</>);
 
-const docIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <text x="7" y="17" fontSize="8" fill="currentColor" stroke="none" fontWeight="bold">W</text>
-  </svg>
-);
+// Sign: pen tool
+const signIcon = icon(<>
+  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+</>);
 
-const pdfIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <text x="6" y="17" fontSize="7" fill="currentColor" stroke="none" fontWeight="bold">PDF</text>
-  </svg>
-);
+// Image to PDF: image frame with arrow
+const imageInIcon = icon(<>
+  <rect x="3" y="3" width="18" height="18" rx="2" />
+  <circle cx="8.5" cy="8.5" r="1.5" />
+  <polyline points="21 15 16 10 5 21" />
+</>);
 
-const excelIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <line x1="8" y1="13" x2="16" y2="13" />
-    <line x1="8" y1="17" x2="16" y2="17" />
-    <line x1="12" y1="11" x2="12" y2="19" />
-  </svg>
-);
+// PDF to Image: page becoming image
+const imageOutIcon = icon(<>
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+  <polyline points="14 2 14 8 20 8" />
+  <circle cx="10" cy="13" r="1" /><path d="M8 18l2-3 2 2 3-4 3 5" />
+</>);
 
-const slideIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <rect x="8" y="12" width="8" height="5" rx="0.5" />
-    <line x1="10" y1="14" x2="14" y2="14" />
-  </svg>
-);
+// Word doc icon
+const docIcon = icon(<>
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+  <polyline points="14 2 14 8 20 8" />
+  <line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="13" y2="17" />
+</>);
 
-const imageOutIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <rect x="8" y="12" width="8" height="6" rx="1" />
-  </svg>
-);
+// PDF icon
+const pdfIcon = icon(<>
+  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+  <polyline points="14 2 14 8 20 8" />
+  <path d="M10 12v6" /><path d="M10 12h2a2 2 0 1 1 0 4h-2" />
+</>);
 
-const imageInIcon = (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <circle cx="8.5" cy="8.5" r="1.5" />
-    <polyline points="21 15 16 10 5 21" />
+// Excel: grid/table
+const excelIcon = icon(<>
+  <rect x="3" y="3" width="18" height="18" rx="2" />
+  <line x1="3" y1="9" x2="21" y2="9" /><line x1="3" y1="15" x2="21" y2="15" />
+  <line x1="9" y1="3" x2="9" y2="21" /><line x1="15" y1="3" x2="15" y2="21" />
+</>);
+
+// Slides: presentation
+const slideIcon = icon(<>
+  <rect x="2" y="3" width="20" height="14" rx="2" />
+  <line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+</>);
+
+// Arrow icon for conversion direction
+const arrowRight = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-40">
+    <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
   </svg>
 );
 
 /* ── Data ─────────────────────────────────────────────── */
 
 const popular: ToolDef[] = [
-  { id: "merge", label: "Merge PDFs", desc: "Combine multiple PDFs into one", color: "#3b82f6", icon: mergeIcon },
-  { id: "split", label: "Split PDF", desc: "Extract specific pages or ranges", color: "#6366f1", icon: splitIcon },
-  { id: "compress", label: "Compress PDF", desc: "Reduce file size", color: "#10b981", icon: compressIcon },
+  { id: "merge", label: "Merge PDFs", desc: "Combine multiple PDFs into one", color: "#6d9eeb", icon: mergeIcon },
+  { id: "split", label: "Split PDF", desc: "Extract specific pages or ranges", color: "#a78bfa", icon: splitIcon },
+  { id: "compress", label: "Compress PDF", desc: "Reduce file size", color: "#6ee7b7", icon: compressIcon },
 ];
 
 const organize: ToolDef[] = [
-  { id: "rotate", label: "Rotate Pages", desc: "Rotate all or specific pages", color: "#f59e0b", icon: rotateIcon },
-  { id: "delete", label: "Delete Pages", desc: "Remove unwanted pages", color: "#ef4444", icon: deleteIcon },
-  { id: "extract", label: "Extract Pages", desc: "Pick pages into a new PDF", color: "#8b5cf6", icon: extractIcon },
+  { id: "rotate", label: "Rotate Pages", desc: "Rotate all or specific pages", color: "#fbbf24", icon: rotateIcon },
+  { id: "delete", label: "Delete Pages", desc: "Remove unwanted pages", color: "#f87171", icon: deleteIcon },
+  { id: "extract", label: "Extract Pages", desc: "Pick pages into a new PDF", color: "#c4b5fd", icon: extractIcon },
 ];
 
 const edit: ToolDef[] = [
-  { id: "watermark", label: "Watermark", desc: "Add text watermark", color: "#0ea5e9", icon: watermarkIcon },
-  { id: "number", label: "Number Pages", desc: "Add page numbers", color: "#6366f1", icon: numberIcon },
-  { id: "crop", label: "Crop PDF", desc: "Trim margins", color: "#14b8a6", icon: cropIcon },
-  { id: "redact", label: "Redact", desc: "Black out sensitive areas", color: "#64748b", icon: redactIcon },
+  { id: "watermark", label: "Watermark", desc: "Add text watermark", color: "#67e8f9", icon: watermarkIcon },
+  { id: "number", label: "Number Pages", desc: "Add page numbers", color: "#a78bfa", icon: numberIcon },
+  { id: "crop", label: "Crop PDF", desc: "Trim margins", color: "#5eead4", icon: cropIcon },
+  { id: "redact", label: "Redact", desc: "Black out sensitive areas", color: "#94a3b8", icon: redactIcon },
 ];
 
-const sign: ToolDef[] = [
-  { id: "sign", label: "Sign PDF", desc: "Draw and embed your signature", color: "#d946ef", icon: signIcon },
+const signTools: ToolDef[] = [
+  { id: "sign", label: "Sign PDF", desc: "Draw and embed your signature", color: "#f0abfc", icon: signIcon },
 ];
 
 interface ConvertPair {
@@ -181,30 +165,35 @@ interface ConvertPair {
 
 const convertPairs: ConvertPair[] = [
   {
-    a: { id: "pdftodocx", label: "PDF → Word", desc: "Convert to editable DOCX", color: "#2563eb", icon: docIcon },
-    b: { id: "docxtopdf", label: "Word → PDF", desc: "Convert DOCX to PDF", color: "#2563eb", icon: pdfIcon },
+    a: { id: "pdftodocx", label: "PDF to Word", desc: "Convert to editable DOCX", color: "#60a5fa", icon: pdfIcon },
+    b: { id: "docxtopdf", label: "Word to PDF", desc: "Convert DOCX to PDF", color: "#60a5fa", icon: docIcon },
   },
   {
-    a: { id: "pdftoexcel", label: "PDF → Excel", desc: "Extract tables to spreadsheet", color: "#16a34a", icon: excelIcon },
-    b: { id: "exceltopdf", label: "Excel → PDF", desc: "Convert spreadsheet to PDF", color: "#16a34a", icon: pdfIcon },
+    a: { id: "pdftoexcel", label: "PDF to Excel", desc: "Extract tables to spreadsheet", color: "#4ade80", icon: pdfIcon },
+    b: { id: "exceltopdf", label: "Excel to PDF", desc: "Convert spreadsheet to PDF", color: "#4ade80", icon: excelIcon },
   },
   {
-    a: { id: "pdftopptx", label: "PDF → PPT", desc: "Convert to presentation slides", color: "#dc2626", icon: slideIcon },
-    b: { id: "pptxtopdf", label: "PPT → PDF", desc: "Convert slides to PDF", color: "#dc2626", icon: pdfIcon },
+    a: { id: "pdftopptx", label: "PDF to PPT", desc: "Convert to presentation slides", color: "#fb923c", icon: pdfIcon },
+    b: { id: "pptxtopdf", label: "PPT to PDF", desc: "Convert slides to PDF", color: "#fb923c", icon: slideIcon },
   },
   {
-    a: { id: "pdftoimage", label: "PDF → Image", desc: "Convert pages to PNG", color: "#ec4899", icon: imageOutIcon },
-    b: { id: "imagetopdf", label: "Image → PDF", desc: "Combine images into PDF", color: "#f97316", icon: imageInIcon },
+    a: { id: "pdftoimage", label: "PDF to Image", desc: "Convert pages to PNG", color: "#f472b6", icon: imageOutIcon },
+    b: { id: "imagetopdf", label: "Image to PDF", desc: "Combine images into PDF", color: "#fb923c", icon: imageInIcon },
   },
 ];
 
 /* ── Components ───────────────────────────────────────── */
 
-function CategoryHeader({ label, color }: { label: string; color: string }) {
+function CategoryHeader({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="w-0.5 h-5" style={{ backgroundColor: color }} />
-      <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}>{label}</h2>
+    <div className="flex items-center gap-3 mb-3">
+      <h2
+        className="text-xs font-medium uppercase tracking-widest"
+        style={{ color: "var(--text-muted)" }}
+      >
+        {label}
+      </h2>
+      <div className="flex-1 h-px" style={{ background: "var(--border-primary)" }} />
     </div>
   );
 }
@@ -213,20 +202,22 @@ function ToolCard({ tool, onSelect, index = 0 }: { tool: ToolDef; onSelect: (t: 
   return (
     <button
       onClick={() => onSelect(tool.id)}
-      className="group flex items-center gap-3.5 p-3 sm:p-5 text-left w-full tool-card-enter theme-card"
-      style={{
-        animationDelay: `${index * 30}ms`,
-      }}
+      className="group flex items-center gap-3.5 p-3.5 sm:p-4 text-left w-full tool-card-enter theme-card cursor-pointer"
+      style={{ animationDelay: `${index * 30}ms` }}
     >
       <div
-        className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200"
-        style={{ backgroundColor: tool.color + "18", color: tool.color }}
+        className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0 rounded-lg group-hover:scale-110 transition-transform duration-200"
+        style={{ backgroundColor: tool.color + "15", color: tool.color }}
       >
         {tool.icon}
       </div>
       <div className="min-w-0">
-        <div className="font-semibold text-sm sm:text-base leading-tight" style={{ color: "var(--text-primary)" }}>{tool.label}</div>
-        <div className="text-xs sm:text-sm leading-snug mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{tool.desc}</div>
+        <div className="font-medium text-sm leading-tight" style={{ color: "var(--text-primary)" }}>
+          {tool.label}
+        </div>
+        <div className="text-xs leading-snug mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
+          {tool.desc}
+        </div>
       </div>
     </button>
   );
@@ -236,20 +227,70 @@ function FeaturedCard({ tool, onSelect, index = 0 }: { tool: ToolDef; onSelect: 
   return (
     <button
       onClick={() => onSelect(tool.id)}
-      className="group flex flex-col items-center text-center p-5 sm:p-7 tool-card-enter theme-card-featured"
-      style={{
-        animationDelay: `${index * 30}ms`,
-      }}
+      className="group flex flex-col items-center text-center p-5 sm:p-6 tool-card-enter theme-card-featured cursor-pointer"
+      style={{ animationDelay: `${index * 30}ms` }}
     >
       <div
-        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-200"
-        style={{ backgroundColor: tool.color + "18", color: tool.color }}
+        className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center mb-3 rounded-xl group-hover:scale-110 transition-transform duration-200"
+        style={{ backgroundColor: tool.color + "15", color: tool.color }}
       >
         {tool.icon}
       </div>
-      <div className="font-semibold text-sm sm:text-base mb-0.5" style={{ color: "var(--text-primary)" }}>{tool.label}</div>
-      <div className="text-xs sm:text-sm leading-snug" style={{ color: "var(--text-muted)" }}>{tool.desc}</div>
+      <div className="font-medium text-sm sm:text-base mb-0.5" style={{ color: "var(--text-primary)" }}>
+        {tool.label}
+      </div>
+      <div className="text-xs leading-snug" style={{ color: "var(--text-muted)" }}>
+        {tool.desc}
+      </div>
     </button>
+  );
+}
+
+function ConvertCard({ pair, onSelect, index = 0 }: { pair: ConvertPair; onSelect: (t: Tool) => void; index: number }) {
+  return (
+    <div
+      className="grid grid-cols-2 gap-2 sm:gap-3 tool-card-enter"
+      style={{ animationDelay: `${index * 40}ms` }}
+    >
+      <button
+        onClick={() => onSelect(pair.a.id)}
+        className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
+      >
+        <div
+          className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center shrink-0 rounded-lg group-hover:scale-110 transition-transform duration-200"
+          style={{ backgroundColor: pair.a.color + "15", color: pair.a.color }}
+        >
+          {pair.a.icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-medium text-xs sm:text-sm leading-tight flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
+            {pair.a.label}
+          </div>
+          <div className="text-xs leading-snug mt-0.5 truncate hidden sm:block" style={{ color: "var(--text-muted)" }}>
+            {pair.a.desc}
+          </div>
+        </div>
+      </button>
+      <button
+        onClick={() => onSelect(pair.b.id)}
+        className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
+      >
+        <div
+          className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center shrink-0 rounded-lg group-hover:scale-110 transition-transform duration-200"
+          style={{ backgroundColor: pair.b.color + "15", color: pair.b.color }}
+        >
+          {pair.b.icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-medium text-xs sm:text-sm leading-tight flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
+            {pair.b.label}
+          </div>
+          <div className="text-xs leading-snug mt-0.5 truncate hidden sm:block" style={{ color: "var(--text-muted)" }}>
+            {pair.b.desc}
+          </div>
+        </div>
+      </button>
+    </div>
   );
 }
 
@@ -260,8 +301,8 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
     <div className="space-y-8 sm:space-y-10">
       {/* Most Popular */}
       <div>
-        <CategoryHeader label="Most Popular" color="#e5322d" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <CategoryHeader label="Most Popular" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {popular.map((t, i) => (
             <FeaturedCard key={t.id} tool={t} onSelect={onSelect} index={i} />
           ))}
@@ -270,8 +311,8 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
 
       {/* Organize */}
       <div>
-        <CategoryHeader label="Organize" color="#f59e0b" />
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <CategoryHeader label="Organize" />
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {organize.map((t, i) => (
             <ToolCard key={t.id} tool={t} onSelect={onSelect} index={i} />
           ))}
@@ -280,8 +321,8 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
 
       {/* Edit */}
       <div>
-        <CategoryHeader label="Edit" color="#0ea5e9" />
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <CategoryHeader label="Edit" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {edit.map((t, i) => (
             <ToolCard key={t.id} tool={t} onSelect={onSelect} index={i} />
           ))}
@@ -290,9 +331,9 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
 
       {/* Sign */}
       <div>
-        <CategoryHeader label="Sign" color="#d946ef" />
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {sign.map((t, i) => (
+        <CategoryHeader label="Sign" />
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          {signTools.map((t, i) => (
             <ToolCard key={t.id} tool={t} onSelect={onSelect} index={i} />
           ))}
         </div>
@@ -300,13 +341,10 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
 
       {/* Convert */}
       <div>
-        <CategoryHeader label="Convert" color="#2563eb" />
+        <CategoryHeader label="Convert" />
         <div className="space-y-3">
           {convertPairs.map((pair, pi) => (
-            <div key={pair.a.id} className="grid grid-cols-2 gap-3 sm:gap-4">
-              <ToolCard tool={pair.a} onSelect={onSelect} index={pi * 2} />
-              <ToolCard tool={pair.b} onSelect={onSelect} index={pi * 2 + 1} />
-            </div>
+            <ConvertCard key={pair.a.id} pair={pair} onSelect={onSelect} index={pi} />
           ))}
         </div>
       </div>
