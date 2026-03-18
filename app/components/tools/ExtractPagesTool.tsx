@@ -53,7 +53,9 @@ export default function ExtractPagesTool() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `extracted_${selected.size}_pages.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Extraction failed");

@@ -76,7 +76,9 @@ export default function PdfToImageTool() {
         const a = document.createElement("a");
         a.href = url;
         a.download = images[0].name;
-        a.click();
+        document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
         URL.revokeObjectURL(url);
       } else {
         // Multiple pages: bundle into a ZIP using JSZip
@@ -90,7 +92,9 @@ export default function PdfToImageTool() {
         const a = document.createElement("a");
         a.href = url;
         a.download = file.name.replace(/\.pdf$/i, "") + "_pages.zip";
-        a.click();
+        document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
     } catch (e) {

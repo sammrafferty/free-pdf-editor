@@ -54,7 +54,9 @@ export default function SplitTool() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `split_pages_${range.replace(/,/g, "_")}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e: any) {
       setError(e.message);

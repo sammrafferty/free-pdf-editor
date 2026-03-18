@@ -56,7 +56,9 @@ export default function DeletePagesTool() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `edited_${file.name}`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e: any) {
       setError(e.message);

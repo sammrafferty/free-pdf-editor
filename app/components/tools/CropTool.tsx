@@ -60,7 +60,9 @@ export default function CropTool() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `cropped_${file.name}`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);

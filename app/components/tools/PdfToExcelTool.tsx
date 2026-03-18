@@ -203,7 +203,9 @@ export default function PdfToExcelTool() {
       const a = document.createElement("a");
       a.href = url;
       a.download = file.name.replace(/\.pdf$/i, "") + ".xlsx";
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
       setStatus(`Done! Extracted ${totalCells} cells across ${doc.numPages} sheet${doc.numPages > 1 ? "s" : ""}.`);

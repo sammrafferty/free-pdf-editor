@@ -102,7 +102,9 @@ export default function RedactTool() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `redacted_${file.name}`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);

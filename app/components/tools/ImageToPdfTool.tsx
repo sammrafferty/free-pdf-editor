@@ -95,7 +95,9 @@ export default function ImageToPdfTool() {
       const a = document.createElement("a");
       a.href = url;
       a.download = "images_to_pdf.pdf";
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error(e);

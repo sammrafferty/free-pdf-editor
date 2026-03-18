@@ -710,7 +710,9 @@ export default function PdfToDocxTool() {
       const a = document.createElement("a");
       a.href = url;
       a.download = file.name.replace(/\.pdf$/i, "") + ".docx";
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
       setStatus(

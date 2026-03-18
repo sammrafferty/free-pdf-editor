@@ -49,7 +49,9 @@ export default function MergeTool() {
       const a = document.createElement("a");
       a.href = url;
       a.download = "merged.pdf";
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e: unknown) {
       console.error(e);

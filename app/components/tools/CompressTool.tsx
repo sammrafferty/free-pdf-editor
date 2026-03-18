@@ -32,7 +32,9 @@ export default function CompressTool() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `compressed_${file.name}`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e: unknown) {
       console.error(e);
