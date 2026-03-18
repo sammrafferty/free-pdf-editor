@@ -1,11 +1,56 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Dropzone from "../Dropzone";
+
+type StylePreset = "classic" | "professional" | "minimal" | "colorful";
+type Orientation = "landscape" | "portrait";
+
+interface PresetConfig {
+  label: string;
+  headerColor: [number, number, number] | null;
+  headerTextColor: number | [number, number, number];
+  altRowColor: [number, number, number] | null;
+  preview: { header: string; alt: string; border?: string };
+}
+
+const PRESETS: Record<StylePreset, PresetConfig> = {
+  classic: {
+    label: "Classic",
+    headerColor: [22, 163, 74],
+    headerTextColor: 255,
+    altRowColor: [240, 253, 244],
+    preview: { header: "#16a34a", alt: "#f0fdf4" },
+  },
+  professional: {
+    label: "Professional",
+    headerColor: [30, 64, 175],
+    headerTextColor: 255,
+    altRowColor: [239, 246, 255],
+    preview: { header: "#1e40af", alt: "#eff6ff" },
+  },
+  minimal: {
+    label: "Minimal",
+    headerColor: null,
+    headerTextColor: [30, 30, 30],
+    altRowColor: null,
+    preview: { header: "#f5f5f5", alt: "#ffffff", border: "#d4d4d4" },
+  },
+  colorful: {
+    label: "Colorful",
+    headerColor: [124, 58, 237],
+    headerTextColor: 255,
+    altRowColor: [245, 243, 255],
+    preview: { header: "#7c3aed", alt: "#f5f3ff" },
+  },
+};
 
 export default function ExcelToPdfTool() {
   const [file, setFile] = useState<File | null>(null);
   const [sheetNames, setSheetNames] = useState<string[]>([]);
   const [selectedSheets, setSelectedSheets] = useState<string[]>([]);
+  const [stylePreset, setStylePreset] = useState<StylePreset>("classic");
+  const [orientation, setOrientation] = useState<Orientation>("landscape");
+  const [suggestedOrientation, setSuggestedOrientation] = useState<Orientation | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -21,6 +66,21 @@ export default function ExcelToPdfTool() {
       const wb = XLSX.read(buf);
       setSheetNames(wb.SheetNames);
       setSelectedSheets(wb.SheetNames);
+
+      // Auto-detect orientation based on max column count
+      let maxCols = 0;
+      for (const sn of wb.SheetNames) {
+        const ws = wb.Sheets[sn];
+        if (!ws) continue;
+        const jsonData = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
+        if (jsonData.length > 0) {
+          const cols = (jsonData[0] as string[]).length;
+          if (cols > maxCols) maxCols = cols;
+        }
+      }
+      const suggested: Orientation = maxCols > 6 ? "landscape" : "portrait";
+      setSuggestedOrientation(suggested);
+      setOrientation(suggested);
     } catch (e: unknown) {
       console.error(e);
       setError("Could not read this file. It may be corrupted or unsupported.");
@@ -33,6 +93,8 @@ export default function ExcelToPdfTool() {
       prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name]
     );
   };
+
+  const preset = useMemo(() => PRESETS[stylePreset], [stylePreset]);
 
   const handleConvert = async () => {
     if (!file || selectedSheets.length === 0) return;
@@ -47,7 +109,7 @@ export default function ExcelToPdfTool() {
 
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf);
-      const pdf = new jsPDF("l", "pt", "a4"); // landscape for wide tables
+      const pdf = new jsPDF(orientation === "landscape" ? "l" : "p", "pt", "a4");
       let firstPage = true;
 
       for (const sheetName of selectedSheets) {
@@ -73,7 +135,26 @@ export default function ExcelToPdfTool() {
           (row as string[]).map((cell) => String(cell ?? ""))
         );
 
-        // Use autoTable
+        // Build styles based on preset
+        const headStyles: Record<string, unknown> = {
+          fontStyle: "bold",
+          fontSize: 9,
+        };
+        if (preset.headerColor) {
+          headStyles.fillColor = preset.headerColor;
+        } else {
+          // Minimal: no fill, bold text, bottom border
+          headStyles.fillColor = [255, 255, 255];
+          headStyles.lineWidth = { bottom: 1.5 };
+          headStyles.lineColor = [100, 100, 100];
+        }
+        headStyles.textColor = preset.headerTextColor;
+
+        const alternateRowStyles: Record<string, unknown> = {};
+        if (preset.altRowColor) {
+          alternateRowStyles.fillColor = preset.altRowColor;
+        }
+
         autoTable(pdf, {
           head: [headers],
           body: body,
@@ -84,15 +165,8 @@ export default function ExcelToPdfTool() {
             overflow: "linebreak",
             lineWidth: 0.5,
           },
-          headStyles: {
-            fillColor: [22, 163, 74], // green-600
-            textColor: 255,
-            fontStyle: "bold",
-            fontSize: 9,
-          },
-          alternateRowStyles: {
-            fillColor: [240, 253, 244], // green-50
-          },
+          headStyles,
+          alternateRowStyles,
           margin: { left: 40, right: 40 },
           tableLineColor: [200, 200, 200],
           tableLineWidth: 0.5,
@@ -145,7 +219,7 @@ export default function ExcelToPdfTool() {
                 <p className="text-xs theme-text-muted">{sheetNames.length} sheet{sheetNames.length !== 1 ? "s" : ""} &middot; {(file.size / 1024 / 1024).toFixed(1)} MB</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setSheetNames([]); setSelectedSheets([]); setError(""); setStatus(""); }} className="theme-text-muted  text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setSheetNames([]); setSelectedSheets([]); setError(""); setStatus(""); setSuggestedOrientation(null); }} className="theme-text-muted  text-sm font-medium">Remove</button>
           </div>
 
           {/* Sheet selector */}
@@ -167,6 +241,77 @@ export default function ExcelToPdfTool() {
               </div>
             </div>
           )}
+
+          {/* Style preset selector */}
+          <div>
+            <label className="block text-sm font-medium theme-text-secondary mb-2">Table Style</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.keys(PRESETS) as StylePreset[]).map((key) => {
+                const p = PRESETS[key];
+                const selected = stylePreset === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setStylePreset(key)}
+                    className={`p-3 rounded-xl border text-left text-sm font-medium transition-colors ${
+                      selected ? "ring-2 ring-offset-1" : "theme-bg-secondary theme-border hover:opacity-80"
+                    }`}
+                    style={selected ? { borderColor: accentColor, outlineColor: accentColor } : {}}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      {/* Color preview swatches */}
+                      <div className="flex gap-0.5">
+                        <div
+                          className="w-4 h-4 rounded-sm"
+                          style={{
+                            backgroundColor: p.preview.header,
+                            border: p.preview.border ? `1px solid ${p.preview.border}` : undefined,
+                          }}
+                        />
+                        <div
+                          className="w-4 h-4 rounded-sm"
+                          style={{
+                            backgroundColor: p.preview.alt,
+                            border: p.preview.border ? `1px solid ${p.preview.border}` : undefined,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <span className={selected ? "" : "theme-text-secondary"}>{p.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Orientation toggle */}
+          <div>
+            <label className="block text-sm font-medium theme-text-secondary mb-2">
+              Page Orientation
+              {suggestedOrientation && (
+                <span className="ml-2 text-xs font-normal theme-text-muted">
+                  (recommended: {suggestedOrientation})
+                </span>
+              )}
+            </label>
+            <div className="flex gap-2">
+              {([
+                { key: "landscape" as Orientation, label: "Landscape", icon: "&#9645;" },
+                { key: "portrait" as Orientation, label: "Portrait", icon: "&#9647;" },
+              ]).map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setOrientation(opt.key)}
+                  className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
+                    orientation === opt.key ? "text-white" : "theme-bg-secondary theme-border theme-text-secondary hover:opacity-80"
+                  }`}
+                  style={orientation === opt.key ? { backgroundColor: accentColor, borderColor: accentColor } : {}}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {error && (
             <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10">
@@ -196,7 +341,7 @@ export default function ExcelToPdfTool() {
           </button>
 
           <p className="text-xs theme-text-muted text-center leading-relaxed">
-            Renders spreadsheet data as formatted tables in PDF. Uses landscape orientation for wide tables.
+            Renders spreadsheet data as formatted tables in PDF. Choose a style and orientation to match your needs.
           </p>
         </div>
       )}

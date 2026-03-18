@@ -3,18 +3,48 @@ import { useState } from "react";
 import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
+type OutputFormat = "png" | "jpeg" | "webp";
+
+const FORMAT_OPTIONS: { value: OutputFormat; label: string; desc: string }[] = [
+  { value: "png", label: "PNG", desc: "Lossless" },
+  { value: "jpeg", label: "JPEG", desc: "Smaller files" },
+  { value: "webp", label: "WebP", desc: "Best compression" },
+];
+
+const MIME_MAP: Record<OutputFormat, string> = {
+  png: "image/png",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+};
+
+const EXT_MAP: Record<OutputFormat, string> = {
+  png: "png",
+  jpeg: "jpg",
+  webp: "webp",
+};
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function PdfToImageTool() {
   const [file, setFile] = useState<File | null>(null);
   const [pageCount, setPageCount] = useState(0);
   const [scale, setScale] = useState(2);
+  const [format, setFormat] = useState<OutputFormat>("png");
+  const [quality, setQuality] = useState(0.85);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
+  const [totalSize, setTotalSize] = useState<number | null>(null);
 
   const handleFile = async (files: File[]) => {
     const f = files[0];
     setFile(f);
     setError("");
+    setTotalSize(null);
     try {
       const pdfjsLib = await import("pdfjs-dist");
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
@@ -33,6 +63,7 @@ export default function PdfToImageTool() {
     setLoading(true);
     setProgress(0);
     setError("");
+    setTotalSize(null);
     try {
       const pdfjsLib = await import("pdfjs-dist");
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
@@ -43,6 +74,8 @@ export default function PdfToImageTool() {
       const ctx = canvas.getContext("2d")!;
 
       const images: { name: string; blob: Blob }[] = [];
+      const mime = MIME_MAP[format];
+      const ext = EXT_MAP[format];
 
       for (let i = 1; i <= doc.numPages; i++) {
         setProgress(i);
@@ -65,11 +98,15 @@ export default function PdfToImageTool() {
               if (b) resolve(b);
               else reject(new Error(`Failed to render page ${i}`));
             },
-            "image/png"
+            mime,
+            format !== "png" ? quality : undefined
           );
         });
-        images.push({ name: `page_${i}.png`, blob });
+        images.push({ name: `page_${i}.${ext}`, blob });
       }
+
+      const total = images.reduce((sum, img) => sum + img.blob.size, 0);
+      setTotalSize(total);
 
       if (images.length === 1) {
         // Single page: download directly
@@ -92,6 +129,8 @@ export default function PdfToImageTool() {
     setProgress(0);
   };
 
+  const formatLabel = format.toUpperCase();
+
   return (
     <div>
       {!file ? (
@@ -111,8 +150,48 @@ export default function PdfToImageTool() {
                 <p className="text-xs theme-text-muted">{pageCount} pages</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setPageCount(0); setError(""); }} className="theme-text-muted  text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setPageCount(0); setError(""); setTotalSize(null); }} className="theme-text-muted  text-sm font-medium">Remove</button>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium theme-text-secondary mb-2">Output format</label>
+            <div className="flex gap-2">
+              {FORMAT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setFormat(opt.value)}
+                  className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
+                    format === opt.value ? "text-white" : "theme-bg-secondary theme-border theme-text-secondary hover:opacity-80"
+                  }`}
+                  style={format === opt.value ? { backgroundColor: "#f472b6", borderColor: "#f472b6" } : {}}
+                >
+                  <span className="block">{opt.label}</span>
+                  <span className={`block text-xs mt-0.5 ${format === opt.value ? "text-white/80" : "theme-text-muted"}`}>{opt.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {format !== "png" && (
+            <div>
+              <label className="block text-sm font-medium theme-text-secondary mb-2">
+                Quality: {Math.round(quality * 100)}%
+              </label>
+              <input
+                type="range"
+                min={0.5}
+                max={1.0}
+                step={0.05}
+                value={quality}
+                onChange={(e) => setQuality(parseFloat(e.target.value))}
+                className="w-full accent-pink-400"
+              />
+              <div className="flex justify-between text-xs theme-text-muted mt-1">
+                <span>50%</span>
+                <span>100%</span>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium theme-text-secondary mb-2">Quality (scale factor)</label>
@@ -124,7 +203,7 @@ export default function PdfToImageTool() {
                   className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
                     scale === s ? "text-white" : "theme-bg-secondary theme-border theme-text-secondary hover:opacity-80"
                   }`}
-                  style={scale === s ? { backgroundColor: "#ec4899", borderColor: "#ec4899" } : {}}
+                  style={scale === s ? { backgroundColor: "#f472b6", borderColor: "#f472b6" } : {}}
                 >
                   {s === 1 ? "Standard" : s === 2 ? "High" : "Ultra"}
                 </button>
@@ -141,12 +220,20 @@ export default function PdfToImageTool() {
           {loading && (
             <div className="p-4 rounded-xl border theme-border" style={{ backgroundColor: "var(--bg-tertiary)" }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium" style={{ color: "#ec4899" }}>Converting...</span>
+                <span className="text-sm font-medium" style={{ color: "#f472b6" }}>Converting...</span>
                 <span className="text-xs theme-text-secondary">{progress} / {pageCount}</span>
               </div>
               <div className="w-full bg-pink-100 rounded-full h-2">
-                <div className="h-2 rounded-full transition-all" style={{ backgroundColor: "#ec4899", width: `${(progress / pageCount) * 100}%` }} />
+                <div className="h-2 rounded-full transition-all" style={{ backgroundColor: "#f472b6", width: `${(progress / pageCount) * 100}%` }} />
               </div>
+            </div>
+          )}
+
+          {totalSize !== null && !loading && (
+            <div className="p-3 rounded-xl border theme-border" style={{ backgroundColor: "var(--bg-tertiary)" }}>
+              <p className="text-sm theme-text-secondary">
+                Total size of exported images: <span className="font-semibold" style={{ color: "#f472b6" }}>{formatBytes(totalSize)}</span>
+              </p>
             </div>
           )}
 
@@ -154,9 +241,9 @@ export default function PdfToImageTool() {
             onClick={handleConvert}
             disabled={loading}
             className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
-            style={!loading ? { backgroundColor: "#ec4899" } : {}}
+            style={!loading ? { backgroundColor: "#f472b6" } : {}}
           >
-            {loading ? `Converting page ${progress}...` : `Convert to PNG${pageCount > 1 ? ` (${pageCount} images as ZIP)` : ""}`}
+            {loading ? `Converting page ${progress}...` : `Convert to ${formatLabel}${pageCount > 1 ? ` (${pageCount} images as ZIP)` : ""}`}
           </button>
         </div>
       )}

@@ -9,6 +9,7 @@ export default function PdfToPptxTool() {
   const [pageCount, setPageCount] = useState(0);
   const [quality, setQuality] = useState<QualityMode>("2x");
   const [includeText, setIncludeText] = useState(true);
+  const [textOverlay, setTextOverlay] = useState(false);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("");
@@ -87,6 +88,51 @@ export default function PdfToPptxTool() {
           w: slideW,
           h: slideH,
         });
+
+        // Text overlay: add selectable text boxes on top of the image
+        if (textOverlay) {
+          const textContent = await page.getTextContent();
+          const pageVp = page.getViewport({ scale: 1 });
+          const pageW = pageVp.width;
+          const pageH = pageVp.height;
+
+          for (const item of textContent.items) {
+            if (!("str" in item) || !item.str.trim()) continue;
+            const textItem = item as {
+              str: string;
+              transform: number[];
+              width: number;
+              height: number;
+            };
+
+            // pdfjs transform: [scaleX, skewX, skewY, scaleY, translateX, translateY]
+            const tx = textItem.transform[4];
+            const ty = textItem.transform[5];
+            const fontSize = Math.abs(textItem.transform[3]);
+
+            // Convert PDF coordinates (origin bottom-left) to slide coordinates (origin top-left)
+            const x = (tx / pageW) * slideW;
+            const y = ((pageH - ty) / pageH) * slideH;
+            const w = (textItem.width / pageW) * slideW;
+            // Approximate height from font size
+            const h = ((fontSize * 1.2) / pageH) * slideH;
+
+            // Map PDF font size to PowerPoint points (approximate)
+            const pptFontSize = Math.max(4, Math.round((fontSize / pageH) * slideH * 72));
+
+            slide.addText(textItem.str, {
+              x,
+              y: Math.max(0, y - h),
+              w: Math.max(w, 0.3),
+              h: Math.max(h, 0.15),
+              fontSize: pptFontSize,
+              color: "000000",
+              transparent: true,
+              valign: "bottom",
+              wrap: false,
+            } as Parameters<typeof slide.addText>[1]);
+          }
+        }
 
         // Extract text for notes
         if (includeText) {
@@ -169,6 +215,15 @@ export default function PdfToPptxTool() {
             <div>
               <span className="text-sm font-medium theme-text-secondary">Include text as slide notes</span>
               <p className="text-xs theme-text-muted">Extracted text will be added to speaker notes for searchability</p>
+            </div>
+          </label>
+
+          {/* Selectable text overlay option */}
+          <label className="flex items-center gap-3 p-3 theme-file-row rounded-xl cursor-pointer hover:opacity-90">
+            <input type="checkbox" checked={textOverlay} onChange={(e) => setTextOverlay(e.target.checked)} className="w-4 h-4 rounded accent-red-600" />
+            <div>
+              <span className="text-sm font-medium theme-text-secondary">Make text selectable (overlay text on slides)</span>
+              <p className="text-xs theme-text-muted">Places invisible text boxes over the slide image so text can be selected and searched in PowerPoint. May be imperfect for complex layouts.</p>
             </div>
           </label>
 
