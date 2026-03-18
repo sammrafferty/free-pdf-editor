@@ -63,6 +63,7 @@ export default function PdfToDocxTool() {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
 
   const handleFile = async (files: File[]) => {
     const f = files[0];
@@ -121,7 +122,81 @@ export default function PdfToDocxTool() {
     return items;
   };
 
-  const groupIntoLines = (items: TextItem[], pageHeight: number): LineGroup[] => {
+  const detectColumns = (items: TextItem[], pageWidth: number): TextItem[][] => {
+    if (items.length === 0) return [[]];
+
+    // Collect all starting X positions
+    const xPositions = items.map((it) => it.x);
+    xPositions.sort((a, b) => a - b);
+
+    // Cluster X positions: group items whose X values are within a threshold
+    const clusterThreshold = pageWidth * 0.05; // 5% of page width
+    const clusters: { center: number; count: number; minX: number; maxX: number }[] = [];
+
+    for (const x of xPositions) {
+      const existing = clusters.find(
+        (c) => Math.abs(x - c.center) < clusterThreshold
+      );
+      if (existing) {
+        existing.center =
+          (existing.center * existing.count + x) / (existing.count + 1);
+        existing.count++;
+        existing.minX = Math.min(existing.minX, x);
+        existing.maxX = Math.max(existing.maxX, x);
+      } else {
+        clusters.push({ center: x, count: 1, minX: x, maxX: x });
+      }
+    }
+
+    // Only keep clusters with meaningful item count (at least 5% of items)
+    const minCount = Math.max(2, items.length * 0.05);
+    const significantClusters = clusters
+      .filter((c) => c.count >= minCount)
+      .sort((a, b) => a.center - b.center);
+
+    if (significantClusters.length < 2) return [items];
+
+    // Check if clusters are separated by > 20% of page width
+    let hasColumnGap = false;
+    for (let i = 1; i < significantClusters.length; i++) {
+      const gap = significantClusters[i].center - significantClusters[i - 1].center;
+      if (gap > pageWidth * 0.2) {
+        hasColumnGap = true;
+        break;
+      }
+    }
+
+    if (!hasColumnGap) return [items];
+
+    // Find column boundaries: midpoints between significant clusters
+    const boundaries: number[] = [];
+    for (let i = 1; i < significantClusters.length; i++) {
+      const gap = significantClusters[i].center - significantClusters[i - 1].center;
+      if (gap > pageWidth * 0.2) {
+        boundaries.push(
+          (significantClusters[i - 1].center + significantClusters[i].center) / 2
+        );
+      }
+    }
+
+    // Assign items to columns based on boundaries
+    const columns: TextItem[][] = Array.from(
+      { length: boundaries.length + 1 },
+      () => []
+    );
+    for (const item of items) {
+      let colIdx = 0;
+      for (let b = 0; b < boundaries.length; b++) {
+        if (item.x > boundaries[b]) colIdx = b + 1;
+      }
+      columns[colIdx].push(item);
+    }
+
+    // Filter out empty columns
+    return columns.filter((col) => col.length > 0);
+  };
+
+  const groupItemsIntoLines = (items: TextItem[]): LineGroup[] => {
     if (items.length === 0) return [];
 
     // Sort by Y descending (PDF coords: bottom-up), then X ascending
@@ -141,7 +216,6 @@ export default function PdfToDocxTool() {
       if (Math.abs(item.y - currentY) <= yThreshold) {
         currentLine.push(item);
       } else {
-        // Sort current line items by X
         currentLine.sort((a, b) => a.x - b.x);
         lines.push(buildLineGroup(currentLine));
         currentLine = [item];
@@ -153,9 +227,23 @@ export default function PdfToDocxTool() {
       lines.push(buildLineGroup(currentLine));
     }
 
-    // Detect columns: if items cluster into distinct X regions
-    void pageHeight; // page height available for future use
     return lines;
+  };
+
+  const groupIntoLines = (items: TextItem[], pageWidth: number): LineGroup[] => {
+    if (items.length === 0) return [];
+
+    // Detect columns and process each independently
+    const columns = detectColumns(items, pageWidth);
+
+    // Process each column top-to-bottom, left column first
+    const allLines: LineGroup[] = [];
+    for (const colItems of columns) {
+      const colLines = groupItemsIntoLines(colItems);
+      allLines.push(...colLines);
+    }
+
+    return allLines;
   };
 
   const buildLineGroup = (items: TextItem[]): LineGroup => {
@@ -229,6 +317,18 @@ export default function PdfToDocxTool() {
       Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 12
     );
 
+    // Calculate median line spacing for better paragraph detection
+    const lineGaps: number[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const gap = lines[i - 1].y - lines[i].y;
+      if (gap > 0) lineGaps.push(gap);
+    }
+    lineGaps.sort((a, b) => a - b);
+    const medianLineSpacing =
+      lineGaps.length > 0
+        ? lineGaps[Math.floor(lineGaps.length / 2)]
+        : lines[0].avgFontSize * 1.4;
+
     const paragraphs: ParagraphGroup[] = [];
     let currentLines: LineGroup[] = [lines[0]];
 
@@ -236,9 +336,8 @@ export default function PdfToDocxTool() {
       const prevLine = lines[i - 1];
       const currLine = lines[i];
       const gap = prevLine.y - currLine.y;
-      const lineHeight = prevLine.avgFontSize * 1.4;
       const isNewParagraph =
-        gap > lineHeight * 1.8 ||
+        gap > medianLineSpacing * 1.8 ||
         Math.abs(currLine.avgFontSize - prevLine.avgFontSize) > 1 ||
         isBulletLine(currLine.text) ||
         isNumberedLine(currLine.text);
@@ -447,6 +546,33 @@ export default function PdfToDocxTool() {
     return images;
   };
 
+  const renderPageToImage = async (
+    page: import("pdfjs-dist").PDFPageProxy
+  ): Promise<ExtractedImage> => {
+    const scale = 2; // 2x scale for good quality
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext("2d")!;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/png")
+    );
+    if (!blob) throw new Error("Failed to render page to image");
+
+    const arrayBuf = await blob.arrayBuffer();
+    return {
+      data: new Uint8Array(arrayBuf),
+      width: viewport.width,
+      height: viewport.height,
+      format: "png",
+    };
+  };
+
   const extractPageContent = async (
     page: import("pdfjs-dist").PDFPageProxy,
     mode: QualityMode
@@ -456,7 +582,7 @@ export default function PdfToDocxTool() {
     const pageHeight = viewport.height;
 
     const textItems = await extractTextItems(page);
-    const lines = groupIntoLines(textItems, pageHeight);
+    const lines = groupIntoLines(textItems, pageWidth);
     const paragraphs = groupIntoParagraphs(lines, pageWidth);
 
     let images: ExtractedImage[] = [];
@@ -669,6 +795,7 @@ export default function PdfToDocxTool() {
     setProgress(0);
     setStatus("Loading PDF...");
     setError("");
+    setWarning("");
 
     try {
       const pdfjsLib = await import("pdfjs-dist");
@@ -677,43 +804,80 @@ export default function PdfToDocxTool() {
       const buf = await file.arrayBuffer();
       const doc = await pdfjsLib.getDocument({ data: buf }).promise;
       const totalPages = doc.numPages;
-      const pages: PageContent[] = [];
 
+      // First pass: count total text items to detect scanned PDFs
+      setStatus("Analyzing PDF content...");
+      let totalTextItems = 0;
       for (let i = 1; i <= totalPages; i++) {
-        setProgress(i);
-        setStatus(
-          quality === "full"
-            ? `Extracting text & images from page ${i} of ${totalPages}...`
-            : `Extracting text from page ${i} of ${totalPages}...`
-        );
         const page = await doc.getPage(i);
-        const content = await extractPageContent(page, quality);
-        pages.push(content);
+        const textItems = await extractTextItems(page);
+        totalTextItems += textItems.length;
       }
 
-      // Check if any text was found
-      const totalParagraphs = pages.reduce((s, p) => s + p.paragraphs.length, 0);
-      const totalImages = pages.reduce((s, p) => s + p.images.length, 0);
+      const isScannedPdf = totalTextItems < 10;
 
-      if (totalParagraphs === 0 && totalImages === 0) {
-        setError(
-          "No text or images could be extracted. This PDF may be a scanned document — OCR is not supported in the browser."
+      if (isScannedPdf) {
+        // Scanned PDF: render each page as an image and embed in DOCX
+        setWarning(
+          "This appears to be a scanned PDF. Pages will be embedded as images."
         );
-        setLoading(false);
-        return;
+
+        const pages: PageContent[] = [];
+        for (let i = 1; i <= totalPages; i++) {
+          setProgress(i);
+          setStatus(`Rendering page ${i} of ${totalPages} as image...`);
+          const page = await doc.getPage(i);
+          const viewport = page.getViewport({ scale: 1 });
+          const pageImage = await renderPageToImage(page);
+          pages.push({
+            paragraphs: [],
+            images: [pageImage],
+            width: viewport.width,
+            height: viewport.height,
+          });
+        }
+
+        setStatus("Building DOCX file...");
+        const blob = await buildDocx(pages);
+        downloadBlob(blob, file.name.replace(/\.pdf$/i, "") + ".docx");
+        setStatus(
+          `Done! Embedded ${totalPages} page${totalPages !== 1 ? "s" : ""} as images.`
+        );
+      } else {
+        // Normal text-based PDF extraction
+        const pages: PageContent[] = [];
+        for (let i = 1; i <= totalPages; i++) {
+          setProgress(i);
+          setStatus(
+            quality === "full"
+              ? `Extracting text & images from page ${i} of ${totalPages}...`
+              : `Extracting text from page ${i} of ${totalPages}...`
+          );
+          const page = await doc.getPage(i);
+          const content = await extractPageContent(page, quality);
+          pages.push(content);
+        }
+
+        const totalParagraphs = pages.reduce((s, p) => s + p.paragraphs.length, 0);
+        const totalImages = pages.reduce((s, p) => s + p.images.length, 0);
+
+        if (totalParagraphs === 0 && totalImages === 0) {
+          setError(
+            "No text or images could be extracted. This PDF may be a scanned document — OCR is not supported in the browser."
+          );
+          setLoading(false);
+          return;
+        }
+
+        setStatus("Building DOCX file...");
+        const blob = await buildDocx(pages);
+        downloadBlob(blob, file.name.replace(/\.pdf$/i, "") + ".docx");
+        setStatus(
+          `Done! Extracted ${totalParagraphs} paragraph${totalParagraphs !== 1 ? "s" : ""}${
+            totalImages > 0 ? ` and ${totalImages} image${totalImages !== 1 ? "s" : ""}` : ""
+          }.`
+        );
       }
-
-      setStatus("Building DOCX file...");
-      const blob = await buildDocx(pages);
-
-      // Download
-      downloadBlob(blob, file.name.replace(/\.pdf$/i, "") + ".docx");
-
-      setStatus(
-        `Done! Extracted ${totalParagraphs} paragraph${totalParagraphs !== 1 ? "s" : ""}${
-          totalImages > 0 ? ` and ${totalImages} image${totalImages !== 1 ? "s" : ""}` : ""
-        }.`
-      );
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error("PDF to DOCX error:", e);
@@ -769,6 +933,7 @@ export default function PdfToDocxTool() {
                 setFile(null);
                 setPageCount(0);
                 setError("");
+                setWarning("");
                 setStatus("");
               }}
               className="theme-text-muted  text-sm font-medium"
@@ -815,6 +980,13 @@ export default function PdfToDocxTool() {
               ))}
             </div>
           </div>
+
+          {/* Warning message */}
+          {warning && (
+            <div className="p-4 rounded-xl border border-yellow-500/30 bg-yellow-500/10">
+              <p className="text-sm text-yellow-700">{warning}</p>
+            </div>
+          )}
 
           {/* Error message */}
           {error && (
@@ -867,8 +1039,8 @@ export default function PdfToDocxTool() {
 
           {/* Info note */}
           <p className="text-xs theme-text-muted text-center leading-relaxed">
-            Works best with text-based PDFs. Scanned documents (image-only PDFs) require OCR which
-            isn&apos;t available in the browser.
+            Works best with text-based PDFs. Scanned documents will be embedded as page images
+            in the Word file (text in scanned pages is not searchable).
           </p>
         </div>
       )}

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Dropzone from "../Dropzone";
 
 export default function DocxToPdfTool() {
@@ -7,7 +7,6 @@ export default function DocxToPdfTool() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
-  const hiddenRef = useRef<HTMLDivElement>(null);
 
   const handleFile = (files: File[]) => {
     setFile(files[0]);
@@ -34,83 +33,326 @@ export default function DocxToPdfTool() {
         return;
       }
 
-      setStatus("Rendering document...");
-
-      // Create a hidden container for rendering
-      const container = hiddenRef.current;
-      if (!container) throw new Error("Render container not found");
-
-      container.innerHTML = `<div style="
-        width: 595px; padding: 50px; font-family: 'Times New Roman', serif;
-        font-size: 12pt; line-height: 1.5; color: #000; background: #fff;
-      ">${result.value}</div>`;
-
-      // Style tables, headings, etc.
-      const style = document.createElement("style");
-      style.textContent = `
-        .docx-render-container table { border-collapse: collapse; width: 100%; margin: 10px 0; }
-        .docx-render-container td, .docx-render-container th { border: 1px solid #ccc; padding: 6px 8px; font-size: 11pt; }
-        .docx-render-container h1 { font-size: 22pt; font-weight: bold; margin: 16px 0 8px; }
-        .docx-render-container h2 { font-size: 18pt; font-weight: bold; margin: 14px 0 6px; }
-        .docx-render-container h3 { font-size: 14pt; font-weight: bold; margin: 12px 0 6px; }
-        .docx-render-container p { margin: 4px 0; }
-        .docx-render-container ul, .docx-render-container ol { margin: 4px 0; padding-left: 24px; }
-        .docx-render-container img { max-width: 100%; }
-      `;
-      container.appendChild(style);
-      container.className = "docx-render-container";
-
-      // Wait for images to load
-      const imgs = container.querySelectorAll("img");
-      if (imgs.length > 0) {
-        await Promise.all(
-          Array.from(imgs).map(
-            (img) =>
-              new Promise<void>((resolve) => {
-                if (img.complete) resolve();
-                else {
-                  img.onload = () => resolve();
-                  img.onerror = () => resolve();
-                }
-              })
-          )
-        );
-      }
-
       setStatus("Generating PDF...");
 
-      const html2canvasModule = await import("html2canvas");
-      const html2canvas = html2canvasModule.default;
       const { jsPDF } = await import("jspdf");
+      const autoTableModule = await import("jspdf-autotable");
+      const autoTable = autoTableModule.default;
 
-      const renderTarget = container.firstElementChild as HTMLElement;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const canvas = await (html2canvas as any)(renderTarget, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-
-      const imgWidth = 595.28; // A4 width in points
-      const pageHeight = 841.89; // A4 height in points
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const PAGE_WIDTH = 595.28;
+      const PAGE_HEIGHT = 841.89;
+      const MARGIN = 50;
+      const MAX_WIDTH = PAGE_WIDTH - MARGIN * 2;
+      const USABLE_HEIGHT = PAGE_HEIGHT - MARGIN * 2;
 
       const pdf = new jsPDF("p", "pt", "a4");
-      let heightLeft = imgHeight;
-      let position = 0;
+      let y = MARGIN;
 
-      pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      const HEADING_SIZES: Record<string, number> = {
+        H1: 22, H2: 18, H3: 16, H4: 14, H5: 13, H6: 12,
+      };
+      const DEFAULT_SIZE = 12;
+      const LINE_HEIGHT_FACTOR = 1.4;
+      const PARAGRAPH_SPACING = 8;
 
-      while (heightLeft > 0) {
-        position -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      function ensureSpace(needed: number) {
+        if (y + needed > PAGE_HEIGHT - MARGIN) {
+          pdf.addPage();
+          y = MARGIN;
+        }
       }
 
-      // Clean up
-      container.innerHTML = "";
+      function setFont(style: "normal" | "bold" | "italic" | "bolditalic", size: number) {
+        pdf.setFontSize(size);
+        pdf.setFont("Helvetica", style);
+      }
+
+      function getFontStyle(bold: boolean, italic: boolean): "normal" | "bold" | "italic" | "bolditalic" {
+        if (bold && italic) return "bolditalic";
+        if (bold) return "bold";
+        if (italic) return "italic";
+        return "normal";
+      }
+
+      // Render inline text content from an element, handling nested bold/italic
+      function renderInlineText(
+        el: Element,
+        fontSize: number,
+        inheritBold: boolean,
+        inheritItalic: boolean,
+        indent: number,
+        prefix: string
+      ) {
+        // Collect all text runs with their styles
+        const runs: { text: string; bold: boolean; italic: boolean }[] = [];
+        collectRuns(el, inheritBold, inheritItalic, runs);
+
+        const fullText = (prefix + runs.map((r) => r.text).join("")).trim();
+        if (!fullText) return;
+
+        const lineHeight = fontSize * LINE_HEIGHT_FACTOR;
+        const availWidth = MAX_WIDTH - indent;
+
+        // If all runs share the same style, render simply
+        const allSameStyle = runs.every(
+          (r) => r.bold === runs[0]?.bold && r.italic === runs[0]?.italic
+        );
+
+        if (allSameStyle || runs.length <= 1) {
+          const bold = runs[0]?.bold ?? inheritBold;
+          const italic = runs[0]?.italic ?? inheritItalic;
+          setFont(getFontStyle(bold, italic), fontSize);
+          const lines: string[] = pdf.splitTextToSize(fullText, availWidth);
+          for (const line of lines) {
+            ensureSpace(lineHeight);
+            pdf.text(line, MARGIN + indent, y);
+            y += lineHeight;
+          }
+        } else {
+          // Mixed styles: render all as single block with dominant style
+          // (Full mixed-style inline rendering on a single line is complex;
+          //  we approximate by using the outermost style for wrapping.)
+          setFont(getFontStyle(inheritBold, inheritItalic), fontSize);
+          const lines: string[] = pdf.splitTextToSize(fullText, availWidth);
+          for (const line of lines) {
+            ensureSpace(lineHeight);
+            // Determine which runs contribute to this line and render segments
+            pdf.text(line, MARGIN + indent, y);
+            y += lineHeight;
+          }
+        }
+      }
+
+      function collectRuns(
+        node: Node,
+        bold: boolean,
+        italic: boolean,
+        runs: { text: string; bold: boolean; italic: boolean }[]
+      ) {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          const child = node.childNodes[i];
+          if (child.nodeType === Node.TEXT_NODE) {
+            const text = child.textContent || "";
+            if (text) runs.push({ text, bold, italic });
+          } else if (child.nodeType === Node.ELEMENT_NODE) {
+            const tag = (child as Element).tagName;
+            const nextBold = bold || tag === "STRONG" || tag === "B";
+            const nextItalic = italic || tag === "EM" || tag === "I";
+            if (tag === "BR") {
+              runs.push({ text: "\n", bold, italic });
+            } else {
+              collectRuns(child, nextBold, nextItalic, runs);
+            }
+          }
+        }
+      }
+
+      function renderElement(el: Element, indent: number, listCounter?: { count: number }) {
+        const tag = el.tagName;
+
+        // Headings
+        if (HEADING_SIZES[tag]) {
+          const size = HEADING_SIZES[tag];
+          const lineHeight = size * LINE_HEIGHT_FACTOR;
+          ensureSpace(lineHeight);
+          y += 4; // small top margin before heading
+          renderInlineText(el, size, true, false, indent, "");
+          y += PARAGRAPH_SPACING;
+          return;
+        }
+
+        // Paragraph
+        if (tag === "P") {
+          renderInlineText(el, DEFAULT_SIZE, false, false, indent, "");
+          y += PARAGRAPH_SPACING;
+          return;
+        }
+
+        // Line break
+        if (tag === "BR") {
+          y += DEFAULT_SIZE * LINE_HEIGHT_FACTOR;
+          return;
+        }
+
+        // Unordered list
+        if (tag === "UL") {
+          for (let i = 0; i < el.children.length; i++) {
+            const li = el.children[i];
+            if (li.tagName === "LI") {
+              // Check for nested lists
+              let hasNestedList = false;
+              for (let j = 0; j < li.children.length; j++) {
+                const child = li.children[j];
+                if (child.tagName === "UL" || child.tagName === "OL") {
+                  // Render text content before nested list
+                  const textContent = getDirectTextContent(li);
+                  if (textContent.trim()) {
+                    renderInlineText(li, DEFAULT_SIZE, false, false, indent + 20, "\u2022 ");
+                    y += 2;
+                  }
+                  renderElement(child, indent + 20);
+                  hasNestedList = true;
+                }
+              }
+              if (!hasNestedList) {
+                renderInlineText(li, DEFAULT_SIZE, false, false, indent + 20, "\u2022 ");
+                y += 2;
+              }
+            }
+          }
+          y += PARAGRAPH_SPACING;
+          return;
+        }
+
+        // Ordered list
+        if (tag === "OL") {
+          let counter = 1;
+          for (let i = 0; i < el.children.length; i++) {
+            const li = el.children[i];
+            if (li.tagName === "LI") {
+              let hasNestedList = false;
+              for (let j = 0; j < li.children.length; j++) {
+                const child = li.children[j];
+                if (child.tagName === "UL" || child.tagName === "OL") {
+                  const textContent = getDirectTextContent(li);
+                  if (textContent.trim()) {
+                    renderInlineText(li, DEFAULT_SIZE, false, false, indent + 20, `${counter}. `);
+                    y += 2;
+                  }
+                  renderElement(child, indent + 20);
+                  hasNestedList = true;
+                }
+              }
+              if (!hasNestedList) {
+                renderInlineText(li, DEFAULT_SIZE, false, false, indent + 20, `${counter}. `);
+                y += 2;
+              }
+              counter++;
+            }
+          }
+          y += PARAGRAPH_SPACING;
+          return;
+        }
+
+        // Table
+        if (tag === "TABLE") {
+          const head: string[][] = [];
+          const body: string[][] = [];
+
+          const thead = el.querySelector("thead");
+          const tbody = el.querySelector("tbody");
+
+          if (thead) {
+            thead.querySelectorAll("tr").forEach((tr) => {
+              const row: string[] = [];
+              tr.querySelectorAll("th, td").forEach((cell) => {
+                row.push(cell.textContent?.trim() || "");
+              });
+              head.push(row);
+            });
+          }
+
+          const bodySource = tbody || el;
+          bodySource.querySelectorAll("tr").forEach((tr) => {
+            // Skip rows that were already in thead
+            if (thead && tr.parentElement === thead) return;
+            const row: string[] = [];
+            tr.querySelectorAll("th, td").forEach((cell) => {
+              row.push(cell.textContent?.trim() || "");
+            });
+            if (row.length > 0) body.push(row);
+          });
+
+          if (body.length > 0 || head.length > 0) {
+            ensureSpace(40);
+            autoTable(pdf, {
+              startY: y,
+              head: head.length > 0 ? head : undefined,
+              body: body,
+              margin: { left: MARGIN + indent, right: MARGIN },
+              styles: { fontSize: 10, font: "Helvetica" },
+              headStyles: { fillColor: [66, 66, 66] },
+              theme: "grid",
+            });
+            // @ts-expect-error lastAutoTable is added by jspdf-autotable
+            y = pdf.lastAutoTable.finalY + PARAGRAPH_SPACING;
+          }
+          return;
+        }
+
+        // Image
+        if (tag === "IMG") {
+          const src = el.getAttribute("src");
+          if (src && src.startsWith("data:")) {
+            try {
+              // Determine format from data URI
+              let format = "PNG";
+              if (src.includes("image/jpeg") || src.includes("image/jpg")) format = "JPEG";
+              else if (src.includes("image/png")) format = "PNG";
+              else if (src.includes("image/gif")) format = "GIF";
+
+              // Create a temporary image to get dimensions
+              const img = new Image();
+              img.src = src;
+
+              // Use reasonable defaults - scale to fit page width
+              let imgWidth = MAX_WIDTH - indent;
+              let imgHeight = imgWidth * 0.6; // default aspect ratio
+
+              // Try to get actual dimensions
+              if (img.naturalWidth && img.naturalHeight) {
+                const ratio = img.naturalHeight / img.naturalWidth;
+                imgWidth = Math.min(MAX_WIDTH - indent, img.naturalWidth);
+                imgHeight = imgWidth * ratio;
+              }
+
+              // Cap height to usable page height
+              if (imgHeight > USABLE_HEIGHT * 0.8) {
+                imgHeight = USABLE_HEIGHT * 0.8;
+                imgWidth = imgHeight / ((img.naturalHeight || 1) / (img.naturalWidth || 1));
+              }
+
+              ensureSpace(imgHeight + 10);
+              pdf.addImage(src, format, MARGIN + indent, y, imgWidth, imgHeight);
+              y += imgHeight + PARAGRAPH_SPACING;
+            } catch (e) {
+              console.warn("Failed to add image to PDF:", e);
+            }
+          }
+          return;
+        }
+
+        // Generic container (div, span, etc.) — recurse into children
+        for (let i = 0; i < el.children.length; i++) {
+          renderElement(el.children[i], indent, listCounter);
+        }
+      }
+
+      function getDirectTextContent(el: Element): string {
+        let text = "";
+        for (let i = 0; i < el.childNodes.length; i++) {
+          const child = el.childNodes[i];
+          if (child.nodeType === Node.TEXT_NODE) {
+            text += child.textContent || "";
+          } else if (child.nodeType === Node.ELEMENT_NODE) {
+            const tag = (child as Element).tagName;
+            if (tag !== "UL" && tag !== "OL") {
+              text += child.textContent || "";
+            }
+          }
+        }
+        return text;
+      }
+
+      // Parse HTML and render
+      setStatus("Rendering content to PDF...");
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(result.value, "text/html");
+      const bodyChildren = doc.body.children;
+
+      for (let i = 0; i < bodyChildren.length; i++) {
+        renderElement(bodyChildren[i], 0);
+      }
 
       pdf.save(file.name.replace(/\.docx$/i, "") + ".pdf");
       setStatus("Done! PDF downloaded.");
@@ -126,12 +368,6 @@ export default function DocxToPdfTool() {
 
   return (
     <div>
-      {/* Hidden render container */}
-      <div
-        ref={hiddenRef}
-        style={{ position: "absolute", left: "-9999px", top: 0, zIndex: -1 }}
-      />
-
       {!file ? (
         <Dropzone
           onFiles={handleFile}
