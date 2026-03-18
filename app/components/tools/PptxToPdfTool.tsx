@@ -2,9 +2,30 @@
 import { useState } from "react";
 import Dropzone from "../Dropzone";
 
+interface TextItem {
+  text: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  fontSize: number;
+  bold: boolean;
+  italic: boolean;
+  color: string;
+}
+
+interface TableItem {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  rows: string[][];
+}
+
 interface SlideContent {
-  texts: { text: string; x: number; y: number; w: number; h: number; fontSize: number; bold: boolean; italic: boolean; color: string }[];
+  texts: TextItem[];
   images: { data: string; x: number; y: number; w: number; h: number }[];
+  tables: TableItem[];
 }
 
 export default function PptxToPdfTool() {
@@ -21,14 +42,78 @@ export default function PptxToPdfTool() {
     setStatus("");
   };
 
-  const parseColor = (colorEl: Element | null): string => {
+  // Default fallback colors for scheme color names
+  const defaultSchemeColors: Record<string, string> = {
+    dk1: "#000000",
+    lt1: "#FFFFFF",
+    dk2: "#44546A",
+    lt2: "#E7E6E6",
+    accent1: "#4472C4",
+    accent2: "#ED7D31",
+    accent3: "#A5A5A5",
+    accent4: "#FFC000",
+    accent5: "#5B9BD5",
+    accent6: "#70AD47",
+    hlink: "#0563C1",
+    folHlink: "#954F72",
+  };
+
+  const parseThemeColors = (themeXml: string): Record<string, string> => {
+    const colorMap: Record<string, string> = { ...defaultSchemeColors };
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(themeXml, "text/xml");
+      const clrScheme = doc.querySelector("a\\:clrScheme, clrScheme");
+      if (!clrScheme) return colorMap;
+
+      for (const child of Array.from(clrScheme.children)) {
+        const tagName = child.localName || child.tagName.replace(/^.*:/, "");
+        const srgb = child.querySelector("a\\:srgbClr, srgbClr");
+        const sysClr = child.querySelector("a\\:sysClr, sysClr");
+        let hex = "";
+        if (srgb) {
+          hex = srgb.getAttribute("val") || "";
+        } else if (sysClr) {
+          hex = sysClr.getAttribute("lastClr") || sysClr.getAttribute("val") || "";
+        }
+        if (hex) {
+          colorMap[tagName] = "#" + hex;
+        }
+      }
+    } catch {
+      // use defaults
+    }
+    return colorMap;
+  };
+
+  const parseColor = (colorEl: Element | null, themeColors: Record<string, string>): string => {
     if (!colorEl) return "#000000";
     const srgb = colorEl.querySelector("a\\:srgbClr, srgbClr");
     if (srgb) return "#" + (srgb.getAttribute("val") || "000000");
+    const schemeClr = colorEl.querySelector("a\\:schemeClr, schemeClr");
+    if (schemeClr) {
+      const val = schemeClr.getAttribute("val") || "";
+      return themeColors[val] || defaultSchemeColors[val] || "#000000";
+    }
     return "#000000";
   };
 
   const emuToPoints = (emu: number): number => emu / 12700;
+
+  const extractCellText = (tc: Element): string => {
+    const parts: string[] = [];
+    const paragraphs = tc.querySelectorAll("a\\:p, p");
+    for (const para of Array.from(paragraphs)) {
+      const runs = para.querySelectorAll("a\\:r, r");
+      let paraText = "";
+      for (const run of Array.from(runs)) {
+        const tEl = run.querySelector("a\\:t, t");
+        if (tEl) paraText += tEl.textContent || "";
+      }
+      if (paraText) parts.push(paraText);
+    }
+    return parts.join("\n");
+  };
 
   const handleConvert = async () => {
     if (!file) return;
@@ -40,9 +125,24 @@ export default function PptxToPdfTool() {
     try {
       const JSZip = (await import("jszip")).default;
       const { jsPDF } = await import("jspdf");
+      const autoTableModule = await import("jspdf-autotable");
+      // jspdf-autotable adds itself to jsPDF prototype on import; access it via default export
+      const autoTable = autoTableModule.default;
 
       const buf = await file.arrayBuffer();
       const zip = await JSZip.loadAsync(buf);
+
+      // Parse theme colors from theme XML
+      let themeColors: Record<string, string> = { ...defaultSchemeColors };
+      try {
+        const themeFile = zip.file("ppt/theme/theme1.xml");
+        if (themeFile) {
+          const themeXml = await themeFile.async("text");
+          themeColors = parseThemeColors(themeXml);
+        }
+      } catch {
+        // use defaults
+      }
 
       // Find all slide files
       const slideFiles: string[] = [];
@@ -135,22 +235,23 @@ export default function PptxToPdfTool() {
         const slideDoc = parser.parseFromString(xmlText, "text/xml");
         const rels = await loadMedia(slideNum);
 
-        const slideContent: SlideContent = { texts: [], images: [] };
+        const slideContent: SlideContent = { texts: [], images: [], tables: [] };
 
-        // Extract shapes with text
+        // Extract shapes (including group shapes)
         const spTree = slideDoc.querySelectorAll("p\\:sp, sp");
         for (const sp of Array.from(spTree)) {
-          // Get position
+          // Get position and dimensions from the shape's transform
           const off = sp.querySelector("a\\:off, off");
           const ext = sp.querySelector("a\\:ext, ext");
-          const x = off ? emuToPoints(parseInt(off.getAttribute("x") || "0")) : 0;
-          const y = off ? emuToPoints(parseInt(off.getAttribute("y") || "0")) : 0;
-          const w = ext ? emuToPoints(parseInt(ext.getAttribute("cx") || "0")) : slideW;
-          const _h = ext ? emuToPoints(parseInt(ext.getAttribute("cy") || "0")) : 50;
+          const shapeX = off ? emuToPoints(parseInt(off.getAttribute("x") || "0")) : 0;
+          const shapeY = off ? emuToPoints(parseInt(off.getAttribute("y") || "0")) : 0;
+          const shapeW = ext ? emuToPoints(parseInt(ext.getAttribute("cx") || "0")) : slideW;
+          const shapeH = ext ? emuToPoints(parseInt(ext.getAttribute("cy") || "0")) : 50;
 
-          // Extract text runs
+          // Collect all paragraph data first to calculate total height
+          const paraDataList: { text: string; fontSize: number; bold: boolean; italic: boolean; color: string }[] = [];
           const paragraphs = sp.querySelectorAll("a\\:p, p");
-          let textY = y;
+
           for (const para of Array.from(paragraphs)) {
             const runs = para.querySelectorAll("a\\:r, r");
             let paraText = "";
@@ -168,22 +269,97 @@ export default function PptxToPdfTool() {
 
               if (rPr) {
                 const sz = rPr.getAttribute("sz");
+                // OOXML sz is in hundredths of a point: sz="1800" = 18pt
                 if (sz) fontSize = parseInt(sz) / 100;
                 bold = rPr.getAttribute("b") === "1";
                 italic = rPr.getAttribute("i") === "1";
                 const solidFill = rPr.querySelector("a\\:solidFill, solidFill");
-                if (solidFill) color = parseColor(solidFill);
+                if (solidFill) color = parseColor(solidFill, themeColors);
               }
             }
 
             if (paraText.trim()) {
-              slideContent.texts.push({
-                text: paraText,
-                x, y: textY, w, h: fontSize * 1.4,
-                fontSize, bold, italic, color,
-              });
-              textY += fontSize * 1.4;
+              paraDataList.push({ text: paraText, fontSize, bold, italic, color });
             }
+          }
+
+          if (paraDataList.length === 0) continue;
+
+          // Calculate total text height to check if it fits in the bounding box
+          const lineHeight = 1.4;
+          let totalTextHeight = 0;
+          for (const pd of paraDataList) {
+            totalTextHeight += pd.fontSize * lineHeight;
+          }
+
+          // Determine scale factor if text overflows the shape's bounding box
+          let scaleFactor = 1;
+          if (shapeH > 0 && totalTextHeight > shapeH) {
+            scaleFactor = shapeH / totalTextHeight;
+          }
+
+          // Place text items within the shape bounding box
+          let textY = shapeY;
+          for (const pd of paraDataList) {
+            const effectiveFontSize = pd.fontSize * scaleFactor;
+            const itemHeight = effectiveFontSize * lineHeight;
+
+            // Clip: do not render text that falls outside the shape box
+            if (shapeH > 0 && (textY + itemHeight - shapeY) > shapeH + 1) {
+              break;
+            }
+
+            slideContent.texts.push({
+              text: pd.text,
+              x: shapeX,
+              y: textY,
+              w: shapeW,
+              h: itemHeight,
+              fontSize: effectiveFontSize,
+              bold: pd.bold,
+              italic: pd.italic,
+              color: pd.color,
+            });
+            textY += itemHeight;
+          }
+        }
+
+        // Extract tables from graphicFrame shapes
+        const graphicFrames = slideDoc.querySelectorAll("p\\:graphicFrame, graphicFrame");
+        for (const gf of Array.from(graphicFrames)) {
+          const tbl = gf.querySelector("a\\:tbl, tbl");
+          if (!tbl) continue;
+
+          // Get table position
+          const off = gf.querySelector("a\\:off, off");
+          const ext = gf.querySelector("a\\:ext, ext");
+          const tableX = off ? emuToPoints(parseInt(off.getAttribute("x") || "0")) : 0;
+          const tableY = off ? emuToPoints(parseInt(off.getAttribute("y") || "0")) : 0;
+          const tableW = ext ? emuToPoints(parseInt(ext.getAttribute("cx") || "0")) : slideW;
+          const tableH = ext ? emuToPoints(parseInt(ext.getAttribute("cy") || "0")) : 100;
+
+          // Parse table rows
+          const rows: string[][] = [];
+          const trElements = tbl.querySelectorAll("a\\:tr, tr");
+          for (const tr of Array.from(trElements)) {
+            const cells: string[] = [];
+            const tcElements = tr.querySelectorAll("a\\:tc, tc");
+            for (const tc of Array.from(tcElements)) {
+              cells.push(extractCellText(tc));
+            }
+            if (cells.length > 0) {
+              rows.push(cells);
+            }
+          }
+
+          if (rows.length > 0) {
+            slideContent.tables.push({
+              x: tableX,
+              y: tableY,
+              w: tableW,
+              h: tableH,
+              rows,
+            });
           }
         }
 
@@ -250,8 +426,42 @@ export default function PptxToPdfTool() {
           pdf.setTextColor(r, g, b);
 
           // Word wrap within the text box width
-          const lines = pdf.splitTextToSize(t.text, t.w);
-          pdf.text(lines, t.x, t.y + t.fontSize);
+          const lines: string[] = pdf.splitTextToSize(t.text, t.w);
+
+          // Limit lines to what fits in the allocated height
+          const lineSpacing = t.fontSize * 1.2;
+          const maxLines = Math.max(1, Math.floor(t.h / lineSpacing));
+          const clippedLines = lines.slice(0, maxLines);
+
+          pdf.text(clippedLines, t.x, t.y + t.fontSize);
+        }
+
+        // Draw tables using jspdf-autotable
+        for (const table of slide.tables) {
+          if (table.rows.length === 0) continue;
+
+          // Use first row as header, rest as body
+          const head = [table.rows[0]];
+          const body = table.rows.slice(1);
+
+          autoTable(pdf, {
+            startY: table.y,
+            margin: { left: table.x },
+            tableWidth: table.w,
+            head,
+            body,
+            styles: {
+              fontSize: 10,
+              cellPadding: 4,
+              overflow: "linebreak",
+            },
+            headStyles: {
+              fillColor: [68, 114, 196],
+              textColor: [255, 255, 255],
+              fontStyle: "bold",
+            },
+            theme: "grid",
+          });
         }
       }
 
