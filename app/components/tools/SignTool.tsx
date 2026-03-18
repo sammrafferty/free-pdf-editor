@@ -129,12 +129,14 @@ export default function SignTool() {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset drawn state on file change
     setHasDrawn(false);
   }, [file]);
 
   // ---------- Type tab ----------
   useEffect(() => {
     if (activeTab !== "type" || !typedText.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clear signature when switching away from type
       if (activeTab === "type") setSignatureDataUrl(null);
       return;
     }
@@ -241,7 +243,7 @@ export default function SignTool() {
         const newY = Math.max(0, Math.min(100 - ds.startPos.height, ds.startPos.y + dy));
         setSigPos((prev) => ({ ...prev, x: newX, y: newY }));
       } else if (ds.type === "resize" && ds.corner) {
-        let newPos = { ...ds.startPos };
+        const newPos = { ...ds.startPos };
         const minSize = 5;
         if (ds.corner === "se") {
           newPos.width = Math.max(minSize, Math.min(100 - ds.startPos.x, ds.startPos.width + dx));
@@ -321,9 +323,10 @@ export default function SignTool() {
 
   const hasSignature = !!signatureDataUrl;
 
-  // Corner handle component
-  const CornerHandle = ({ corner, cursor }: { corner: string; cursor: string }) => (
+  // Corner handle helper (not a component — returns JSX directly to avoid "cannot create components during render")
+  const renderCornerHandle = (corner: string, cursor: string) => (
     <div
+      key={corner}
       onMouseDown={(e) => handleDragStart(e, "resize", corner)}
       onTouchStart={(e) => handleDragStart(e, "resize", corner)}
       style={{
@@ -382,10 +385,10 @@ export default function SignTool() {
             userSelect: "none",
           }}
         />
-        <CornerHandle corner="nw" cursor="nwse-resize" />
-        <CornerHandle corner="ne" cursor="nesw-resize" />
-        <CornerHandle corner="sw" cursor="nesw-resize" />
-        <CornerHandle corner="se" cursor="nwse-resize" />
+        {renderCornerHandle("nw", "nwse-resize")}
+        {renderCornerHandle("ne", "nesw-resize")}
+        {renderCornerHandle("sw", "nesw-resize")}
+        {renderCornerHandle("se", "nwse-resize")}
       </div>
     </div>
   ) : null;
