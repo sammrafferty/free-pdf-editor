@@ -241,8 +241,8 @@ function HomeContent() {
               &copy; {new Date().getFullYear()} PDF Tools. All rights reserved.
             </p>
             {process.env.NEXT_PUBLIC_COMMIT_HASH && (
-              <p className="text-[10px] mt-1 opacity-40" style={{ color: "var(--text-dim)" }}>
-                v{process.env.NEXT_PUBLIC_COMMIT_HASH} &middot; {new Date(process.env.NEXT_PUBLIC_COMMIT_DATE || "").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
+                Build v{process.env.NEXT_PUBLIC_COMMIT_HASH} &middot; {new Date(process.env.NEXT_PUBLIC_COMMIT_DATE || "").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </p>
             )}
           </div>
