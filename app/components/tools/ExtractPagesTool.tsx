@@ -3,6 +3,7 @@ import { useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
+import PdfThumbnailGrid from "@/app/components/PdfThumbnailGrid";
 
 export default function ExtractPagesTool() {
   const [file, setFile] = useState<File | null>(null);
@@ -40,6 +41,14 @@ export default function ExtractPagesTool() {
   };
 
   const selectNone = () => setSelected(new Set());
+
+  const selectOdd = () => {
+    setSelected(new Set(Array.from({ length: pageCount }, (_, i) => i + 1).filter((p) => p % 2 === 1)));
+  };
+
+  const selectEven = () => {
+    setSelected(new Set(Array.from({ length: pageCount }, (_, i) => i + 1).filter((p) => p % 2 === 0)));
+  };
 
   const handleExtract = async () => {
     if (!file || selected.size === 0) return;
@@ -96,23 +105,17 @@ export default function ExtractPagesTool() {
               <label className="text-sm font-medium theme-text-secondary">Select pages to extract</label>
               <div className="flex gap-2">
                 <button onClick={selectAll} className="text-xs text-purple-600 hover:text-purple-800 font-medium">All</button>
-                <button onClick={selectNone} className="text-xs theme-text-muted  font-medium">None</button>
+                <button onClick={selectNone} className="text-xs theme-text-muted font-medium">None</button>
+                <button onClick={selectOdd} className="text-xs text-purple-600 hover:text-purple-800 font-medium">Select Odd</button>
+                <button onClick={selectEven} className="text-xs text-purple-600 hover:text-purple-800 font-medium">Select Even</button>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => togglePage(p)}
-                  className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
-                    selected.has(p) ? "text-white" : "theme-bg-secondary border theme-border theme-text-secondary hover:border-purple-300"
-                  }`}
-                  style={selected.has(p) ? { backgroundColor: "#8b5cf6" } : {}}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+            <PdfThumbnailGrid
+              file={file}
+              pageCount={pageCount}
+              selected={selected}
+              onToggle={togglePage}
+            />
           </div>
 
           {error && <div className="p-3 theme-error rounded-xl text-sm">{error}</div>}

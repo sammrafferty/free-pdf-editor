@@ -3,11 +3,37 @@ import { useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
+import ProgressBar from "@/app/components/ProgressBar";
+
+type Preset = "maximum" | "balanced" | "light";
+
+const presets: { key: Preset; name: string; description: string; range: string }[] = [
+  {
+    key: "maximum",
+    name: "Maximum",
+    description: "Converts pages to JPEG images for aggressive compression",
+    range: "50-80% smaller",
+  },
+  {
+    key: "balanced",
+    name: "Balanced",
+    description: "Optimizes structure and strips metadata",
+    range: "10-40% smaller",
+  },
+  {
+    key: "light",
+    name: "Light",
+    description: "Lossless optimization, preserves everything",
+    range: "5-15% smaller",
+  },
+];
 
 export default function CompressTool() {
   const [file, setFile] = useState<File | null>(null);
+  const [preset, setPreset] = useState<Preset>("balanced");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ original: number; compressed: number } | null>(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [result, setResult] = useState<{ original: number; compressed: number; method: string } | null>(null);
   const [error, setError] = useState("");
 
   const handleFile = (files: File[]) => {
@@ -22,21 +48,92 @@ export default function CompressTool() {
     return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
   };
 
+  const compressMaximum = async (buf: ArrayBuffer): Promise<{ bytes: Uint8Array; method: string }> => {
+    const pdfjsLib = await import("pdfjs-dist");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+    const doc = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+    const totalPages = doc.numPages;
+    setProgress({ current: 0, total: totalPages });
+
+    const newPdf = await PDFDocument.create();
+
+    for (let i = 1; i <= totalPages; i++) {
+      const page = await doc.getPage(i);
+      const viewport = page.getViewport({ scale: 1.5 });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext("2d")!;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
+
+      const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.6);
+      const jpegBytes = Uint8Array.from(atob(jpegDataUrl.split(",")[1]), (c) => c.charCodeAt(0));
+
+      const jpegImage = await newPdf.embedJpg(jpegBytes);
+      const newPage = newPdf.addPage([viewport.width, viewport.height]);
+      newPage.drawImage(jpegImage, {
+        x: 0,
+        y: 0,
+        width: viewport.width,
+        height: viewport.height,
+      });
+
+      setProgress({ current: i, total: totalPages });
+    }
+
+    doc.destroy();
+    const bytes = await newPdf.save({ useObjectStreams: true });
+    return { bytes: new Uint8Array(bytes), method: "Converted pages to images" };
+  };
+
+  const compressBalanced = async (buf: ArrayBuffer): Promise<{ bytes: Uint8Array; method: string }> => {
+    const pdf = await PDFDocument.load(buf, { ignoreEncryption: true });
+    pdf.setTitle("");
+    pdf.setAuthor("");
+    pdf.setSubject("");
+    pdf.setKeywords([]);
+    pdf.setProducer("");
+    pdf.setCreator("");
+    const bytes = await pdf.save({ useObjectStreams: true });
+    return { bytes: new Uint8Array(bytes), method: "Optimized structure" };
+  };
+
+  const compressLight = async (buf: ArrayBuffer): Promise<{ bytes: Uint8Array; method: string }> => {
+    const pdf = await PDFDocument.load(buf, { ignoreEncryption: true });
+    const bytes = await pdf.save({ useObjectStreams: true });
+    return { bytes: new Uint8Array(bytes), method: "Optimized structure" };
+  };
+
   const handleCompress = async () => {
     if (!file) return;
     setLoading(true);
+    setResult(null);
+    setProgress({ current: 0, total: 0 });
     try {
       const buf = await file.arrayBuffer();
-      const pdf = await PDFDocument.load(buf, { ignoreEncryption: true });
-      const bytes = await pdf.save({ useObjectStreams: true });
-      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
-      setResult({ original: file.size, compressed: bytes.length });
+      let output: { bytes: Uint8Array; method: string };
+
+      if (preset === "maximum") {
+        output = await compressMaximum(buf);
+      } else if (preset === "balanced") {
+        output = await compressBalanced(buf);
+      } else {
+        output = await compressLight(buf);
+      }
+
+      const blob = new Blob([output.bytes as BlobPart], { type: "application/pdf" });
+      setResult({ original: file.size, compressed: output.bytes.length, method: output.method });
       downloadBlob(blob, `compressed_${file.name}`);
     } catch (e: unknown) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Compression failed");
     }
     setLoading(false);
+    setProgress({ current: 0, total: 0 });
   };
 
   const pctNum = result ? (1 - result.compressed / result.original) * 100 : 0;
@@ -70,6 +167,46 @@ export default function CompressTool() {
             </button>
           </div>
 
+          {/* Compression preset selector */}
+          <div>
+            <label className="block text-sm font-medium theme-text-secondary mb-2">
+              Compression level
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {presets.map((p) => (
+                <button
+                  key={p.key}
+                  onClick={() => setPreset(p.key)}
+                  disabled={loading}
+                  className={`p-3 rounded-xl border text-left transition-colors
+                    ${
+                      preset === p.key
+                        ? "bg-emerald-500/100 border-emerald-500 text-white"
+                        : "theme-bg-secondary theme-border theme-text-secondary hover:border-emerald-300 hover:bg-emerald-500/10"
+                    }`}
+                >
+                  <span className="block text-sm font-semibold">{p.name}</span>
+                  <span className={`block text-xs mt-1 ${preset === p.key ? "text-emerald-100" : "theme-text-muted"}`}>
+                    {p.description}
+                  </span>
+                  <span className={`block text-xs mt-1 font-medium ${preset === p.key ? "text-emerald-200" : "theme-text-dim"}`}>
+                    {p.range}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Progress bar for Maximum mode */}
+          {loading && preset === "maximum" && progress.total > 0 && (
+            <ProgressBar
+              current={progress.current}
+              total={progress.total}
+              status={`Compressing page ${progress.current} of ${progress.total}`}
+              color="#10b981"
+            />
+          )}
+
           {/* Result */}
           {result && (
             <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
@@ -92,6 +229,7 @@ export default function CompressTool() {
                   {pctNum >= 0 ? `${pct}% smaller` : `${pct}% larger (already optimized)`}
                 </span>
               </div>
+              <p className="text-xs theme-text-muted mt-2">{result.method}</p>
             </div>
           )}
 
