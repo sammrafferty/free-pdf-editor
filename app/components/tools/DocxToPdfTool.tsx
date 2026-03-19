@@ -9,6 +9,7 @@ export default function DocxToPdfTool() {
   const [error, setError] = useState("");
 
   const handleFile = (files: File[]) => {
+    if (!files || files.length === 0) return;
     setFile(files[0]);
     setError("");
     setStatus("");
@@ -136,6 +137,8 @@ export default function DocxToPdfTool() {
             if (text) runs.push({ text, bold, italic });
           } else if (child.nodeType === Node.ELEMENT_NODE) {
             const tag = (child as Element).tagName;
+            // Skip nested lists -- they are rendered separately
+            if (tag === "UL" || tag === "OL") continue;
             const nextBold = bold || tag === "STRONG" || tag === "B";
             const nextItalic = italic || tag === "EM" || tag === "I";
             if (tag === "BR") {
@@ -154,7 +157,7 @@ export default function DocxToPdfTool() {
         if (HEADING_SIZES[tag]) {
           const size = HEADING_SIZES[tag];
           const lineHeight = size * LINE_HEIGHT_FACTOR;
-          ensureSpace(lineHeight);
+          ensureSpace(lineHeight + 4); // include top margin in space check
           y += 4; // small top margin before heading
           renderInlineText(el, size, true, false, indent, "");
           y += PARAGRAPH_SPACING;
@@ -179,24 +182,18 @@ export default function DocxToPdfTool() {
           for (let i = 0; i < el.children.length; i++) {
             const li = el.children[i];
             if (li.tagName === "LI") {
-              // Check for nested lists
-              let hasNestedList = false;
+              // Render the direct text content of the LI first
+              const textContent = getDirectTextContent(li);
+              if (textContent.trim()) {
+                renderInlineText(li, DEFAULT_SIZE, false, false, indent + 20, "\u2022 ");
+                y += 2;
+              }
+              // Then render any nested lists
               for (let j = 0; j < li.children.length; j++) {
                 const child = li.children[j];
                 if (child.tagName === "UL" || child.tagName === "OL") {
-                  // Render text content before nested list
-                  const textContent = getDirectTextContent(li);
-                  if (textContent.trim()) {
-                    renderInlineText(li, DEFAULT_SIZE, false, false, indent + 20, "\u2022 ");
-                    y += 2;
-                  }
                   renderElement(child, indent + 20);
-                  hasNestedList = true;
                 }
-              }
-              if (!hasNestedList) {
-                renderInlineText(li, DEFAULT_SIZE, false, false, indent + 20, "\u2022 ");
-                y += 2;
               }
             }
           }
@@ -210,22 +207,18 @@ export default function DocxToPdfTool() {
           for (let i = 0; i < el.children.length; i++) {
             const li = el.children[i];
             if (li.tagName === "LI") {
-              let hasNestedList = false;
+              // Render the direct text content of the LI first
+              const textContent = getDirectTextContent(li);
+              if (textContent.trim()) {
+                renderInlineText(li, DEFAULT_SIZE, false, false, indent + 20, `${counter}. `);
+                y += 2;
+              }
+              // Then render any nested lists
               for (let j = 0; j < li.children.length; j++) {
                 const child = li.children[j];
                 if (child.tagName === "UL" || child.tagName === "OL") {
-                  const textContent = getDirectTextContent(li);
-                  if (textContent.trim()) {
-                    renderInlineText(li, DEFAULT_SIZE, false, false, indent + 20, `${counter}. `);
-                    y += 2;
-                  }
                   renderElement(child, indent + 20);
-                  hasNestedList = true;
                 }
-              }
-              if (!hasNestedList) {
-                renderInlineText(li, DEFAULT_SIZE, false, false, indent + 20, `${counter}. `);
-                y += 2;
               }
               counter++;
             }
@@ -255,7 +248,7 @@ export default function DocxToPdfTool() {
           const bodySource = tbody || el;
           bodySource.querySelectorAll("tr").forEach((tr) => {
             // Skip rows that were already in thead
-            if (thead && tr.parentElement === thead) return;
+            if (thead && thead.contains(tr)) return;
             const row: string[] = [];
             tr.querySelectorAll("th, td").forEach((cell) => {
               row.push(cell.textContent?.trim() || "");
@@ -291,25 +284,25 @@ export default function DocxToPdfTool() {
               else if (src.includes("image/png")) format = "PNG";
               else if (src.includes("image/gif")) format = "GIF";
 
-              // Create a temporary image to get dimensions
-              const img = new Image();
-              img.src = src;
-
               // Use reasonable defaults - scale to fit page width
               let imgWidth = MAX_WIDTH - indent;
               let imgHeight = imgWidth * 0.6; // default aspect ratio
 
-              // Try to get actual dimensions
-              if (img.naturalWidth && img.naturalHeight) {
-                const ratio = img.naturalHeight / img.naturalWidth;
-                imgWidth = Math.min(MAX_WIDTH - indent, img.naturalWidth);
+              // Try to get actual dimensions from the element attributes
+              const attrWidth = parseInt(el.getAttribute("width") || "0", 10);
+              const attrHeight = parseInt(el.getAttribute("height") || "0", 10);
+
+              if (attrWidth > 0 && attrHeight > 0) {
+                const ratio = attrHeight / attrWidth;
+                imgWidth = Math.min(MAX_WIDTH - indent, attrWidth);
                 imgHeight = imgWidth * ratio;
               }
 
               // Cap height to usable page height
               if (imgHeight > USABLE_HEIGHT * 0.8) {
+                const ratio = imgWidth / imgHeight;
                 imgHeight = USABLE_HEIGHT * 0.8;
-                imgWidth = imgHeight / ((img.naturalHeight || 1) / (img.naturalWidth || 1));
+                imgWidth = imgHeight * ratio;
               }
 
               ensureSpace(imgHeight + 10);
@@ -359,8 +352,9 @@ export default function DocxToPdfTool() {
     } catch (e: unknown) {
       console.error("DOCX to PDF error:", e);
       setError("Conversion failed: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const accentColor = "#2563eb";
@@ -393,8 +387,9 @@ export default function DocxToPdfTool() {
               </div>
             </div>
             <button
-              onClick={() => { setFile(null); setError(""); setStatus(""); }}
-              className="theme-text-muted  text-sm font-medium"
+              onClick={() => { setFile(null); setError(""); setStatus(""); setLoading(false); }}
+              disabled={loading}
+              className="theme-text-muted text-sm font-medium disabled:opacity-40"
             >
               Remove
             </button>

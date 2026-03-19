@@ -32,10 +32,12 @@ export default function PdfToExcelTool() {
   const [previewIsHeader, setPreviewIsHeader] = useState(false);
 
   const handleFile = async (files: File[]) => {
+    if (!files || files.length === 0) return;
     const f = files[0];
     setFile(f);
     setError("");
     setStatus("");
+    setProgress(0);
     setPreview(null);
     setPreviewIsHeader(false);
     try {
@@ -211,31 +213,24 @@ export default function PdfToExcelTool() {
       // Use detected horizontal lines as row boundaries
       const hLines = [...lines.horizontalLines].sort((a, b) => a - b);
       rows = [];
+      // Use midpoints between lines as boundaries to avoid duplicate assignment
+      const boundaries: number[] = [];
+      boundaries.push(-Infinity);
       for (let r = 0; r < hLines.length - 1; r++) {
-        const yMin = hLines[r];
-        const yMax = hLines[r + 1];
+        boundaries.push((hLines[r] + hLines[r + 1]) / 2);
+      }
+      boundaries.push(Infinity);
+
+      for (let r = 0; r < boundaries.length - 1; r++) {
+        const yMin = boundaries[r];
+        const yMax = boundaries[r + 1];
         const rowItems = sorted.filter(
-          (it) => it.y >= yMin - yTolerance && it.y <= yMax + yTolerance
+          (it) => it.y > yMin && it.y <= yMax
         );
         if (rowItems.length > 0) {
           rowItems.sort((a, b) => a.x - b.x);
           rows.push(rowItems);
         }
-      }
-      // Also include items above the first line and below the last line
-      const aboveItems = sorted.filter(
-        (it) => it.y > hLines[hLines.length - 1] + yTolerance
-      );
-      if (aboveItems.length > 0) {
-        aboveItems.sort((a, b) => a.x - b.x);
-        rows.unshift(aboveItems);
-      }
-      const belowItems = sorted.filter(
-        (it) => it.y < hLines[0] - yTolerance
-      );
-      if (belowItems.length > 0) {
-        belowItems.sort((a, b) => a.x - b.x);
-        rows.push(belowItems);
       }
 
       // If line-based rows yield very few results, fall back to text clustering
@@ -332,10 +327,11 @@ export default function PdfToExcelTool() {
 
     const sorted = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
     const rows: string[][] = [];
-    let currentLine: string[] = [];
+    let currentLine: string[] = [sorted[0].str];
     let currentY = sorted[0].y;
 
-    for (const item of sorted) {
+    for (let i = 1; i < sorted.length; i++) {
+      const item = sorted[i];
       if (Math.abs(item.y - currentY) > yTolerance) {
         if (currentLine.length > 0) rows.push([currentLine.join(" ")]);
         currentLine = [item.str];
@@ -387,6 +383,8 @@ export default function PdfToExcelTool() {
           data = extractRawText(items);
         }
 
+        totalCells += data.reduce((s, r) => s + r.length, 0);
+
         if (data.length === 0) {
           data = [["(No text found on this page)"]];
         }
@@ -396,8 +394,6 @@ export default function PdfToExcelTool() {
           firstPageData = data;
           firstPageIsHeader = isHeader;
         }
-
-        totalCells += data.reduce((s, r) => s + r.length, 0);
         const ws = XLSX.utils.aoa_to_sheet(data);
 
         // Apply bold styling to header row if detected
@@ -415,7 +411,6 @@ export default function PdfToExcelTool() {
 
       if (totalCells === 0) {
         setError("No text could be extracted from this PDF.");
-        setLoading(false);
         return;
       }
 
@@ -436,8 +431,9 @@ export default function PdfToExcelTool() {
     } catch (e: unknown) {
       console.error("PDF to Excel error:", e);
       setError("Conversion failed: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const accentColor = "#16a34a";
@@ -463,7 +459,7 @@ export default function PdfToExcelTool() {
                 <p className="text-xs theme-text-muted">{pageCount} page{pageCount !== 1 ? "s" : ""} &middot; {(file.size / 1024 / 1024).toFixed(1)} MB</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setPageCount(0); setError(""); setStatus(""); setPreview(null); setPreviewIsHeader(false); }} className="theme-text-muted  text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setPageCount(0); setError(""); setStatus(""); setProgress(0); setPreview(null); setPreviewIsHeader(false); }} disabled={loading} className="theme-text-muted text-sm font-medium disabled:opacity-50">Remove</button>
           </div>
 
           {/* Mode selector */}
@@ -477,6 +473,7 @@ export default function PdfToExcelTool() {
                 <button
                   key={opt.key}
                   onClick={() => setMode(opt.key)}
+                  disabled={loading}
                   className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
                     mode === opt.key ? "text-white" : "theme-bg-secondary theme-border theme-text-secondary hover:opacity-80"
                   }`}
@@ -502,7 +499,7 @@ export default function PdfToExcelTool() {
                 <span className="text-xs theme-text-secondary">{progress} / {pageCount}</span>
               </div>
               <div className="w-full bg-green-100 rounded-full h-2">
-                <div className="h-2 rounded-full transition-all" style={{ backgroundColor: accentColor, width: `${(progress / pageCount) * 100}%` }} />
+                <div className="h-2 rounded-full transition-all" style={{ backgroundColor: accentColor, width: `${pageCount > 0 ? (progress / pageCount) * 100 : 0}%` }} />
               </div>
             </div>
           )}
@@ -523,23 +520,31 @@ export default function PdfToExcelTool() {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
+                  {previewIsHeader && preview.length > 0 && (
+                    <thead>
+                      <tr className="theme-bg-primary">
+                        {preview[0].map((cell, ci) => (
+                          <th
+                            key={ci}
+                            className="px-3 py-1.5 border-b theme-border text-left font-semibold theme-text"
+                          >
+                            {cell || "\u00A0"}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                  )}
                   <tbody>
-                    {preview.map((row, ri) => (
+                    {preview.slice(previewIsHeader ? 1 : 0).map((row, ri) => (
                       <tr key={ri} className={ri % 2 === 0 ? "theme-bg-primary" : "theme-bg-secondary"}>
-                        {row.map((cell, ci) => {
-                          const isHeaderCell = ri === 0 && previewIsHeader;
-                          const Tag = isHeaderCell ? "th" : "td";
-                          return (
-                            <Tag
-                              key={ci}
-                              className={`px-3 py-1.5 border-b theme-border text-left ${
-                                isHeaderCell ? "font-semibold theme-text" : "theme-text-secondary"
-                              }`}
-                            >
-                              {cell || "\u00A0"}
-                            </Tag>
-                          );
-                        })}
+                        {row.map((cell, ci) => (
+                          <td
+                            key={ci}
+                            className="px-3 py-1.5 border-b theme-border text-left theme-text-secondary"
+                          >
+                            {cell || "\u00A0"}
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>

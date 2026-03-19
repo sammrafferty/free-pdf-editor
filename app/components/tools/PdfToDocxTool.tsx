@@ -66,9 +66,13 @@ export default function PdfToDocxTool() {
   const [warning, setWarning] = useState("");
 
   const handleFile = async (files: File[]) => {
+    if (!files || files.length === 0) return;
     const f = files[0];
     setFile(f);
     setError("");
+    setWarning("");
+    setStatus("");
+    setProgress(0);
     try {
       const pdfjsLib = await import("pdfjs-dist");
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
@@ -103,8 +107,9 @@ export default function PdfToDocxTool() {
       if (!ti.str.trim() && !ti.hasEOL) continue;
 
       const tx = ti.transform;
-      // Font size from transform matrix
-      const fontSize = Math.abs(tx[0]) || Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3]) || 12;
+      // Font size from transform matrix: for non-rotated text it's |tx[3]|,
+      // for rotated text use the magnitude of the vertical component
+      const fontSize = Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3]) || Math.abs(tx[0]) || 12;
       const x = tx[4];
       const y = tx[5];
 
@@ -499,7 +504,8 @@ export default function PdfToDocxTool() {
               const canvas = document.createElement("canvas");
               canvas.width = imgData.width;
               canvas.height = imgData.height;
-              const ctx = canvas.getContext("2d")!;
+              const ctx = canvas.getContext("2d");
+              if (!ctx) continue;
 
               // imgData.data might be RGB or RGBA
               let imageDataArr: Uint8ClampedArray;
@@ -525,6 +531,9 @@ export default function PdfToDocxTool() {
               const blob = await new Promise<Blob | null>((resolve) =>
                 canvas.toBlob(resolve, "image/png")
               );
+              // Release canvas memory
+              canvas.width = 0;
+              canvas.height = 0;
               if (blob) {
                 const arrayBuf = await blob.arrayBuffer();
                 images.push({
@@ -554,7 +563,8 @@ export default function PdfToDocxTool() {
     const canvas = document.createElement("canvas");
     canvas.width = viewport.width;
     canvas.height = viewport.height;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Failed to create canvas context");
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
@@ -562,9 +572,17 @@ export default function PdfToDocxTool() {
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, "image/png")
     );
-    if (!blob) throw new Error("Failed to render page to image");
+    if (!blob) {
+      // Release canvas memory
+      canvas.width = 0;
+      canvas.height = 0;
+      throw new Error("Failed to render page to image");
+    }
 
     const arrayBuf = await blob.arrayBuffer();
+    // Release canvas memory after extracting the blob
+    canvas.width = 0;
+    canvas.height = 0;
     return {
       data: new Uint8Array(arrayBuf),
       width: viewport.width,
@@ -866,6 +884,7 @@ export default function PdfToDocxTool() {
             "No text or images could be extracted. This PDF may be a scanned document — OCR is not supported in the browser."
           );
           setLoading(false);
+          setProgress(0);
           return;
         }
 
@@ -932,11 +951,13 @@ export default function PdfToDocxTool() {
               onClick={() => {
                 setFile(null);
                 setPageCount(0);
+                setProgress(0);
                 setError("");
                 setWarning("");
                 setStatus("");
               }}
-              className="theme-text-muted  text-sm font-medium"
+              disabled={loading}
+              className="theme-text-muted text-sm font-medium"
             >
               Remove
             </button>
@@ -957,6 +978,7 @@ export default function PdfToDocxTool() {
                 <button
                   key={opt.key}
                   onClick={() => setQuality(opt.key)}
+                  disabled={loading}
                   className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
                     quality === opt.key
                       ? "text-white"
@@ -1011,7 +1033,7 @@ export default function PdfToDocxTool() {
                   className="h-2 rounded-full transition-all"
                   style={{
                     backgroundColor: accentColor,
-                    width: `${(progress / pageCount) * 100}%`,
+                    width: `${pageCount > 0 ? (progress / pageCount) * 100 : 0}%`,
                   }}
                 />
               </div>
@@ -1033,7 +1055,9 @@ export default function PdfToDocxTool() {
             style={!loading ? { backgroundColor: accentColor } : {}}
           >
             {loading
-              ? `Converting page ${progress} of ${pageCount}...`
+              ? progress > 0
+                ? `Converting page ${progress} of ${pageCount}...`
+                : "Analyzing PDF..."
               : "Convert to Word Document"}
           </button>
 
