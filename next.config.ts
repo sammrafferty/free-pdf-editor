@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
 import { execSync } from "child_process";
 
-const commitHash = execSync("git rev-parse --short HEAD").toString().trim();
-const commitDate = execSync("git log -1 --format=%cI").toString().trim();
+let commitHash = "unknown";
+let commitDate = new Date().toISOString();
+try {
+  commitHash = execSync("git rev-parse --short HEAD").toString().trim();
+  commitDate = execSync("git log -1 --format=%cI").toString().trim();
+} catch {
+  // Not in a git repo (e.g., Vercel CLI deploy) — use fallbacks
+}
 
 const nextConfig: NextConfig = {
   env: {
