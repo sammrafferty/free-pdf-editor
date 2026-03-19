@@ -1,13 +1,24 @@
 "use client";
-import { Tool } from "../page";
+import Link from "next/link";
+import { TOOLS, ToolId } from "@/app/lib/toolData";
 
 interface ToolDef {
-  id: Tool;
+  id: ToolId;
   label: string;
   desc: string;
   color: string;
   icon: React.ReactNode;
 }
+
+/* ── Build toolId → slug mapping ─────────────────────── */
+
+const toolIdToSlug: Record<ToolId, string> = Object.values(TOOLS).reduce(
+  (acc, t) => {
+    acc[t.toolId] = t.slug;
+    return acc;
+  },
+  {} as Record<ToolId, string>
+);
 
 /* ── SVG Icon helpers ─────────────────────────────────── */
 
@@ -191,10 +202,11 @@ function CategoryHeader({ label }: { label: string }) {
   );
 }
 
-function ToolCard({ tool, onSelect, index = 0 }: { tool: ToolDef; onSelect: (t: Tool) => void; index?: number }) {
+function ToolCard({ tool, index = 0 }: { tool: ToolDef; index?: number }) {
+  const slug = toolIdToSlug[tool.id];
   return (
-    <button
-      onClick={() => onSelect(tool.id)}
+    <Link
+      href={`/${slug}`}
       className="group flex items-center gap-3.5 p-3.5 sm:p-4 text-left w-full tool-card-enter theme-card cursor-pointer"
       style={{ animationDelay: `${index * 30}ms` }}
     >
@@ -212,14 +224,15 @@ function ToolCard({ tool, onSelect, index = 0 }: { tool: ToolDef; onSelect: (t: 
           {tool.desc}
         </div>
       </div>
-    </button>
+    </Link>
   );
 }
 
-function FeaturedCard({ tool, onSelect, index = 0 }: { tool: ToolDef; onSelect: (t: Tool) => void; index?: number }) {
+function FeaturedCard({ tool, index = 0 }: { tool: ToolDef; index?: number }) {
+  const slug = toolIdToSlug[tool.id];
   return (
-    <button
-      onClick={() => onSelect(tool.id)}
+    <Link
+      href={`/${slug}`}
       className="group flex flex-col items-center text-center p-5 sm:p-6 tool-card-enter theme-card-featured cursor-pointer"
       style={{ animationDelay: `${index * 30}ms` }}
     >
@@ -235,18 +248,20 @@ function FeaturedCard({ tool, onSelect, index = 0 }: { tool: ToolDef; onSelect: 
       <div className="text-xs leading-snug" style={{ color: "var(--text-muted)" }}>
         {tool.desc}
       </div>
-    </button>
+    </Link>
   );
 }
 
-function ConvertCard({ pair, onSelect, index = 0 }: { pair: ConvertPair; onSelect: (t: Tool) => void; index: number }) {
+function ConvertCard({ pair, index = 0 }: { pair: ConvertPair; index: number }) {
+  const slugA = toolIdToSlug[pair.a.id];
+  const slugB = toolIdToSlug[pair.b.id];
   return (
     <div
       className="grid grid-cols-2 gap-2 sm:gap-3 tool-card-enter"
       style={{ animationDelay: `${index * 40}ms` }}
     >
-      <button
-        onClick={() => onSelect(pair.a.id)}
+      <Link
+        href={`/${slugA}`}
         className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
       >
         <div
@@ -263,9 +278,9 @@ function ConvertCard({ pair, onSelect, index = 0 }: { pair: ConvertPair; onSelec
             {pair.a.desc}
           </div>
         </div>
-      </button>
-      <button
-        onClick={() => onSelect(pair.b.id)}
+      </Link>
+      <Link
+        href={`/${slugB}`}
         className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
       >
         <div
@@ -282,14 +297,14 @@ function ConvertCard({ pair, onSelect, index = 0 }: { pair: ConvertPair; onSelec
             {pair.b.desc}
           </div>
         </div>
-      </button>
+      </Link>
     </div>
   );
 }
 
 /* ── Main ─────────────────────────────────────────────── */
 
-export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void }) {
+export default function ToolSelector() {
   return (
     <div className="space-y-8 sm:space-y-10">
       {/* Most Popular */}
@@ -297,7 +312,7 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
         <CategoryHeader label="Most Popular" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {popular.map((t, i) => (
-            <FeaturedCard key={t.id} tool={t} onSelect={onSelect} index={i} />
+            <FeaturedCard key={t.id} tool={t} index={i} />
           ))}
         </div>
       </div>
@@ -307,7 +322,7 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
         <CategoryHeader label="Organize" />
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {organize.map((t, i) => (
-            <ToolCard key={t.id} tool={t} onSelect={onSelect} index={i} />
+            <ToolCard key={t.id} tool={t} index={i} />
           ))}
         </div>
       </div>
@@ -317,7 +332,7 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
         <CategoryHeader label="Edit" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {edit.map((t, i) => (
-            <ToolCard key={t.id} tool={t} onSelect={onSelect} index={i} />
+            <ToolCard key={t.id} tool={t} index={i} />
           ))}
         </div>
       </div>
@@ -327,7 +342,7 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
         <CategoryHeader label="Sign" />
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {signTools.map((t, i) => (
-            <ToolCard key={t.id} tool={t} onSelect={onSelect} index={i} />
+            <ToolCard key={t.id} tool={t} index={i} />
           ))}
         </div>
       </div>
@@ -337,7 +352,7 @@ export default function ToolSelector({ onSelect }: { onSelect: (t: Tool) => void
         <CategoryHeader label="Convert" />
         <div className="space-y-3">
           {convertPairs.map((pair, pi) => (
-            <ConvertCard key={pair.a.id} pair={pair} onSelect={onSelect} index={pi} />
+            <ConvertCard key={pair.a.id} pair={pair} index={pi} />
           ))}
         </div>
       </div>
