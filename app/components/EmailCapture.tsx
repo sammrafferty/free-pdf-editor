@@ -7,22 +7,26 @@ export default function EmailCapture() {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    const captured = localStorage.getItem("pdf-tools-email-captured");
-    const dismissed = localStorage.getItem("pdf-tools-email-dismissed");
-    if (!captured && !dismissed) {
-      setHidden(false);
+    try {
+      const captured = localStorage.getItem("pdf-tools-email-captured");
+      const dismissed = localStorage.getItem("pdf-tools-email-dismissed");
+      if (!captured && !dismissed) {
+        setHidden(false);
+      }
+    } catch {
+      // localStorage unavailable (private browsing) — hide the component
     }
   }, []);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    localStorage.setItem("pdf-tools-email-captured", "true");
+    try { localStorage.setItem("pdf-tools-email-captured", "true"); } catch { /* private browsing */ }
     setSubmitted(true);
   };
 
   const handleDismiss = () => {
-    localStorage.setItem("pdf-tools-email-dismissed", "true");
+    try { localStorage.setItem("pdf-tools-email-dismissed", "true"); } catch { /* private browsing */ }
     setHidden(true);
   };
 
