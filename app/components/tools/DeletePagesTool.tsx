@@ -12,8 +12,11 @@ export default function DeletePagesTool() {
   const [markedPages, setMarkedPages] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Flag to skip the useEffect sync when pagesInput is set programmatically (e.g. from thumbnail clicks)
+  const [skipSync, setSkipSync] = useState(false);
 
   const handleFile = async (files: File[]) => {
+    if (!files || files.length === 0) return;
     const f = files[0];
     setError("");
     try {
@@ -65,9 +68,13 @@ export default function DeletePagesTool() {
     return ranges.join(", ");
   };
 
-  // Sync text input -> marked pages
+  // Sync text input -> marked pages (only when user types, not programmatic updates)
   useEffect(() => {
     if (pageCount === 0) return;
+    if (skipSync) {
+      setSkipSync(false);
+      return;
+    }
     const parsed = parsePages(pagesInput, pageCount);
     setMarkedPages(parsed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -82,6 +89,7 @@ export default function DeletePagesTool() {
         } else {
           next.add(pageNum);
         }
+        setSkipSync(true);
         setPagesInput(buildRangeString(next));
         return next;
       });
@@ -92,11 +100,13 @@ export default function DeletePagesTool() {
   const markAll = () => {
     const all = new Set(Array.from({ length: pageCount }, (_, i) => i + 1));
     setMarkedPages(all);
+    setSkipSync(true);
     setPagesInput(buildRangeString(all));
   };
 
   const unmarkAll = () => {
     setMarkedPages(new Set());
+    setSkipSync(true);
     setPagesInput("");
   };
 
@@ -159,8 +169,9 @@ export default function DeletePagesTool() {
       downloadBlob(blob, `edited_${file.name}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to delete pages");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -191,7 +202,7 @@ export default function DeletePagesTool() {
               </div>
             </div>
             <button
-              onClick={() => { setFile(null); setPageCount(0); setMarkedPages(new Set()); setPagesInput(""); }}
+              onClick={() => { setFile(null); setPageCount(0); setMarkedPages(new Set()); setPagesInput(""); setError(""); }}
               className="theme-text-muted text-sm font-medium"
             >
               Remove

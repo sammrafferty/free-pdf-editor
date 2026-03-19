@@ -55,12 +55,21 @@ export default function SignTool() {
   // ---------- File handling ----------
   const handleFile = async (files: File[]) => {
     const f = files[0];
+    if (!f) return;
     setError("");
     try {
       const buf = await f.arrayBuffer();
       const pdf = await PDFDocument.load(buf);
+      const count = pdf.getPageCount();
+      if (count === 0) {
+        setError("This PDF has no pages.");
+        setFile(null);
+        return;
+      }
       setFile(f);
-      setPageCount(pdf.getPageCount());
+      setPageCount(count);
+      setPageNum(1);
+      setSignatureDataUrl(null);
     } catch {
       setError("Could not read this PDF. It may be corrupted or password-protected.");
       setFile(null);
@@ -152,11 +161,12 @@ export default function SignTool() {
     ctx.fillStyle = "#1a1a1a";
     ctx.textBaseline = "middle";
 
-    // Measure and center
+    // Measure and center; clamp to canvas width
     const metrics = ctx.measureText(typedText);
     const textWidth = metrics.width;
-    const x = Math.max(10, (canvas.width - textWidth) / 2);
-    ctx.fillText(typedText, x, canvas.height / 2);
+    const maxWidth = canvas.width - 20;
+    const x = Math.max(10, (canvas.width - Math.min(textWidth, maxWidth)) / 2);
+    ctx.fillText(typedText, x, canvas.height / 2, maxWidth);
 
     setSignatureDataUrl(canvas.toDataURL("image/png"));
   }, [typedText, activeTab]);
@@ -249,22 +259,26 @@ export default function SignTool() {
           newPos.width = Math.max(minSize, Math.min(100 - ds.startPos.x, ds.startPos.width + dx));
           newPos.height = Math.max(minSize, Math.min(100 - ds.startPos.y, ds.startPos.height + dy));
         } else if (ds.corner === "sw") {
-          const newW = Math.max(minSize, ds.startPos.width - dx);
+          const newW = Math.max(minSize, Math.min(ds.startPos.x + ds.startPos.width, ds.startPos.width - dx));
           const newX = ds.startPos.x + ds.startPos.width - newW;
-          if (newX >= 0) { newPos.x = newX; newPos.width = newW; }
+          newPos.x = newX;
+          newPos.width = newW;
           newPos.height = Math.max(minSize, Math.min(100 - ds.startPos.y, ds.startPos.height + dy));
         } else if (ds.corner === "ne") {
           newPos.width = Math.max(minSize, Math.min(100 - ds.startPos.x, ds.startPos.width + dx));
-          const newH = Math.max(minSize, ds.startPos.height - dy);
+          const newH = Math.max(minSize, Math.min(ds.startPos.y + ds.startPos.height, ds.startPos.height - dy));
           const newY = ds.startPos.y + ds.startPos.height - newH;
-          if (newY >= 0) { newPos.y = newY; newPos.height = newH; }
+          newPos.y = newY;
+          newPos.height = newH;
         } else if (ds.corner === "nw") {
-          const newW = Math.max(minSize, ds.startPos.width - dx);
+          const newW = Math.max(minSize, Math.min(ds.startPos.x + ds.startPos.width, ds.startPos.width - dx));
           const newX = ds.startPos.x + ds.startPos.width - newW;
-          if (newX >= 0) { newPos.x = newX; newPos.width = newW; }
-          const newH = Math.max(minSize, ds.startPos.height - dy);
+          newPos.x = newX;
+          newPos.width = newW;
+          const newH = Math.max(minSize, Math.min(ds.startPos.y + ds.startPos.height, ds.startPos.height - dy));
           const newY = ds.startPos.y + ds.startPos.height - newH;
-          if (newY >= 0) { newPos.y = newY; newPos.height = newH; }
+          newPos.y = newY;
+          newPos.height = newH;
         }
         setSigPos(newPos);
       }
@@ -300,7 +314,8 @@ export default function SignTool() {
       const isJpeg = signatureDataUrl.startsWith("data:image/jpeg");
       const sigImage = isJpeg ? await pdf.embedJpg(sigBytes) : await pdf.embedPng(sigBytes);
 
-      const page = pdf.getPage(Math.min(pageNum, pageCount) - 1);
+      const clampedPageNum = Math.max(1, Math.min(pageNum, pageCount));
+      const page = pdf.getPage(clampedPageNum - 1);
       const { width: pageWidth, height: pageHeight } = page.getSize();
 
       const pdfX = (sigPos.x / 100) * pageWidth;
@@ -317,8 +332,9 @@ export default function SignTool() {
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Failed to sign PDF. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const hasSignature = !!signatureDataUrl;
@@ -429,10 +445,13 @@ export default function SignTool() {
             <button
               onClick={() => {
                 setFile(null);
+                setPageCount(0);
+                setPageNum(1);
                 setHasDrawn(false);
                 setSignatureDataUrl(null);
                 setTypedText("");
                 setUploadedSigUrl(null);
+                setError("");
               }}
               className="theme-text-muted text-sm font-medium"
             >
@@ -459,7 +478,7 @@ export default function SignTool() {
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => { setActiveTab(tab.key); setError(""); }}
                   className="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors"
                   style={
                     activeTab === tab.key
