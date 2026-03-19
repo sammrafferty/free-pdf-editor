@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
-import ThemeProvider, { ThemeToggle } from "./components/ThemeProvider";
+import ThemeProvider from "./components/ThemeProvider";
 import ToolSelector from "./components/ToolSelector";
 import AdSlot from "./components/AdSlot";
 import CookieConsent from "./components/CookieConsent";
 import Logo from "./components/Logo";
+import Navbar from "./components/Navbar";
 
 function HomeContent() {
   const scrollToTop = () => {
@@ -13,26 +14,8 @@ function HomeContent() {
 
   return (
     <main className="min-h-screen grid-bg">
-      {/* Header */}
-      <header className="theme-header sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <button onClick={scrollToTop} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Logo size={38} />
-            <span className="font-semibold text-sm tracking-tight" style={{ color: "var(--text-primary)" }}>
-              PDF Tools
-            </span>
-          </button>
-
-          <div className="flex items-center gap-2">
-            <nav className="flex items-center gap-3 mr-1">
-              <Link href="/about" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "var(--text-muted)" }}>About</Link>
-              <Link href="/faq" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "var(--text-muted)" }}>FAQ</Link>
-              <Link href="/guides" className="text-xs hover:opacity-80 transition-opacity" style={{ color: "var(--text-muted)" }}>Guides</Link>
-            </nav>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <Navbar onLogoClick={scrollToTop} />
+      <div className="navbar-spacer" />
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6">

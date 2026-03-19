@@ -6,7 +6,7 @@ export default function Logo({ size = 40 }: { size?: number }) {
       height={size}
       viewBox="0 0 1024 1024"
       fill="currentColor"
-      style={{ color: "var(--logo-color)" }}
+      style={{ color: "var(--logo-color)", flexShrink: 0 }}
     >
       <g transform="translate(0,1024) scale(0.1,-0.1)">
         <path d="M3500 7230 c-134 -12 -207 -29 -318 -72 -268 -104 -459 -305 -565

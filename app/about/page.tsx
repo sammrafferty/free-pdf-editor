@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ThemeToggle } from "@/app/components/ThemeProvider";
 import Logo from "@/app/components/Logo";
 import AdSlot from "@/app/components/AdSlot";
+import Navbar from "@/app/components/Navbar";
 
 export const metadata: Metadata = {
   title: "About — PDF Tools | Free Browser-Based PDF Suite",
@@ -30,23 +30,8 @@ export const metadata: Metadata = {
 export default function About() {
   return (
     <main className="min-h-screen">
-      <header className="theme-header sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 hover:opacity-80">
-            <Logo size={38} />
-            <span className="font-bold text-lg tracking-tight" style={{ color: "var(--text-primary)" }}>PDF Tools</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-1.5 text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-              Back to Tools
-            </Link>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <Navbar />
+      <div className="navbar-spacer" />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <h1

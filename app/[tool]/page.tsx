@@ -7,7 +7,7 @@ import FaqSchema from "../components/FaqSchema";
 import RelatedTools from "../components/RelatedTools";
 import EmailCapture from "../components/EmailCapture";
 import AdSlot from "../components/AdSlot";
-import { ThemeToggle } from "../components/ThemeProvider";
+import Navbar from "../components/Navbar";
 import CookieConsent from "../components/CookieConsent";
 
 export function generateStaticParams() {
@@ -53,39 +53,8 @@ export default async function ToolPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen grid-bg">
-      {/* Header */}
-      <header className="theme-header sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: "var(--accent-primary)", color: "#fff" }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-            </div>
-            <span className="font-semibold text-sm tracking-tight" style={{ color: "var(--text-primary)" }}>
-              PDF Tools
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors"
-              style={{ color: "var(--text-muted)", background: "var(--bg-tertiary)" }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-              All Tools
-            </Link>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <Navbar />
+      <div className="navbar-spacer" />
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
