@@ -1291,6 +1291,7 @@ export default function SignTool() {
                   file={file}
                   pageNumber={activePage}
                   width={500}
+                  scale={1.5}
                   overlay={currentPageSigs.length > 0 ? placedSigsOverlay : undefined}
                   className="shadow-lg"
                 />

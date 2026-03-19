@@ -428,13 +428,14 @@ export default function RedactTool() {
 
     try {
       const buf = await file.arrayBuffer();
+      const bufCopy = buf.slice(0);
       const pdfjsLib = await import("pdfjs-dist");
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
       const doc = await pdfjsLib.getDocument({ data: buf }).promise;
 
       const redactedPageNums = new Set(pagesWithRegions);
       const newPdf = await PDFDocument.create();
-      const origPdf = await PDFDocument.load(buf);
+      const origPdf = await PDFDocument.load(bufCopy);
 
       for (let i = 0; i < doc.numPages; i++) {
         const pageNum = i + 1;
@@ -1120,6 +1121,7 @@ export default function RedactTool() {
                   file={file}
                   pageNumber={activePage}
                   width={500}
+                  scale={1.5}
                   overlay={previewOverlay}
                   className="shadow-lg select-none"
                 />
