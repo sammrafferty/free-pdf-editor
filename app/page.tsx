@@ -17,7 +17,7 @@ function HomeContent() {
       <header className="theme-header sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <button onClick={scrollToTop} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Logo size={24} />
+            <Logo size={38} />
             <span className="font-semibold text-sm tracking-tight" style={{ color: "var(--text-primary)" }}>
               PDF Tools
             </span>
@@ -95,7 +95,7 @@ function HomeContent() {
           <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
             <div className="text-center sm:text-left">
               <div className="flex items-center gap-2 justify-center sm:justify-start mb-2">
-                <Logo size={16} />
+                <Logo size={28} />
                 <span className="font-semibold text-xs" style={{ color: "var(--text-primary)" }}>PDF Tools</span>
               </div>
               <p className="text-xs max-w-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>

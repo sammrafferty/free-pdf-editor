@@ -1,4 +1,4 @@
-export default function Logo({ size = 28 }: { size?: number }) {
+export default function Logo({ size = 40 }: { size?: number }) {
   return (
     <svg
       className="site-logo"
