@@ -3,7 +3,7 @@ import { useState } from "react";
 import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
 
-type ExtractionMode = "table" | "raw";
+type ExtractionMode = "smart" | "table" | "raw";
 
 interface TextItem {
   str: string;
@@ -20,10 +20,25 @@ interface LineBoundaries {
   verticalLines: number[];   // X positions of vertical lines
 }
 
+interface PageTableData {
+  data: string[][];
+  isHeader: boolean;
+  columnPositions: number[];
+  pageIndex: number;
+}
+
+/** Parsed cell with type information for Excel output */
+interface TypedCell {
+  value: string | number;
+  type: "s" | "n";
+  format?: string;
+}
+
 export default function PdfToExcelTool() {
   const [file, setFile] = useState<File | null>(null);
   const [pageCount, setPageCount] = useState(0);
-  const [mode, setMode] = useState<ExtractionMode>("table");
+  const [mode, setMode] = useState<ExtractionMode>("smart");
+  const [mergePages, setMergePages] = useState(true);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("");
@@ -86,7 +101,7 @@ export default function PdfToExcelTool() {
     return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
   };
 
-  /** Detect line-drawing operations (rectangles and moveTo+lineTo pairs) from the PDF operator list. */
+  /** Detect line-drawing operations (rectangles, moveTo+lineTo, and constructPath) from the PDF operator list. */
   const detectLines = async (page: import("pdfjs-dist").PDFPageProxy): Promise<LineBoundaries> => {
     const horizontalLines: number[] = [];
     const verticalLines: number[] = [];
@@ -114,6 +129,43 @@ export default function PdfToExcelTool() {
             }
           }
         }
+
+        // Handle constructPath operations (ops array + coordinates array)
+        if (opList.fnArray[i] === OPS.constructPath) {
+          const args = opList.argsArray[i];
+          if (args && args.length >= 2) {
+            const ops = args[0] as number[];
+            const coords = args[1] as number[];
+            let idx = 0;
+            for (let j = 0; j < ops.length; j++) {
+              const op = ops[j];
+              if (op === OPS.rectangle && idx + 3 < coords.length) {
+                const rx = coords[idx];
+                const ry = coords[idx + 1];
+                const rw = coords[idx + 2];
+                const rh = coords[idx + 3];
+                if (Math.abs(rh) <= 3 && Math.abs(rw) > 10) {
+                  horizontalLines.push(pageHeight - ry);
+                }
+                if (Math.abs(rw) <= 3 && Math.abs(rh) > 10) {
+                  verticalLines.push(rx);
+                }
+                idx += 4;
+              } else if (op === OPS.moveTo || op === OPS.lineTo) {
+                idx += 2;
+              } else if (op === OPS.curveTo) {
+                idx += 6;
+              } else if ((op as number) === 16 || (op as number) === 17) {
+                // curveTo2 / curveTo3
+                idx += 4;
+              } else if (op === OPS.closePath) {
+                // no coordinates consumed
+              } else {
+                idx += 2; // fallback
+              }
+            }
+          }
+        }
       }
 
       // Scan for moveTo + lineTo pairs
@@ -124,11 +176,9 @@ export default function PdfToExcelTool() {
           if (moveArgs && lineArgs && moveArgs.length >= 2 && lineArgs.length >= 2) {
             const [mx, my] = moveArgs;
             const [lx, ly] = lineArgs;
-            // Horizontal line: same Y (within tolerance), different X
             if (Math.abs(my - ly) <= 2 && Math.abs(mx - lx) > 10) {
               horizontalLines.push(pageHeight - my);
             }
-            // Vertical line: same X (within tolerance), different Y
             if (Math.abs(mx - lx) <= 2 && Math.abs(my - ly) > 10) {
               verticalLines.push(mx);
             }
@@ -158,18 +208,16 @@ export default function PdfToExcelTool() {
   };
 
   /** Check if the first row is likely a header (bold or larger font). */
-  const detectHeaderRow = (items: TextItem[], rows: TextItem[][]): boolean => {
+  const detectHeaderRow = (rows: TextItem[][]): boolean => {
     if (rows.length < 2) return false;
     const firstRow = rows[0];
     const restRows = rows.slice(1);
 
-    // Check for bold font names in first row
     const firstRowBoldCount = firstRow.filter(
       (it) => /bold/i.test(it.fontName)
     ).length;
     const firstRowBoldRatio = firstRowBoldCount / firstRow.length;
 
-    // Check if first row has a larger average font size
     const firstRowAvgSize =
       firstRow.reduce((s, it) => s + it.fontSize, 0) / firstRow.length;
     const restItems = restRows.flat();
@@ -177,122 +225,7 @@ export default function PdfToExcelTool() {
       ? restItems.reduce((s, it) => s + it.fontSize, 0) / restItems.length
       : firstRowAvgSize;
 
-    // Header if majority of first row is bold, or font size is notably larger
     return firstRowBoldRatio >= 0.5 || firstRowAvgSize > restAvgSize * 1.15;
-  };
-
-  const detectTable = (
-    items: TextItem[],
-    lines: LineBoundaries
-  ): { data: string[][]; isHeader: boolean } => {
-    if (items.length === 0) return { data: [], isHeader: false };
-
-    // Compute adaptive tolerances from median font metrics
-    const fontSizes = items.map((it) => it.fontSize);
-    const charWidths = items
-      .filter((it) => it.str.length > 0 && it.width > 0)
-      .map((it) => it.width / it.str.length);
-
-    const medFontSize = median(fontSizes, 12);
-    const medCharWidth = median(charWidths, 6);
-
-    // Adaptive Y-tolerance: half the median font size
-    const yTolerance = medFontSize * 0.5;
-
-    // Adaptive X-rounding factor based on median font size
-    const xRoundFactor = Math.max(1, Math.round(medFontSize * 0.3));
-
-    // Adaptive column merge threshold based on median character width
-    const colMergeThreshold = Math.max(10, medCharWidth * 3);
-
-    // --- Determine row boundaries ---
-    const sorted = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
-    let rows: TextItem[][];
-
-    if (lines.horizontalLines.length >= 2) {
-      // Use detected horizontal lines as row boundaries
-      const hLines = [...lines.horizontalLines].sort((a, b) => a - b);
-      rows = [];
-      // Use midpoints between lines as boundaries to avoid duplicate assignment
-      const boundaries: number[] = [];
-      boundaries.push(-Infinity);
-      for (let r = 0; r < hLines.length - 1; r++) {
-        boundaries.push((hLines[r] + hLines[r + 1]) / 2);
-      }
-      boundaries.push(Infinity);
-
-      for (let r = 0; r < boundaries.length - 1; r++) {
-        const yMin = boundaries[r];
-        const yMax = boundaries[r + 1];
-        const rowItems = sorted.filter(
-          (it) => it.y > yMin && it.y <= yMax
-        );
-        if (rowItems.length > 0) {
-          rowItems.sort((a, b) => a.x - b.x);
-          rows.push(rowItems);
-        }
-      }
-
-      // If line-based rows yield very few results, fall back to text clustering
-      if (rows.length < 2) {
-        rows = clusterRowsByY(sorted, yTolerance);
-      }
-    } else {
-      rows = clusterRowsByY(sorted, yTolerance);
-    }
-
-    // --- Determine column boundaries ---
-    let mergedCols: number[];
-
-    if (lines.verticalLines.length >= 2) {
-      // Use detected vertical lines as column boundaries
-      mergedCols = [...lines.verticalLines].sort((a, b) => a - b);
-    } else {
-      // Cluster X positions to find columns
-      const allX = items.map((it) => Math.round(it.x / xRoundFactor) * xRoundFactor);
-      const xCounts: Record<number, number> = {};
-      allX.forEach((x) => { xCounts[x] = (xCounts[x] || 0) + 1; });
-
-      const colPositions = Object.entries(xCounts)
-        .filter(([, c]) => c >= Math.min(2, rows.length * 0.3))
-        .map(([x]) => Number(x))
-        .sort((a, b) => a - b);
-
-      mergedCols = [];
-      for (const x of colPositions) {
-        if (mergedCols.length === 0 || x - mergedCols[mergedCols.length - 1] > colMergeThreshold) {
-          mergedCols.push(x);
-        }
-      }
-    }
-
-    if (mergedCols.length <= 1) {
-      // No table structure detected, return text line by line
-      const data = rows.map((row) => [row.map((it) => it.str).join(" ")]);
-      return { data, isHeader: false };
-    }
-
-    // Map each row's items to columns
-    const data = rows.map((row) => {
-      const cells: string[] = new Array(mergedCols.length).fill("");
-      for (const item of row) {
-        let colIdx = 0;
-        let minDist = Infinity;
-        for (let c = 0; c < mergedCols.length; c++) {
-          const dist = Math.abs(item.x - mergedCols[c]);
-          if (dist < minDist) {
-            minDist = dist;
-            colIdx = c;
-          }
-        }
-        cells[colIdx] = cells[colIdx] ? cells[colIdx] + " " + item.str : item.str;
-      }
-      return cells;
-    });
-
-    const isHeader = detectHeaderRow(items, rows);
-
-    return { data, isHeader };
   };
 
   /** Cluster text items into rows by Y position using adaptive tolerance. */
@@ -317,10 +250,294 @@ export default function PdfToExcelTool() {
     return rows;
   };
 
+  /**
+   * Enhanced row grouping: handle multi-line cells by merging rows whose
+   * Y positions are within a fraction of font size AND share similar X alignment.
+   */
+  const clusterRowsWithMultiline = (sorted: TextItem[], yTolerance: number, medFontSize: number): TextItem[][] => {
+    const rawRows = clusterRowsByY(sorted, yTolerance);
+    if (rawRows.length <= 1) return rawRows;
+
+    // Merge consecutive rows that are very close (within 0.3 * font size beyond normal tolerance)
+    // AND have overlapping X ranges (multi-line cell content)
+    const merged: TextItem[][] = [rawRows[0]];
+    const multilineTol = medFontSize * 1.2;
+
+    for (let i = 1; i < rawRows.length; i++) {
+      const prevRow = merged[merged.length - 1];
+      const currRow = rawRows[i];
+
+      const prevAvgY = prevRow.reduce((s, it) => s + it.y, 0) / prevRow.length;
+      const currAvgY = currRow.reduce((s, it) => s + it.y, 0) / currRow.length;
+      const yDiff = Math.abs(prevAvgY - currAvgY);
+
+      if (yDiff <= multilineTol && yDiff > yTolerance) {
+        // Check X overlap: if current row items fall within X range of previous row columns
+        const prevMinX = Math.min(...prevRow.map(it => it.x));
+        const prevMaxX = Math.max(...prevRow.map(it => it.x + it.width));
+        const currMinX = Math.min(...currRow.map(it => it.x));
+        const currMaxX = Math.max(...currRow.map(it => it.x + it.width));
+
+        const overlapExists = currMinX < prevMaxX && currMaxX > prevMinX;
+        // Only merge if current row has fewer items (likely continuation text)
+        if (overlapExists && currRow.length <= prevRow.length) {
+          merged[merged.length - 1] = [...prevRow, ...currRow];
+          merged[merged.length - 1].sort((a, b) => a.x - b.x);
+          continue;
+        }
+      }
+      merged.push(currRow);
+    }
+
+    return merged;
+  };
+
+  /**
+   * SMART (whitespace-based) column detection — the core new algorithm.
+   * Inspired by Camelot's Stream mode and Tabula's stream extraction.
+   *
+   * Algorithm:
+   * 1. Group text items into rows by Y position
+   * 2. For each row, compute gaps between consecutive items (sorted by X)
+   * 3. Build a frequency map of gap X-positions across all rows
+   * 4. X-ranges that are gaps in >50% of rows = column separators
+   * 5. Use these separators to assign items to columns
+   */
+  const detectTableSmart = (
+    items: TextItem[]
+  ): { data: string[][]; isHeader: boolean; columnPositions: number[] } => {
+    if (items.length === 0) return { data: [], isHeader: false, columnPositions: [] };
+
+    const fontSizes = items.map((it) => it.fontSize);
+    const charWidths = items
+      .filter((it) => it.str.length > 0 && it.width > 0)
+      .map((it) => it.width / it.str.length);
+
+    const medFontSize = median(fontSizes, 12);
+    const medCharWidth = median(charWidths, 6);
+    const yTolerance = medFontSize * 0.5;
+
+    // Step 1: Group into rows
+    const sorted = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
+    const rows = clusterRowsWithMultiline(sorted, yTolerance, medFontSize);
+
+    if (rows.length < 2) {
+      const data = rows.map((row) => [row.map((it) => it.str).join(" ")]);
+      return { data, isHeader: false, columnPositions: [] };
+    }
+
+    // Step 2: For each row, compute gaps between consecutive items
+    // A "gap" is defined as the space between the right edge of one item and the left edge of the next
+    const minGapWidth = medCharWidth * 1.5; // Minimum gap to be considered a column separator
+
+    interface GapInfo {
+      midX: number;      // Midpoint X of the gap
+      leftEdge: number;  // Right edge of left item
+      rightEdge: number; // Left edge of right item
+    }
+
+    const allGaps: GapInfo[][] = [];
+
+    for (const row of rows) {
+      const sortedRow = [...row].sort((a, b) => a.x - b.x);
+      const rowGaps: GapInfo[] = [];
+      for (let i = 0; i < sortedRow.length - 1; i++) {
+        const rightEdgeOfLeft = sortedRow[i].x + sortedRow[i].width;
+        const leftEdgeOfRight = sortedRow[i + 1].x;
+        const gapWidth = leftEdgeOfRight - rightEdgeOfLeft;
+
+        if (gapWidth > minGapWidth) {
+          rowGaps.push({
+            midX: (rightEdgeOfLeft + leftEdgeOfRight) / 2,
+            leftEdge: rightEdgeOfLeft,
+            rightEdge: leftEdgeOfRight,
+          });
+        }
+      }
+      allGaps.push(rowGaps);
+    }
+
+    // Step 3: Build gap frequency map — cluster gap midpoints
+    // Use a tolerance-based clustering to group nearby gap positions
+    const allGapMidpoints: number[] = allGaps.flatMap(g => g.map(gi => gi.midX));
+    if (allGapMidpoints.length === 0) {
+      // No gaps found — all text is continuous, return as single column
+      const data = rows.map((row) => [row.map((it) => it.str).join(" ")]);
+      return { data, isHeader: false, columnPositions: [] };
+    }
+
+    const gapClusterTol = medCharWidth * 2;
+    const sortedGaps = [...allGapMidpoints].sort((a, b) => a - b);
+
+    // Cluster gap positions
+    const gapClusters: { center: number; count: number; positions: number[] }[] = [];
+    for (const gx of sortedGaps) {
+      let found = false;
+      for (const cluster of gapClusters) {
+        if (Math.abs(gx - cluster.center) <= gapClusterTol) {
+          cluster.positions.push(gx);
+          cluster.center = cluster.positions.reduce((a, b) => a + b, 0) / cluster.positions.length;
+          cluster.count++;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        gapClusters.push({ center: gx, count: 1, positions: [gx] });
+      }
+    }
+
+    // Step 4: Filter clusters that appear in >40% of rows (relaxed from 50% for better detection)
+    const threshold = Math.max(2, rows.length * 0.4);
+    const significantGaps = gapClusters
+      .filter(c => c.count >= threshold)
+      .map(c => c.center)
+      .sort((a, b) => a - b);
+
+    if (significantGaps.length === 0) {
+      // No consistent column separators found
+      const data = rows.map((row) => [row.map((it) => it.str).join(" ")]);
+      return { data, isHeader: false, columnPositions: [] };
+    }
+
+    // Step 5: Define column boundaries using gap positions as separators
+    // Column boundaries: [-Inf, gap1, gap2, ..., +Inf]
+    const boundaries = [-Infinity, ...significantGaps, Infinity];
+    const numCols = boundaries.length - 1;
+
+    // Compute column center positions for reference
+    const columnPositions: number[] = [];
+    for (let c = 0; c < numCols; c++) {
+      const left = boundaries[c] === -Infinity ? (items.length > 0 ? Math.min(...items.map(it => it.x)) : 0) : boundaries[c];
+      const right = boundaries[c + 1] === Infinity ? (items.length > 0 ? Math.max(...items.map(it => it.x + it.width)) : 1000) : boundaries[c + 1];
+      columnPositions.push((left + right) / 2);
+    }
+
+    // Step 6: Assign items to columns
+    const data = rows.map((row) => {
+      const cells: string[] = new Array(numCols).fill("");
+      for (const item of row) {
+        const itemCenter = item.x + item.width / 2;
+        // Find which column this item belongs to
+        let colIdx = 0;
+        for (let c = 0; c < numCols; c++) {
+          if (itemCenter > boundaries[c] && itemCenter <= boundaries[c + 1]) {
+            colIdx = c;
+            break;
+          }
+        }
+        cells[colIdx] = cells[colIdx] ? cells[colIdx] + " " + item.str : item.str;
+      }
+      return cells;
+    });
+
+    const isHeader = detectHeaderRow(rows);
+
+    return { data, isHeader, columnPositions };
+  };
+
+  /** Original grid-line-based table detection (used as "Table" mode) */
+  const detectTable = (
+    items: TextItem[],
+    lines: LineBoundaries
+  ): { data: string[][]; isHeader: boolean; columnPositions: number[] } => {
+    if (items.length === 0) return { data: [], isHeader: false, columnPositions: [] };
+
+    const fontSizes = items.map((it) => it.fontSize);
+    const charWidths = items
+      .filter((it) => it.str.length > 0 && it.width > 0)
+      .map((it) => it.width / it.str.length);
+
+    const medFontSize = median(fontSizes, 12);
+    const medCharWidth = median(charWidths, 6);
+    const yTolerance = medFontSize * 0.5;
+    const xRoundFactor = Math.max(1, Math.round(medFontSize * 0.3));
+    const colMergeThreshold = Math.max(10, medCharWidth * 3);
+
+    const sorted = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
+    let rows: TextItem[][];
+
+    if (lines.horizontalLines.length >= 2) {
+      const hLines = [...lines.horizontalLines].sort((a, b) => a - b);
+      rows = [];
+      const boundaries: number[] = [];
+      boundaries.push(-Infinity);
+      for (let r = 0; r < hLines.length - 1; r++) {
+        boundaries.push((hLines[r] + hLines[r + 1]) / 2);
+      }
+      boundaries.push(Infinity);
+
+      for (let r = 0; r < boundaries.length - 1; r++) {
+        const yMin = boundaries[r];
+        const yMax = boundaries[r + 1];
+        const rowItems = sorted.filter(
+          (it) => it.y > yMin && it.y <= yMax
+        );
+        if (rowItems.length > 0) {
+          rowItems.sort((a, b) => a.x - b.x);
+          rows.push(rowItems);
+        }
+      }
+
+      if (rows.length < 2) {
+        rows = clusterRowsByY(sorted, yTolerance);
+      }
+    } else {
+      rows = clusterRowsByY(sorted, yTolerance);
+    }
+
+    let mergedCols: number[];
+
+    if (lines.verticalLines.length >= 2) {
+      mergedCols = [...lines.verticalLines].sort((a, b) => a - b);
+    } else {
+      const allX = items.map((it) => Math.round(it.x / xRoundFactor) * xRoundFactor);
+      const xCounts: Record<number, number> = {};
+      allX.forEach((x) => { xCounts[x] = (xCounts[x] || 0) + 1; });
+
+      const colPositions = Object.entries(xCounts)
+        .filter(([, c]) => c >= Math.min(2, rows.length * 0.3))
+        .map(([x]) => Number(x))
+        .sort((a, b) => a - b);
+
+      mergedCols = [];
+      for (const x of colPositions) {
+        if (mergedCols.length === 0 || x - mergedCols[mergedCols.length - 1] > colMergeThreshold) {
+          mergedCols.push(x);
+        }
+      }
+    }
+
+    if (mergedCols.length <= 1) {
+      const data = rows.map((row) => [row.map((it) => it.str).join(" ")]);
+      return { data, isHeader: false, columnPositions: mergedCols };
+    }
+
+    const data = rows.map((row) => {
+      const cells: string[] = new Array(mergedCols.length).fill("");
+      for (const item of row) {
+        let colIdx = 0;
+        let minDist = Infinity;
+        for (let c = 0; c < mergedCols.length; c++) {
+          const dist = Math.abs(item.x - mergedCols[c]);
+          if (dist < minDist) {
+            minDist = dist;
+            colIdx = c;
+          }
+        }
+        cells[colIdx] = cells[colIdx] ? cells[colIdx] + " " + item.str : item.str;
+      }
+      return cells;
+    });
+
+    const isHeader = detectHeaderRow(rows);
+
+    return { data, isHeader, columnPositions: mergedCols };
+  };
+
   const extractRawText = (items: TextItem[]): string[][] => {
     if (items.length === 0) return [];
 
-    // Compute adaptive Y-tolerance
     const fontSizes = items.map((it) => it.fontSize);
     const medFontSize = median(fontSizes, 12);
     const yTolerance = medFontSize * 0.5;
@@ -344,6 +561,278 @@ export default function PdfToExcelTool() {
     return rows;
   };
 
+  // ==================== CELL TYPE INFERENCE ====================
+
+  /** Try to parse a cell string into a typed cell (number, percentage, currency, date, or string). */
+  const inferCellType = (text: string): TypedCell => {
+    const trimmed = text.trim();
+    if (!trimmed) return { value: "", type: "s" };
+
+    // Percentage: "45.2%", "100%", "-3.5%"
+    const pctMatch = trimmed.match(/^([+-]?\d[\d,]*\.?\d*)\s*%$/);
+    if (pctMatch) {
+      const num = parseFloat(pctMatch[1].replace(/,/g, ""));
+      if (!isNaN(num)) {
+        return { value: num / 100, type: "n", format: "0.00%" };
+      }
+    }
+
+    // Currency: "$1,234.56", "€50", "£1,000.00", "-$500"
+    const currencyMatch = trimmed.match(/^([+-])?\s*([$$€£¥₹])\s*([+-])?\s*([\d,]+\.?\d*)$/);
+    if (currencyMatch) {
+      const sign = currencyMatch[1] || currencyMatch[3] || "";
+      const symbol = currencyMatch[2];
+      const numStr = sign + currencyMatch[4].replace(/,/g, "");
+      const num = parseFloat(numStr);
+      if (!isNaN(num)) {
+        const symbolMap: Record<string, string> = {
+          "$": '"$"#,##0.00',
+          "\u20AC": '"\u20AC"#,##0.00',  // €
+          "\u00A3": '"\u00A3"#,##0.00',  // £
+          "\u00A5": '"\u00A5"#,##0',     // ¥
+          "\u20B9": '"\u20B9"#,##0.00',  // ₹
+        };
+        return { value: num, type: "n", format: symbolMap[symbol] || '"$"#,##0.00' };
+      }
+    }
+
+    // Parenthesized negative: "(1,234.56)" or "($1,234.56)"
+    const parenMatch = trimmed.match(/^\(([$$€£¥₹])?\s*([\d,]+\.?\d*)\)$/);
+    if (parenMatch) {
+      const num = -parseFloat(parenMatch[2].replace(/,/g, ""));
+      if (!isNaN(num)) {
+        const symbol = parenMatch[1] || "$";
+        return { value: num, type: "n", format: `"${symbol}"#,##0.00_);("${symbol}"#,##0.00)` };
+      }
+    }
+
+    // Date detection: common formats
+    // MM/DD/YYYY or DD/MM/YYYY
+    const dateSlash = trimmed.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/);
+    if (dateSlash) {
+      const a = parseInt(dateSlash[1]);
+      const b = parseInt(dateSlash[2]);
+      let year = parseInt(dateSlash[3]);
+      if (year < 100) year += 2000;
+
+      // Heuristic: if first number > 12, it's DD/MM/YYYY; otherwise MM/DD/YYYY
+      let month: number, day: number;
+      if (a > 12 && b <= 12) {
+        day = a; month = b;
+      } else if (b > 12 && a <= 12) {
+        month = a; day = b;
+      } else {
+        // Default to MM/DD/YYYY (US format)
+        month = a; day = b;
+      }
+
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        const jsDate = new Date(year, month - 1, day);
+        if (!isNaN(jsDate.getTime())) {
+          // Convert to Excel serial date number
+          const excelDate = 25569 + (jsDate.getTime() / 86400000);
+          return { value: excelDate, type: "n", format: "mm/dd/yyyy" };
+        }
+      }
+    }
+
+    // YYYY-MM-DD (ISO)
+    const dateIso = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (dateIso) {
+      const year = parseInt(dateIso[1]);
+      const month = parseInt(dateIso[2]);
+      const day = parseInt(dateIso[3]);
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        const jsDate = new Date(year, month - 1, day);
+        if (!isNaN(jsDate.getTime())) {
+          const excelDate = 25569 + (jsDate.getTime() / 86400000);
+          return { value: excelDate, type: "n", format: "yyyy-mm-dd" };
+        }
+      }
+    }
+
+    // Plain number: "1,234.56", "-500", "+3.14", "1234"
+    const numMatch = trimmed.match(/^[+-]?\d[\d,]*\.?\d*$/);
+    if (numMatch) {
+      const num = parseFloat(trimmed.replace(/,/g, ""));
+      if (!isNaN(num)) {
+        // Determine format based on content
+        const hasCommas = trimmed.includes(",");
+        const decimalPart = trimmed.split(".")[1];
+        const decimals = decimalPart ? decimalPart.length : 0;
+
+        let format = "General";
+        if (hasCommas && decimals > 0) {
+          format = "#,##0." + "0".repeat(decimals);
+        } else if (hasCommas) {
+          format = "#,##0";
+        } else if (decimals > 0) {
+          format = "0." + "0".repeat(decimals);
+        }
+
+        return { value: num, type: "n", format: format === "General" ? undefined : format };
+      }
+    }
+
+    // Default: string
+    return { value: trimmed, type: "s" };
+  };
+
+  // ==================== COLUMN WIDTH AUTO-SIZING ====================
+
+  /** Calculate optimal column widths based on content. */
+  const computeColumnWidths = (data: string[][]): { wch: number }[] => {
+    if (data.length === 0) return [];
+    const numCols = Math.max(...data.map(r => r.length));
+    const widths: { wch: number }[] = [];
+
+    for (let c = 0; c < numCols; c++) {
+      let maxLen = 8; // minimum width
+      for (const row of data) {
+        if (row[c]) {
+          const len = row[c].length;
+          if (len > maxLen) maxLen = len;
+        }
+      }
+      // Cap at 50 characters
+      widths.push({ wch: Math.min(maxLen + 2, 50) });
+    }
+    return widths;
+  };
+
+  // ==================== MERGED CELL DETECTION ====================
+
+  /** Detect text items that span multiple column boundaries (potential merged cells). */
+  const detectMergedCells = (
+    rows: string[][],
+    originalItems: TextItem[],
+    columnPositions: number[]
+  ): { s: { r: number; c: number }; e: { r: number; c: number } }[] => {
+    const merges: { s: { r: number; c: number }; e: { r: number; c: number } }[] = [];
+
+    if (columnPositions.length < 2) return merges;
+
+    // Check for cells that are empty and adjacent to a cell with wide content
+    for (let r = 0; r < rows.length; r++) {
+      const row = rows[r];
+      for (let c = 0; c < row.length; c++) {
+        if (!row[c]) continue;
+
+        // Count consecutive empty cells to the right
+        let emptyRight = 0;
+        for (let cc = c + 1; cc < row.length; cc++) {
+          if (!row[cc] || row[cc].trim() === "") {
+            emptyRight++;
+          } else {
+            break;
+          }
+        }
+
+        // Check if this looks like a merged cell (text present + empty neighbors)
+        // Only for rows where most other rows have data in those columns
+        if (emptyRight > 0) {
+          // Verify that the empty columns normally have data
+          let columnsNormallyFilled = 0;
+          for (let cc = c + 1; cc <= c + emptyRight; cc++) {
+            let filledCount = 0;
+            for (let rr = 0; rr < rows.length; rr++) {
+              if (rr !== r && rows[rr][cc] && rows[rr][cc].trim()) filledCount++;
+            }
+            if (filledCount >= rows.length * 0.3) columnsNormallyFilled++;
+          }
+
+          if (columnsNormallyFilled === emptyRight && emptyRight >= 1) {
+            merges.push({
+              s: { r, c },
+              e: { r, c: c + emptyRight },
+            });
+          }
+        }
+      }
+    }
+
+    return merges;
+  };
+
+  // ==================== MULTI-PAGE TABLE CONSOLIDATION ====================
+
+  /** Check if two page tables have compatible column structures. */
+  const areTablesCompatible = (a: PageTableData, b: PageTableData): boolean => {
+    if (a.data.length === 0 || b.data.length === 0) return false;
+
+    // Check column count
+    const aColCount = a.data[0].length;
+    const bColCount = b.data[0].length;
+    if (aColCount !== bColCount) return false;
+
+    // If column positions are available, check alignment
+    if (a.columnPositions.length > 0 && b.columnPositions.length > 0) {
+      if (a.columnPositions.length !== b.columnPositions.length) return false;
+      const positionTolerance = 20;
+      let matchCount = 0;
+      for (let i = 0; i < a.columnPositions.length; i++) {
+        if (Math.abs(a.columnPositions[i] - b.columnPositions[i]) <= positionTolerance) {
+          matchCount++;
+        }
+      }
+      return matchCount >= a.columnPositions.length * 0.7;
+    }
+
+    // Column count matches — good enough
+    return true;
+  };
+
+  /** Check if the first row of a page is a repeated header. */
+  const isRepeatedHeader = (headerRow: string[], candidateRow: string[]): boolean => {
+    if (headerRow.length !== candidateRow.length) return false;
+    let matchCount = 0;
+    for (let i = 0; i < headerRow.length; i++) {
+      const a = (headerRow[i] || "").trim().toLowerCase();
+      const b = (candidateRow[i] || "").trim().toLowerCase();
+      if (a === b) matchCount++;
+    }
+    // At least 70% of cells match
+    return matchCount >= headerRow.length * 0.7;
+  };
+
+  /** Merge compatible page tables into consolidated sheets. */
+  const consolidatePages = (pageTables: PageTableData[]): PageTableData[] => {
+    if (pageTables.length <= 1) return pageTables;
+
+    const consolidated: PageTableData[] = [];
+    let currentGroup: PageTableData | null = null;
+
+    for (const pt of pageTables) {
+      if (!currentGroup) {
+        currentGroup = { ...pt, data: [...pt.data] };
+        continue;
+      }
+
+      if (areTablesCompatible(currentGroup, pt)) {
+        // Check for repeated header
+        let dataToAppend = pt.data;
+        if (pt.isHeader && currentGroup.isHeader && currentGroup.data.length > 0 && pt.data.length > 0) {
+          if (isRepeatedHeader(currentGroup.data[0], pt.data[0])) {
+            // Skip the repeated header row
+            dataToAppend = pt.data.slice(1);
+          }
+        }
+        currentGroup.data = [...currentGroup.data, ...dataToAppend];
+      } else {
+        consolidated.push(currentGroup);
+        currentGroup = { ...pt, data: [...pt.data] };
+      }
+    }
+
+    if (currentGroup) {
+      consolidated.push(currentGroup);
+    }
+
+    return consolidated;
+  };
+
+  // ==================== MAIN CONVERSION ====================
+
   const handleConvert = async () => {
     if (!file) return;
     setLoading(true);
@@ -362,8 +851,9 @@ export default function PdfToExcelTool() {
       const doc = await pdfjsLib.getDocument({ data: buf }).promise;
       const wb = XLSX.utils.book_new();
       let totalCells = 0;
-      let firstPageData: string[][] | null = null;
-      let firstPageIsHeader = false;
+
+      // Collect page data for potential consolidation
+      const pageTables: PageTableData[] = [];
 
       for (let i = 1; i <= doc.numPages; i++) {
         setProgress(i);
@@ -373,28 +863,88 @@ export default function PdfToExcelTool() {
 
         let data: string[][];
         let isHeader = false;
+        let columnPositions: number[] = [];
 
-        if (mode === "table") {
+        if (mode === "smart") {
+          const result = detectTableSmart(items);
+          data = result.data;
+          isHeader = result.isHeader;
+          columnPositions = result.columnPositions;
+        } else if (mode === "table") {
           const lines = await detectLines(page);
           const result = detectTable(items, lines);
           data = result.data;
           isHeader = result.isHeader;
+          columnPositions = result.columnPositions;
         } else {
           data = extractRawText(items);
         }
-
-        totalCells += data.reduce((s, r) => s + r.length, 0);
 
         if (data.length === 0) {
           data = [["(No text found on this page)"]];
         }
 
-        // Capture first page data for preview
-        if (i === 1) {
-          firstPageData = data;
-          firstPageIsHeader = isHeader;
-        }
+        pageTables.push({
+          data,
+          isHeader,
+          columnPositions,
+          pageIndex: i,
+        });
+      }
+
+      // Consolidate pages if enabled and using smart/table mode
+      let sheets: { name: string; data: string[][]; isHeader: boolean; columnPositions: number[] }[];
+
+      if (mergePages && mode !== "raw" && pageTables.length > 1) {
+        setStatus("Consolidating tables across pages...");
+        const consolidated = consolidatePages(pageTables);
+        sheets = consolidated.map((ct, idx) => ({
+          name: consolidated.length === 1 ? "Sheet1" : `Table ${idx + 1}`,
+          data: ct.data,
+          isHeader: ct.isHeader,
+          columnPositions: ct.columnPositions,
+        }));
+      } else {
+        sheets = pageTables.map((pt) => ({
+          name: `Page ${pt.pageIndex}`,
+          data: pt.data,
+          isHeader: pt.isHeader,
+          columnPositions: pt.columnPositions,
+        }));
+      }
+
+      let firstSheetData: string[][] | null = null;
+      let firstSheetIsHeader = false;
+
+      for (let si = 0; si < sheets.length; si++) {
+        const sheet = sheets[si];
+        const { data, isHeader, columnPositions } = sheet;
+
+        totalCells += data.reduce((s, r) => s + r.length, 0);
+
+        // Create worksheet from array of arrays
         const ws = XLSX.utils.aoa_to_sheet(data);
+
+        // Apply cell type inference: walk through cells and set types/formats
+        for (let r = 0; r < data.length; r++) {
+          for (let c = 0; c < data[r].length; c++) {
+            const cellRef = XLSX.utils.encode_cell({ r, c });
+            const cellObj = ws[cellRef];
+            if (!cellObj || !data[r][c]) continue;
+
+            // Skip header row — keep as string
+            if (isHeader && r === 0) continue;
+
+            const typed = inferCellType(data[r][c]);
+            if (typed.type === "n") {
+              cellObj.t = "n";
+              cellObj.v = typed.value;
+              if (typed.format) {
+                cellObj.z = typed.format;
+              }
+            }
+          }
+        }
 
         // Apply bold styling to header row if detected
         if (isHeader && data.length > 0) {
@@ -406,7 +956,24 @@ export default function PdfToExcelTool() {
           }
         }
 
-        XLSX.utils.book_append_sheet(wb, ws, `Page ${i}`);
+        // Auto-size columns
+        ws["!cols"] = computeColumnWidths(data);
+
+        // Detect and apply merged cells
+        if (columnPositions.length > 0) {
+          const merges = detectMergedCells(data, [], columnPositions);
+          if (merges.length > 0) {
+            ws["!merges"] = merges;
+          }
+        }
+
+        // Capture first sheet data for preview
+        if (si === 0) {
+          firstSheetData = data;
+          firstSheetIsHeader = isHeader;
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, sheet.name);
       }
 
       if (totalCells === 0) {
@@ -415,9 +982,9 @@ export default function PdfToExcelTool() {
       }
 
       // Set preview data
-      if (firstPageData) {
-        setPreview(firstPageData.slice(0, 10));
-        setPreviewIsHeader(firstPageIsHeader);
+      if (firstSheetData) {
+        setPreview(firstSheetData.slice(0, 10));
+        setPreviewIsHeader(firstSheetIsHeader);
       }
 
       setStatus("Creating Excel file...");
@@ -427,7 +994,8 @@ export default function PdfToExcelTool() {
       });
       downloadBlob(blob, file.name.replace(/\.pdf$/i, "") + ".xlsx");
 
-      setStatus(`Done! Extracted ${totalCells} cells across ${doc.numPages} sheet${doc.numPages > 1 ? "s" : ""}.`);
+      const sheetLabel = sheets.length === 1 ? "1 sheet" : `${sheets.length} sheets`;
+      setStatus(`Done! Extracted ${totalCells} cells across ${sheetLabel}.`);
     } catch (e: unknown) {
       console.error("PDF to Excel error:", e);
       setError("Conversion failed: " + (e instanceof Error ? e.message : String(e)));
@@ -467,7 +1035,8 @@ export default function PdfToExcelTool() {
             <label className="block text-sm font-medium theme-text-secondary mb-2">Extraction Mode</label>
             <div className="flex gap-2">
               {([
-                { key: "table" as ExtractionMode, label: "Table Detection", desc: "Smart grid analysis" },
+                { key: "smart" as ExtractionMode, label: "Smart Detection", desc: "Whitespace-based analysis" },
+                { key: "table" as ExtractionMode, label: "Grid Lines", desc: "Uses visible borders" },
                 { key: "raw" as ExtractionMode, label: "Raw Text", desc: "All text line by line" },
               ]).map((opt) => (
                 <button
@@ -485,6 +1054,30 @@ export default function PdfToExcelTool() {
               ))}
             </div>
           </div>
+
+          {/* Multi-page merge toggle */}
+          {pageCount > 1 && mode !== "raw" && (
+            <div className="flex items-center justify-between p-3 rounded-xl theme-bg-secondary">
+              <div>
+                <p className="text-sm font-medium theme-text">Merge pages into one sheet</p>
+                <p className="text-xs theme-text-muted mt-0.5">Combines tables with matching columns, removes repeated headers</p>
+              </div>
+              <button
+                onClick={() => setMergePages(!mergePages)}
+                disabled={loading}
+                className={`relative w-11 h-6 rounded-full transition-colors ${
+                  mergePages ? "" : "bg-gray-300"
+                }`}
+                style={mergePages ? { backgroundColor: accentColor } : {}}
+              >
+                <span
+                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    mergePages ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
 
           {error && (
             <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/10">
@@ -515,7 +1108,7 @@ export default function PdfToExcelTool() {
             <div className="rounded-xl border theme-border overflow-hidden">
               <div className="px-4 py-2 theme-bg-secondary border-b theme-border">
                 <span className="text-xs font-medium theme-text-secondary">
-                  Preview (page 1{preview.length >= 10 ? ", first 10 rows" : ""})
+                  Preview{preview.length >= 10 ? " (first 10 rows)" : ""}
                 </span>
               </div>
               <div className="overflow-x-auto">
@@ -552,7 +1145,7 @@ export default function PdfToExcelTool() {
               </div>
               <div className="px-4 py-2 theme-bg-secondary border-t theme-border">
                 <p className="text-xs theme-text-muted">
-                  Preview looks wrong? Try Raw Text mode for general text extraction.
+                  Preview looks wrong? Try Grid Lines mode for bordered tables, or Raw Text for general extraction.
                 </p>
               </div>
             </div>
@@ -568,7 +1161,7 @@ export default function PdfToExcelTool() {
           </button>
 
           <p className="text-xs theme-text-muted text-center leading-relaxed">
-            Table Detection works best with structured data. Use Raw Text for general text extraction.
+            Smart Detection works best for most tables. Use Grid Lines for bordered tables, or Raw Text for general text.
           </p>
         </div>
       )}
