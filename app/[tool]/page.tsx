@@ -291,6 +291,11 @@ export default async function ToolPage({ params }: PageProps) {
             <p className="text-xs" style={{ color: "var(--text-dim)" }}>
               &copy; {new Date().getFullYear()} PDF Tools. All rights reserved.
             </p>
+            {process.env.NEXT_PUBLIC_COMMIT_HASH && (
+              <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
+                Build v{process.env.NEXT_PUBLIC_COMMIT_HASH} &middot; {new Date(process.env.NEXT_PUBLIC_COMMIT_DATE || "").toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true })}
+              </p>
+            )}
           </div>
         </div>
       </footer>
