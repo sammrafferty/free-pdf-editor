@@ -14,16 +14,25 @@ export default function ExtractPagesTool() {
 
   const handleFile = async (files: File[]) => {
     const f = files[0];
+    if (!f) return;
     setError("");
     setSelected(new Set());
     try {
       const buf = await f.arrayBuffer();
       const pdf = await PDFDocument.load(buf);
+      const count = pdf.getPageCount();
+      if (count === 0) {
+        setError("This PDF has no pages.");
+        setFile(null);
+        setPageCount(0);
+        return;
+      }
       setFile(f);
-      setPageCount(pdf.getPageCount());
+      setPageCount(count);
     } catch {
       setError("Could not read this PDF. It may be corrupted or password-protected.");
       setFile(null);
+      setPageCount(0);
     }
   };
 
@@ -58,17 +67,25 @@ export default function ExtractPagesTool() {
       const buf = await file.arrayBuffer();
       const srcPdf = await PDFDocument.load(buf);
       const newPdf = await PDFDocument.create();
-      const indices = Array.from(selected).sort((a, b) => a - b).map((p) => p - 1);
+      const indices = Array.from(selected)
+        .filter((p) => p >= 1 && p <= pageCount)
+        .sort((a, b) => a - b)
+        .map((p) => p - 1);
+      if (indices.length === 0) {
+        setError("No valid pages selected.");
+        return;
+      }
       const copied = await newPdf.copyPages(srcPdf, indices);
       copied.forEach((p) => newPdf.addPage(p));
 
       const bytes = await newPdf.save();
       const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
-      downloadBlob(blob, `extracted_${selected.size}_pages.pdf`);
+      downloadBlob(blob, `extracted_${indices.length}_pages.pdf`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Extraction failed");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -97,7 +114,7 @@ export default function ExtractPagesTool() {
                 <p className="text-xs theme-text-muted">{pageCount} pages</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setPageCount(0); setSelected(new Set()); }} className="theme-text-muted  text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setPageCount(0); setSelected(new Set()); setError(""); }} className="theme-text-muted text-sm font-medium">Remove</button>
           </div>
 
           <div>

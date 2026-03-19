@@ -216,6 +216,7 @@ export default function RedactTool() {
   const handleRedact = async () => {
     if (!file || regions.length === 0) return;
     setLoading(true);
+    setError("");
     try {
       const buf = await file.arrayBuffer();
 
@@ -239,7 +240,8 @@ export default function RedactTool() {
           const canvas = document.createElement("canvas");
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-          const ctx = canvas.getContext("2d")!;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("Could not create canvas context for redaction rendering.");
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await pdfPage.render({ canvasContext: ctx, viewport, canvas } as any).promise;
@@ -305,7 +307,7 @@ export default function RedactTool() {
                 <p className="text-xs theme-text-muted">{pageCount} pages</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setRegions([]); setSelectedRegionIdx(null); }} className="theme-text-muted text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setRegions([]); setSelectedRegionIdx(null); setError(""); setPageCount(0); setCurrentPage(1); setLoading(false); }} className="theme-text-muted text-sm font-medium">Remove</button>
           </div>
 
           {/* Warning */}
