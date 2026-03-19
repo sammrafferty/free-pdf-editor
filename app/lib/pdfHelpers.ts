@@ -9,15 +9,33 @@ export function downloadBlob(blob: Blob, filename: string) {
   a.style.display = "none";
   document.body.appendChild(a);
 
-  // Use a microtask to ensure the anchor is fully in the DOM before clicking
-  requestAnimationFrame(() => {
-    a.click();
-    // Keep the blob URL alive for 2 minutes to handle slow downloads
-    setTimeout(() => {
-      if (a.parentNode) a.parentNode.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 120000);
-  });
+  // Check if the processing interstitial is mounted
+  const hasInterstitial =
+    typeof window !== "undefined" &&
+    !!document.querySelector("[data-processing-interstitial]");
+  const delay = hasInterstitial ? 3000 : 0;
+
+  // Fire event so interstitial can show
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("pdf-download-start", { detail: { filename } })
+    );
+  }
+
+  setTimeout(() => {
+    // Use a microtask to ensure the anchor is fully in the DOM before clicking
+    requestAnimationFrame(() => {
+      a.click();
+      // Keep the blob URL alive for 2 minutes to handle slow downloads
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 120000);
+    });
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("pdf-download-complete"));
+    }
+  }, delay);
 }
 
 const docCache = new WeakMap<File, Promise<PDFDocumentProxy>>();

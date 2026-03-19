@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import ThemeProvider from "../components/ThemeProvider";
+import ProcessingInterstitial from "../components/ProcessingInterstitial";
 
 const toolComponentMap: Record<string, React.ComponentType> = {
   split: dynamic(() => import("../components/tools/SplitTool")),
@@ -43,6 +44,7 @@ export default function ToolPageClient({ toolId }: Props) {
   return (
     <ThemeProvider>
       <ToolComponent />
+      <ProcessingInterstitial />
     </ThemeProvider>
   );
 }

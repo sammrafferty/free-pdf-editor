@@ -5,6 +5,7 @@ import { getAllSlugs, getToolBySlug } from "../lib/toolData";
 import ToolPageClient from "./ToolPageClient";
 import FaqSchema from "../components/FaqSchema";
 import RelatedTools from "../components/RelatedTools";
+import EmailCapture from "../components/EmailCapture";
 import AdSlot from "../components/AdSlot";
 import { ThemeToggle } from "../components/ThemeProvider";
 import CookieConsent from "../components/CookieConsent";
@@ -245,6 +246,9 @@ export default async function ToolPage({ params }: PageProps) {
 
             {/* FAQ Schema */}
             <FaqSchema faqs={toolData.faqs} />
+
+            {/* Email Capture */}
+            <EmailCapture />
 
             {/* Related Tools */}
             <RelatedTools currentSlug={slug} />
