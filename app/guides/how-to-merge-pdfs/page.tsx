@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ThemeToggle } from "@/app/components/ThemeProvider";
+import AdSlot from "@/app/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "How to Merge PDFs — Free Online PDF Combiner | PDF Tools",
@@ -93,6 +94,8 @@ export default function MergeGuide() {
             </ol>
           </div>
 
+          <AdSlot slot="guide-merge-mid" format="horizontal" className="my-6 sm:my-8" />
+
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>When to Merge PDFs</h2>
             <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
@@ -124,6 +127,8 @@ export default function MergeGuide() {
               If the merged file is too large for your purposes — for example, if you need to email it and the total exceeds 25 MB — use the Compress PDF tool after merging. Compression can often reduce file size by 30–70% depending on the content, especially for image-heavy documents like scanned pages.
             </p>
           </div>
+
+          <AdSlot slot="guide-merge-faq" format="rectangle" className="my-6 sm:my-8" />
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Frequently Asked Questions</h2>

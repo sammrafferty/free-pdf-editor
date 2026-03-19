@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ThemeToggle } from "@/app/components/ThemeProvider";
+import AdSlot from "@/app/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "About — PDF Tools | Free Browser-Based PDF Suite",
@@ -151,6 +152,10 @@ export default function About() {
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <AdSlot slot="about-content" format="horizontal" className="my-6 sm:my-8" />
       </div>
 
       <footer style={{ borderTop: "1px solid var(--border-primary)" }} className="mt-12">

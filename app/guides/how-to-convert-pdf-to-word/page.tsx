@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ThemeToggle } from "@/app/components/ThemeProvider";
+import AdSlot from "@/app/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "How to Convert PDF to Word — Free Online Converter | PDF Tools",
@@ -91,6 +92,8 @@ export default function ConvertGuide() {
             </ol>
           </div>
 
+          <AdSlot slot="guide-convert-mid" format="horizontal" className="my-6 sm:my-8" />
+
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Understanding PDF-to-Word Conversion</h2>
             <p style={{ color: "var(--text-secondary)" }}>
@@ -129,6 +132,8 @@ export default function ConvertGuide() {
               <li>For forms and fillable PDFs, the form fields may convert as plain text. You may need to recreate form fields in Word.</li>
             </ul>
           </div>
+
+          <AdSlot slot="guide-convert-faq" format="rectangle" className="my-6 sm:my-8" />
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Frequently Asked Questions</h2>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ThemeToggle } from "@/app/components/ThemeProvider";
+import AdSlot from "@/app/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "Terms of Service — PDF Tools",
@@ -106,6 +107,8 @@ export default function TermsOfService() {
               <li>We are not liable for any direct, indirect, incidental, or consequential damages arising from use of the Service</li>
             </ul>
           </section>
+
+          <AdSlot slot="terms-content" format="rectangle" className="my-6 sm:my-8" />
 
           <section>
             <h2 className="text-xl font-semibold mb-3" style={{ color: "var(--text-primary)" }}>6. Disclaimer of Warranties</h2>

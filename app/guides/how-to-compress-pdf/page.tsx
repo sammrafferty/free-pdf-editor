@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ThemeToggle } from "@/app/components/ThemeProvider";
+import AdSlot from "@/app/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "How to Compress a PDF — Free Online PDF Compressor | PDF Tools",
@@ -93,6 +94,8 @@ export default function CompressGuide() {
             </ol>
           </div>
 
+          <AdSlot slot="guide-compress-mid" format="horizontal" className="my-6 sm:my-8" />
+
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>What Makes PDFs Large?</h2>
             <p style={{ color: "var(--text-secondary)" }}>
@@ -124,6 +127,8 @@ export default function CompressGuide() {
               <p><strong style={{ color: "var(--text-primary)" }}>For archival storage.</strong> If you&apos;re storing hundreds or thousands of PDFs, even modest compression per file adds up to significant storage savings over time.</p>
             </div>
           </div>
+
+          <AdSlot slot="guide-compress-faq" format="rectangle" className="my-6 sm:my-8" />
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Frequently Asked Questions</h2>

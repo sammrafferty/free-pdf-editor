@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ThemeToggle } from "@/app/components/ThemeProvider";
+import AdSlot from "@/app/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "How to Rotate PDF Pages — Free Online PDF Rotator | PDF Tools",
@@ -93,6 +94,8 @@ export default function RotateGuide() {
             </ol>
           </div>
 
+          <AdSlot slot="guide-rotate-mid" format="horizontal" className="my-6 sm:my-8" />
+
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Why Do PDFs End Up Sideways?</h2>
             <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
@@ -121,6 +124,8 @@ export default function RotateGuide() {
               <li>After rotating, the page dimensions update accordingly — a portrait page rotated 90° becomes landscape, and vice versa.</li>
             </ul>
           </div>
+
+          <AdSlot slot="guide-rotate-faq" format="rectangle" className="my-6 sm:my-8" />
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Frequently Asked Questions</h2>

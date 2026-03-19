@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ThemeToggle } from "@/app/components/ThemeProvider";
+import AdSlot from "@/app/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "How to Split a PDF — Free Online PDF Splitter | PDF Tools",
@@ -93,6 +94,8 @@ export default function SplitGuide() {
             </ol>
           </div>
 
+          <AdSlot slot="guide-split-mid" format="horizontal" className="my-6 sm:my-8" />
+
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Common Use Cases</h2>
             <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
@@ -112,6 +115,8 @@ export default function SplitGuide() {
               <li>The split operation preserves all formatting, fonts, images, and links from the original document.</li>
             </ul>
           </div>
+
+          <AdSlot slot="guide-split-faq" format="rectangle" className="my-6 sm:my-8" />
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Frequently Asked Questions</h2>

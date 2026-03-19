@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ThemeToggle } from "@/app/components/ThemeProvider";
+import AdSlot from "@/app/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "FAQ — Frequently Asked Questions | PDF Tools",
@@ -152,8 +153,21 @@ export default function FAQ() {
         </p>
 
         <div className="space-y-6">
-          {faqs.map((faq, i) => (
+          {faqs.slice(0, 9).map((faq, i) => (
             <div key={i} className="theme-section p-5 sm:p-6">
+              <h2 className="font-semibold text-base sm:text-lg mb-2" style={{ color: "var(--text-primary)" }}>
+                {faq.q}
+              </h2>
+              <p className="text-sm sm:text-base leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                {faq.a}
+              </p>
+            </div>
+          ))}
+
+          <AdSlot slot="faq-mid" format="rectangle" className="my-6 sm:my-8" />
+
+          {faqs.slice(9).map((faq, i) => (
+            <div key={i + 9} className="theme-section p-5 sm:p-6">
               <h2 className="font-semibold text-base sm:text-lg mb-2" style={{ color: "var(--text-primary)" }}>
                 {faq.q}
               </h2>

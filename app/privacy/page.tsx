@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { ThemeToggle } from "@/app/components/ThemeProvider";
+import AdSlot from "@/app/components/AdSlot";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — PDF Tools",
@@ -97,6 +98,8 @@ export default function PrivacyPolicy() {
               </a>.
             </p>
           </section>
+
+          <AdSlot slot="privacy-content" format="rectangle" className="my-6 sm:my-8" />
 
           <section>
             <h2 className="text-xl font-semibold mb-3" style={{ color: "var(--text-primary)" }}>5. Your Rights and Choices</h2>
