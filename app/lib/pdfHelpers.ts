@@ -5,12 +5,19 @@ export function downloadBlob(blob: Blob, filename: string) {
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
+  a.rel = "noopener";
+  a.style.display = "none";
   document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 1000);
+
+  // Use a microtask to ensure the anchor is fully in the DOM before clicking
+  requestAnimationFrame(() => {
+    a.click();
+    // Keep the blob URL alive for 2 minutes to handle slow downloads
+    setTimeout(() => {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 120000);
+  });
 }
 
 const docCache = new WeakMap<File, Promise<PDFDocumentProxy>>();
