@@ -57,6 +57,7 @@ export default function ExcelToPdfTool() {
 
   const handleFile = async (files: File[]) => {
     const f = files[0];
+    if (!f) return;
     setFile(f);
     setError("");
     setStatus("");
@@ -64,17 +65,22 @@ export default function ExcelToPdfTool() {
       const XLSX = await import("xlsx");
       const buf = await f.arrayBuffer();
       const wb = XLSX.read(buf);
+      if (!wb.SheetNames || wb.SheetNames.length === 0) {
+        setError("This file contains no sheets.");
+        setFile(null);
+        return;
+      }
       setSheetNames(wb.SheetNames);
       setSelectedSheets(wb.SheetNames);
 
-      // Auto-detect orientation based on max column count
+      // Auto-detect orientation based on max column count across all rows
       let maxCols = 0;
       for (const sn of wb.SheetNames) {
         const ws = wb.Sheets[sn];
         if (!ws) continue;
         const jsonData = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
-        if (jsonData.length > 0) {
-          const cols = (jsonData[0] as string[]).length;
+        for (const row of jsonData) {
+          const cols = (row as string[]).length;
           if (cols > maxCols) maxCols = cols;
         }
       }
@@ -111,6 +117,7 @@ export default function ExcelToPdfTool() {
       const wb = XLSX.read(buf);
       const pdf = new jsPDF(orientation === "landscape" ? "l" : "p", "pt", "a4");
       let firstPage = true;
+      let convertedCount = 0;
 
       for (const sheetName of selectedSheets) {
         const ws = wb.Sheets[sheetName];
@@ -123,6 +130,7 @@ export default function ExcelToPdfTool() {
 
         if (!firstPage) pdf.addPage();
         firstPage = false;
+        convertedCount++;
 
         // Add sheet name as title
         pdf.setFontSize(14);
@@ -175,17 +183,18 @@ export default function ExcelToPdfTool() {
 
       if (firstPage) {
         setError("No data found in the selected sheets.");
-        setLoading(false);
         return;
       }
 
-      pdf.save(file.name.replace(/\.(xlsx|xls|csv)$/i, "") + ".pdf");
-      setStatus(`Done! Converted ${selectedSheets.length} sheet${selectedSheets.length > 1 ? "s" : ""} to PDF.`);
+      const outputName = file.name.replace(/\.(xlsx|xls|csv)$/i, "") || file.name;
+      pdf.save(outputName + ".pdf");
+      setStatus(`Done! Converted ${convertedCount} sheet${convertedCount !== 1 ? "s" : ""} to PDF.`);
     } catch (e: unknown) {
       console.error("Excel to PDF error:", e);
       setError("Conversion failed: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const accentColor = "#16a34a";
@@ -337,7 +346,7 @@ export default function ExcelToPdfTool() {
             className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
             style={!loading && selectedSheets.length > 0 ? { backgroundColor: accentColor } : {}}
           >
-            {loading ? status : `Convert ${selectedSheets.length} Sheet${selectedSheets.length !== 1 ? "s" : ""} to PDF`}
+            {loading ? status : selectedSheets.length === 0 ? "Select at least one sheet" : `Convert ${selectedSheets.length} Sheet${selectedSheets.length !== 1 ? "s" : ""} to PDF`}
           </button>
 
           <p className="text-xs theme-text-muted text-center leading-relaxed">

@@ -37,9 +37,12 @@ export default function PptxToPdfTool() {
   const [error, setError] = useState("");
 
   const handleFile = (files: File[]) => {
+    if (!files || files.length === 0) return;
     setFile(files[0]);
     setError("");
     setStatus("");
+    setProgress(0);
+    setTotalSlides(0);
   };
 
   // Default fallback colors for scheme color names
@@ -116,9 +119,10 @@ export default function PptxToPdfTool() {
   };
 
   const handleConvert = async () => {
-    if (!file) return;
+    if (!file || loading) return;
     setLoading(true);
     setProgress(0);
+    setTotalSlides(0);
     setStatus("Reading PowerPoint file...");
     setError("");
 
@@ -161,6 +165,7 @@ export default function PptxToPdfTool() {
 
       if (slideFiles.length === 0) {
         setError("No slides found in this PowerPoint file.");
+        setStatus("");
         setLoading(false);
         return;
       }
@@ -210,8 +215,10 @@ export default function PptxToPdfTool() {
               const mediaFile = zip.file(mediaPath);
               if (mediaFile) {
                 const base64 = await mediaFile.async("base64");
-                const ext = mediaPath.split(".").pop()?.toLowerCase();
-                const mime = ext === "png" ? "image/png" : ext === "gif" ? "image/gif" : "image/jpeg";
+                const ext = mediaPath.split(".").pop()?.toLowerCase() || "";
+                // Skip unsupported formats (SVG, EMF, WMF) - jsPDF only supports PNG/JPEG/GIF/BMP/WebP
+                if (["svg", "emf", "wmf", "tiff", "tif"].includes(ext)) continue;
+                const mime = ext === "png" ? "image/png" : ext === "gif" ? "image/gif" : ext === "webp" ? "image/webp" : ext === "bmp" ? "image/bmp" : "image/jpeg";
                 mediaCache[mediaPath] = `data:${mime};base64,${base64}`;
               }
             }
@@ -416,17 +423,17 @@ export default function PptxToPdfTool() {
         for (const t of slide.texts) {
           const fontStyle = t.bold && t.italic ? "bolditalic" : t.bold ? "bold" : t.italic ? "italic" : "normal";
           pdf.setFont("helvetica", fontStyle);
-          pdf.setFontSize(t.fontSize);
+          pdf.setFontSize(Math.max(t.fontSize, 1));
 
-          // Parse hex color
-          const hex = t.color.replace("#", "");
-          const r = parseInt(hex.substring(0, 2), 16);
-          const g = parseInt(hex.substring(2, 4), 16);
-          const b = parseInt(hex.substring(4, 6), 16);
+          // Parse hex color with fallback for malformed values
+          const hex = t.color.replace("#", "").padEnd(6, "0");
+          const r = parseInt(hex.substring(0, 2), 16) || 0;
+          const g = parseInt(hex.substring(2, 4), 16) || 0;
+          const b = parseInt(hex.substring(4, 6), 16) || 0;
           pdf.setTextColor(r, g, b);
 
-          // Word wrap within the text box width
-          const lines: string[] = pdf.splitTextToSize(t.text, t.w);
+          // Word wrap within the text box width (use slideW as fallback if width is 0)
+          const lines: string[] = pdf.splitTextToSize(t.text, t.w > 0 ? t.w : slideW);
 
           // Limit lines to what fits in the allocated height
           const lineSpacing = t.fontSize * 1.2;
@@ -470,8 +477,10 @@ export default function PptxToPdfTool() {
     } catch (e: unknown) {
       console.error("PPTX to PDF error:", e);
       setError("Conversion failed: " + (e instanceof Error ? e.message : String(e)));
+      setStatus("");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const accentColor = "#dc2626";
@@ -503,7 +512,7 @@ export default function PptxToPdfTool() {
                 <p className="text-xs theme-text-muted">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setError(""); setStatus(""); }} className="theme-text-muted  text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setError(""); setStatus(""); setProgress(0); setTotalSlides(0); }} className="theme-text-muted text-sm font-medium">Remove</button>
           </div>
 
           {error && (
@@ -519,7 +528,7 @@ export default function PptxToPdfTool() {
                 {totalSlides > 0 && <span className="text-xs theme-text-secondary">{progress} / {totalSlides}</span>}
               </div>
               {totalSlides > 0 && (
-                <div className="w-full theme-progress-track rounded-full h-2">
+                <div className="w-full theme-progress-track rounded-full h-2" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={totalSlides} aria-label={`Conversion progress: ${progress} of ${totalSlides} slides`}>
                   <div className="h-2 rounded-full transition-all" style={{ backgroundColor: accentColor, width: `${(progress / totalSlides) * 100}%` }} />
                 </div>
               )}
@@ -538,7 +547,7 @@ export default function PptxToPdfTool() {
             className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
             style={!loading ? { backgroundColor: accentColor } : {}}
           >
-            {loading ? `Converting slide ${progress} of ${totalSlides}...` : "Convert to PDF"}
+            {loading ? (totalSlides > 0 ? `Converting slide ${progress} of ${totalSlides}...` : "Reading file...") : "Convert to PDF"}
           </button>
 
           <p className="text-xs theme-text-muted text-center leading-relaxed">

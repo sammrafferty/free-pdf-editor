@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Dropzone from "../Dropzone";
 
 type QualityMode = "1x" | "2x";
@@ -14,8 +14,10 @@ export default function PdfToPptxTool() {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const convertingRef = useRef(false);
 
   const handleFile = async (files: File[]) => {
+    if (!files || files.length === 0) return;
     const f = files[0];
     setFile(f);
     setError("");
@@ -26,6 +28,7 @@ export default function PdfToPptxTool() {
       const buf = await f.arrayBuffer();
       const doc = await pdfjsLib.getDocument({ data: buf }).promise;
       setPageCount(doc.numPages);
+      doc.destroy();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       if (msg.includes("password") || msg.includes("encrypted")) {
@@ -34,11 +37,13 @@ export default function PdfToPptxTool() {
         setError("Could not read this PDF.");
       }
       setFile(null);
+      setPageCount(0);
     }
   };
 
   const handleConvert = async () => {
-    if (!file) return;
+    if (!file || convertingRef.current) return;
+    convertingRef.current = true;
     setLoading(true);
     setProgress(0);
     setStatus("Loading PDF...");
@@ -51,113 +56,131 @@ export default function PdfToPptxTool() {
 
       const buf = await file.arrayBuffer();
       const doc = await pdfjsLib.getDocument({ data: buf }).promise;
-      const pptx = new PptxGenJS();
-      const scale = quality === "2x" ? 2 : 1;
 
-      // Set slide dimensions based on first page aspect ratio
-      const firstPage = await doc.getPage(1);
-      const firstVp = firstPage.getViewport({ scale: 1 });
-      const aspect = firstVp.width / firstVp.height;
-      const slideW = 10;
-      const slideH = slideW / aspect;
-      pptx.defineLayout({ name: "Custom", width: slideW, height: slideH });
-      pptx.layout = "Custom";
+      try {
+        const pptx = new PptxGenJS();
+        const scale = quality === "2x" ? 2 : 1;
 
-      for (let i = 1; i <= doc.numPages; i++) {
-        setProgress(i);
-        setStatus(`Rendering page ${i} of ${doc.numPages}...`);
+        // Set slide dimensions based on first page aspect ratio
+        const firstPage = await doc.getPage(1);
+        const firstVp = firstPage.getViewport({ scale: 1 });
+        const aspect = firstVp.width / firstVp.height;
+        const slideW = 10;
+        const slideH = slideW / aspect;
+        firstPage.cleanup();
+        pptx.defineLayout({ name: "Custom", width: slideW, height: slideH });
+        pptx.layout = "Custom";
 
-        const page = await doc.getPage(i);
-        const viewport = page.getViewport({ scale });
+        for (let i = 1; i <= doc.numPages; i++) {
+          setStatus(`Rendering page ${i} of ${doc.numPages}...`);
 
-        // Render page to canvas
-        const canvas = document.createElement("canvas");
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        const ctx = canvas.getContext("2d")!;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await page.render({ canvasContext: ctx, viewport } as any).promise;
+          const page = await doc.getPage(i);
+          const viewport = page.getViewport({ scale });
 
-        const imgData = canvas.toDataURL("image/jpeg", 0.92);
-
-        const slide = pptx.addSlide();
-        slide.addImage({
-          data: imgData,
-          x: 0,
-          y: 0,
-          w: slideW,
-          h: slideH,
-        });
-
-        // Text overlay: add selectable text boxes on top of the image
-        if (textOverlay) {
-          const textContent = await page.getTextContent();
-          const pageVp = page.getViewport({ scale: 1 });
-          const pageW = pageVp.width;
-          const pageH = pageVp.height;
-
-          for (const item of textContent.items) {
-            if (!("str" in item) || !item.str.trim()) continue;
-            const textItem = item as {
-              str: string;
-              transform: number[];
-              width: number;
-              height: number;
-            };
-
-            // pdfjs transform: [scaleX, skewX, skewY, scaleY, translateX, translateY]
-            const tx = textItem.transform[4];
-            const ty = textItem.transform[5];
-            const fontSize = Math.abs(textItem.transform[3]);
-
-            // Convert PDF coordinates (origin bottom-left) to slide coordinates (origin top-left)
-            const x = (tx / pageW) * slideW;
-            const y = ((pageH - ty) / pageH) * slideH;
-            const w = (textItem.width / pageW) * slideW;
-            // Approximate height from font size
-            const h = ((fontSize * 1.2) / pageH) * slideH;
-
-            // Map PDF font size to PowerPoint points (approximate)
-            const pptFontSize = Math.max(4, Math.round((fontSize / pageH) * slideH * 72));
-
-            slide.addText(textItem.str, {
-              x,
-              y: Math.max(0, y - h),
-              w: Math.max(w, 0.3),
-              h: Math.max(h, 0.15),
-              fontSize: pptFontSize,
-              color: "000000",
-              transparent: true,
-              valign: "bottom",
-              wrap: false,
-            } as Parameters<typeof slide.addText>[1]);
+          // Render page to canvas
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            throw new Error(`Failed to create canvas context for page ${i}`);
           }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await page.render({ canvasContext: ctx, viewport } as any).promise;
+
+          const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+          // Release canvas memory
+          canvas.width = 0;
+          canvas.height = 0;
+
+          const slide = pptx.addSlide();
+          slide.addImage({
+            data: imgData,
+            x: 0,
+            y: 0,
+            w: slideW,
+            h: slideH,
+          });
+
+          // Get text content once if needed by either feature
+          const needsText = textOverlay || includeText;
+          const textContent = needsText ? await page.getTextContent() : null;
+
+          // Text overlay: add selectable text boxes on top of the image
+          if (textOverlay && textContent) {
+            const pageVp = page.getViewport({ scale: 1 });
+            const pageW = pageVp.width;
+            const pageH = pageVp.height;
+
+            for (const item of textContent.items) {
+              if (!("str" in item) || !item.str.trim()) continue;
+              const textItem = item as {
+                str: string;
+                transform: number[];
+                width: number;
+                height: number;
+              };
+
+              // pdfjs transform: [scaleX, skewX, skewY, scaleY, translateX, translateY]
+              const tx = textItem.transform[4];
+              const ty = textItem.transform[5];
+              const fontSize = Math.abs(textItem.transform[3]);
+
+              // Convert PDF coordinates (origin bottom-left) to slide coordinates (origin top-left)
+              const x = (tx / pageW) * slideW;
+              const y = ((pageH - ty) / pageH) * slideH;
+              const w = (textItem.width / pageW) * slideW;
+              // Approximate height from font size
+              const h = ((fontSize * 1.2) / pageH) * slideH;
+
+              // Map PDF font size to PowerPoint points (approximate)
+              const pptFontSize = Math.max(4, Math.round((fontSize / pageH) * slideH * 72));
+
+              slide.addText(textItem.str, {
+                x: Math.max(0, x),
+                y: Math.max(0, y - h),
+                w: Math.max(w, 0.3),
+                h: Math.max(h, 0.15),
+                fontSize: pptFontSize,
+                color: "000000",
+                transparent: true,
+                valign: "bottom",
+                wrap: false,
+              } as Parameters<typeof slide.addText>[1]);
+            }
+          }
+
+          // Extract text for notes
+          if (includeText && textContent) {
+            const pageText = textContent.items
+              .filter((item) => "str" in item)
+              .map((item) => (item as { str: string }).str)
+              .join(" ")
+              .trim();
+            if (pageText) {
+              slide.addNotes(pageText);
+            }
+          }
+
+          page.cleanup();
+          setProgress(i);
         }
 
-        // Extract text for notes
-        if (includeText) {
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .filter((item) => "str" in item)
-            .map((item) => (item as { str: string }).str)
-            .join(" ")
-            .trim();
-          if (pageText) {
-            slide.addNotes(pageText);
-          }
-        }
+        setStatus("Creating PowerPoint file...");
+        const fileName = file.name.replace(/\.pdf$/i, "") + ".pptx";
+        await pptx.writeFile({ fileName });
+
+        setStatus(`Done! Created ${doc.numPages} slide${doc.numPages > 1 ? "s" : ""}.`);
+      } finally {
+        doc.destroy();
       }
-
-      setStatus("Creating PowerPoint file...");
-      const fileName = file.name.replace(/\.pdf$/i, "") + ".pptx";
-      await pptx.writeFile({ fileName });
-
-      setStatus(`Done! Created ${doc.numPages} slide${doc.numPages > 1 ? "s" : ""}.`);
     } catch (e: unknown) {
       console.error("PDF to PPTX error:", e);
       setError("Conversion failed: " + (e instanceof Error ? e.message : String(e)));
     }
     setLoading(false);
+    convertingRef.current = false;
   };
 
   const accentColor = "#dc2626";
@@ -183,7 +206,7 @@ export default function PdfToPptxTool() {
                 <p className="text-xs theme-text-muted">{pageCount} page{pageCount !== 1 ? "s" : ""} &middot; {(file.size / 1024 / 1024).toFixed(1)} MB</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setPageCount(0); setError(""); setStatus(""); }} className="theme-text-muted  text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setPageCount(0); setProgress(0); setError(""); setStatus(""); }} className="theme-text-muted text-sm font-medium" disabled={loading}>Remove</button>
           </div>
 
           {/* Quality selector */}
@@ -240,7 +263,7 @@ export default function PdfToPptxTool() {
                 <span className="text-xs theme-text-secondary">{progress} / {pageCount}</span>
               </div>
               <div className="w-full theme-progress-track rounded-full h-2">
-                <div className="h-2 rounded-full transition-all" style={{ backgroundColor: accentColor, width: `${(progress / pageCount) * 100}%` }} />
+                <div className="h-2 rounded-full transition-all" style={{ backgroundColor: accentColor, width: `${pageCount > 0 ? (progress / pageCount) * 100 : 0}%` }} />
               </div>
             </div>
           )}
