@@ -170,27 +170,111 @@ const signTools: ToolDef[] = [
   { id: "sign", label: "Sign PDF", desc: "Draw and embed your signature", color: "#f0abfc", icon: signIcon },
 ];
 
+/* ── Format mini-icons for convert cards ──────────────── */
+
+type FormatType = "pdf" | "word" | "excel" | "ppt" | "image";
+
+const formatStyles: Record<FormatType, { bg: string; color: string }> = {
+  pdf:   { bg: "rgba(239,68,68,0.15)", color: "#f87171" },
+  word:  { bg: "rgba(59,130,246,0.15)", color: "#60a5fa" },
+  excel: { bg: "rgba(34,197,94,0.15)", color: "#4ade80" },
+  ppt:   { bg: "rgba(249,115,22,0.15)", color: "#fb923c" },
+  image: { bg: "rgba(139,92,246,0.15)", color: "#a78bfa" },
+};
+
+const miniIcon = (children: React.ReactNode) => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    {children}
+  </svg>
+);
+
+const formatIcons: Record<FormatType, React.ReactNode> = {
+  pdf: miniIcon(<>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+  </>),
+  word: miniIcon(<>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+    <line x1="8" y1="13" x2="16" y2="13"/>
+    <line x1="8" y1="17" x2="13" y2="17"/>
+  </>),
+  excel: miniIcon(<>
+    <rect x="3" y="3" width="18" height="18" rx="2"/>
+    <line x1="3" y1="9" x2="21" y2="9"/>
+    <line x1="3" y1="15" x2="21" y2="15"/>
+    <line x1="9" y1="3" x2="9" y2="21"/>
+  </>),
+  ppt: miniIcon(<>
+    <rect x="2" y="2" width="20" height="14" rx="2"/>
+    <line x1="12" y1="16" x2="12" y2="22"/>
+    <line x1="8" y1="22" x2="16" y2="22"/>
+  </>),
+  image: miniIcon(<>
+    <rect x="3" y="3" width="18" height="18" rx="2"/>
+    <circle cx="8.5" cy="8.5" r="1.5"/>
+    <polyline points="21 15 16 10 5 21"/>
+  </>),
+};
+
+const arrowIcon = (
+  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 12h14M13 6l6 6-6 6"/>
+  </svg>
+);
+
+function FormatDualIcon({ from, to }: { from: FormatType; to: FormatType }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+      <div style={{
+        width: 22, height: 22, borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center",
+        backgroundColor: formatStyles[from].bg, color: formatStyles[from].color,
+      }}>
+        {formatIcons[from]}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", color: "var(--text-muted)" }}>
+        {arrowIcon}
+      </div>
+      <div style={{
+        width: 22, height: 22, borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center",
+        backgroundColor: formatStyles[to].bg, color: formatStyles[to].color,
+      }}>
+        {formatIcons[to]}
+      </div>
+    </div>
+  );
+}
+
+interface ConvertToolDef {
+  id: ToolId;
+  label: string;
+  desc: string;
+  color: string;
+  from: FormatType;
+  to: FormatType;
+}
+
 interface ConvertPair {
-  a: ToolDef;
-  b: ToolDef;
+  a: ConvertToolDef;
+  b: ConvertToolDef;
 }
 
 const convertPairs: ConvertPair[] = [
   {
-    a: { id: "pdftodocx", label: "PDF to Word", desc: "Convert to editable DOCX", color: "#60a5fa", icon: pdfIcon },
-    b: { id: "docxtopdf", label: "Word to PDF", desc: "Convert DOCX to PDF", color: "#60a5fa", icon: docIcon },
+    a: { id: "pdftodocx", label: "PDF to Word", desc: "Convert to editable DOCX", color: "#60a5fa", from: "pdf", to: "word" },
+    b: { id: "docxtopdf", label: "Word to PDF", desc: "Convert DOCX to PDF", color: "#60a5fa", from: "word", to: "pdf" },
   },
   {
-    a: { id: "pdftoexcel", label: "PDF to Excel", desc: "Extract tables to spreadsheet", color: "#4ade80", icon: pdfIcon },
-    b: { id: "exceltopdf", label: "Excel to PDF", desc: "Convert spreadsheet to PDF", color: "#4ade80", icon: excelIcon },
+    a: { id: "pdftoexcel", label: "PDF to Excel", desc: "Extract tables to spreadsheet", color: "#4ade80", from: "pdf", to: "excel" },
+    b: { id: "exceltopdf", label: "Excel to PDF", desc: "Convert spreadsheet to PDF", color: "#4ade80", from: "excel", to: "pdf" },
   },
   {
-    a: { id: "pdftopptx", label: "PDF to PPT", desc: "Convert to presentation slides", color: "#fb923c", icon: pdfIcon },
-    b: { id: "pptxtopdf", label: "PPT to PDF", desc: "Convert slides to PDF", color: "#fb923c", icon: slideIcon },
+    a: { id: "pdftopptx", label: "PDF to PPT", desc: "Convert to presentation slides", color: "#fb923c", from: "pdf", to: "ppt" },
+    b: { id: "pptxtopdf", label: "PPT to PDF", desc: "Convert slides to PDF", color: "#fb923c", from: "ppt", to: "pdf" },
   },
   {
-    a: { id: "pdftoimage", label: "PDF to Image", desc: "Convert pages to PNG", color: "#f472b6", icon: imageOutIcon },
-    b: { id: "imagetopdf", label: "Image to PDF", desc: "Combine images into PDF", color: "#fb923c", icon: imageInIcon },
+    a: { id: "pdftoimage", label: "PDF to Image", desc: "Convert pages to PNG", color: "#f472b6", from: "pdf", to: "image" },
+    b: { id: "imagetopdf", label: "Image to PDF", desc: "Combine images into PDF", color: "#fb923c", from: "image", to: "pdf" },
   },
 ];
 
@@ -272,11 +356,8 @@ function ConvertCard({ pair, index = 0 }: { pair: ConvertPair; index: number }) 
         href={`/${slugA}`}
         className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
       >
-        <div
-          className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center shrink-0 rounded-lg group-hover:scale-110 transition-transform duration-200"
-          style={{ backgroundColor: pair.a.color + "15", color: pair.a.color }}
-        >
-          {pair.a.icon}
+        <div className="shrink-0 group-hover:scale-110 transition-transform duration-200">
+          <FormatDualIcon from={pair.a.from} to={pair.a.to} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="font-medium text-xs sm:text-sm leading-tight flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
@@ -291,11 +372,8 @@ function ConvertCard({ pair, index = 0 }: { pair: ConvertPair; index: number }) 
         href={`/${slugB}`}
         className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
       >
-        <div
-          className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center shrink-0 rounded-lg group-hover:scale-110 transition-transform duration-200"
-          style={{ backgroundColor: pair.b.color + "15", color: pair.b.color }}
-        >
-          {pair.b.icon}
+        <div className="shrink-0 group-hover:scale-110 transition-transform duration-200">
+          <FormatDualIcon from={pair.b.from} to={pair.b.to} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="font-medium text-xs sm:text-sm leading-tight flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
