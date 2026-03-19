@@ -255,7 +255,7 @@ function HomeContent() {
             </p>
             {process.env.NEXT_PUBLIC_COMMIT_HASH && (
               <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
-                Build v{process.env.NEXT_PUBLIC_COMMIT_HASH} &middot; {new Date(process.env.NEXT_PUBLIC_COMMIT_DATE || "").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                Build v{process.env.NEXT_PUBLIC_COMMIT_HASH} &middot; {new Date(process.env.NEXT_PUBLIC_COMMIT_DATE || "").toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true })}
               </p>
             )}
           </div>
