@@ -4,6 +4,7 @@ import ThemeProvider, { ThemeToggle } from "./components/ThemeProvider";
 import ToolSelector from "./components/ToolSelector";
 import AdSlot from "./components/AdSlot";
 import CookieConsent from "./components/CookieConsent";
+import Logo from "./components/Logo";
 
 function HomeContent() {
   const scrollToTop = () => {
@@ -16,12 +17,7 @@ function HomeContent() {
       <header className="theme-header sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <button onClick={scrollToTop} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "var(--accent-primary)", color: "#fff" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-            </div>
+            <Logo size={24} />
             <span className="font-semibold text-sm tracking-tight" style={{ color: "var(--text-primary)" }}>
               PDF Tools
             </span>
@@ -99,12 +95,7 @@ function HomeContent() {
           <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
             <div className="text-center sm:text-left">
               <div className="flex items-center gap-2 justify-center sm:justify-start mb-2">
-                <div className="w-5 h-5 rounded flex items-center justify-center" style={{ background: "var(--accent-primary)", color: "#fff" }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
-                </div>
+                <Logo size={16} />
                 <span className="font-semibold text-xs" style={{ color: "var(--text-primary)" }}>PDF Tools</span>
               </div>
               <p className="text-xs max-w-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>

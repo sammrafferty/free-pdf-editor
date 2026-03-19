@@ -54,6 +54,8 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
+
+  --logo-color: #f5f0e8;
 }
 
 .light {
@@ -99,6 +101,20 @@
 
   --grid-color: rgba(0, 0, 0, 0.03);
   --grid-size: 32px;
+
+  --logo-color: #2c1a0e;
+}
+
+/* Logo hover animation */
+.site-logo {
+  transition: transform 0.4s ease;
+}
+.site-logo:hover {
+  animation: logo-spin 1.5s linear infinite;
+}
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ═══════════════════════════════════════════════════════
