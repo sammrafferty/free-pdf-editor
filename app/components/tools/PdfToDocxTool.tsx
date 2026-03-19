@@ -14,7 +14,22 @@ interface TextItem {
   width: number;
   height: number;
   color?: { r: number; g: number; b: number };
+  isBold: boolean;
+  isItalic: boolean;
+  isUnderline: boolean;
   hasEOL: boolean;
+}
+
+interface LinkAnnotation {
+  url: string;
+  rect: [number, number, number, number]; // [x1, y1, x2, y2] in PDF coords
+}
+
+interface DetectedTable {
+  rows: TextItem[][][]; // rows -> columns -> items
+  startY: number;
+  endY: number;
+  columnBoundaries: number[];
 }
 
 interface LineGroup {
@@ -50,6 +65,8 @@ interface ExtractedImage {
 
 interface PageContent {
   paragraphs: ParagraphGroup[];
+  tables: DetectedTable[];
+  links: LinkAnnotation[];
   images: ExtractedImage[];
   width: number;
   height: number;
@@ -90,9 +107,115 @@ export default function PdfToDocxTool() {
     }
   };
 
-  const extractTextItems = async (page: import("pdfjs-dist").PDFPageProxy): Promise<TextItem[]> => {
+  // ---------- Color extraction via operator list ----------
+
+  const extractTextColors = async (
+    page: import("pdfjs-dist").PDFPageProxy
+  ): Promise<Map<number, { r: number; g: number; b: number }>> => {
+    const colorMap = new Map<number, { r: number; g: number; b: number }>();
+    try {
+      const pdfjsLib = await import("pdfjs-dist");
+      const ops = await page.getOperatorList();
+      const OPS = pdfjsLib.OPS;
+
+      let currentColor = { r: 0, g: 0, b: 0 };
+      const colorStack: { r: number; g: number; b: number }[] = [];
+      let textItemIndex = 0;
+
+      for (let i = 0; i < ops.fnArray.length; i++) {
+        const fn = ops.fnArray[i];
+        const args = ops.argsArray[i];
+
+        switch (fn) {
+          case OPS.save:
+            colorStack.push({ ...currentColor });
+            break;
+          case OPS.restore:
+            if (colorStack.length > 0) {
+              currentColor = colorStack.pop()!;
+            }
+            break;
+          case (OPS as Record<string, number>)["setFillRGBColor"]:
+            if (args && args.length >= 3) {
+              currentColor = {
+                r: Math.round(args[0] * 255),
+                g: Math.round(args[1] * 255),
+                b: Math.round(args[2] * 255),
+              };
+            }
+            break;
+          case (OPS as Record<string, number>)["setFillGray"]:
+            if (args && args.length >= 1) {
+              const gray = Math.round(args[0] * 255);
+              currentColor = { r: gray, g: gray, b: gray };
+            }
+            break;
+          case (OPS as Record<string, number>)["setFillCMYKColor"]:
+            if (args && args.length >= 4) {
+              const c = args[0], m = args[1], y = args[2], k = args[3];
+              currentColor = {
+                r: Math.round(255 * (1 - c) * (1 - k)),
+                g: Math.round(255 * (1 - m) * (1 - k)),
+                b: Math.round(255 * (1 - y) * (1 - k)),
+              };
+            }
+            break;
+          case OPS.showText:
+          case OPS.showSpacedText:
+          case (OPS as Record<string, number>)["nextLineShowText"]:
+          case (OPS as Record<string, number>)["nextLineSetSpacingShowText"]:
+            // Only store non-black colors (black is default and adds noise)
+            if (currentColor.r !== 0 || currentColor.g !== 0 || currentColor.b !== 0) {
+              colorMap.set(textItemIndex, { ...currentColor });
+            }
+            textItemIndex++;
+            break;
+        }
+      }
+    } catch {
+      // Color extraction is best-effort
+    }
+    return colorMap;
+  };
+
+  // ---------- Link annotation extraction ----------
+
+  const extractLinks = async (
+    page: import("pdfjs-dist").PDFPageProxy
+  ): Promise<LinkAnnotation[]> => {
+    const links: LinkAnnotation[] = [];
+    try {
+      const annotations = await page.getAnnotations();
+      for (const ann of annotations) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const a = ann as any;
+        if (a.subtype === "Link" && a.url && a.rect) {
+          links.push({
+            url: a.url,
+            rect: a.rect as [number, number, number, number],
+          });
+        }
+      }
+    } catch {
+      // Link extraction is best-effort
+    }
+    return links;
+  };
+
+  // ---------- Text item extraction with inline formatting ----------
+
+  const extractTextItems = async (
+    page: import("pdfjs-dist").PDFPageProxy,
+    colorMap?: Map<number, { r: number; g: number; b: number }>
+  ): Promise<TextItem[]> => {
     const textContent = await page.getTextContent();
     const items: TextItem[] = [];
+
+    // Build a styles lookup from textContent
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const styles = (textContent as any).styles as Record<string, { fontFamily?: string; ascent?: number; descent?: number }> | undefined;
+
+    let textOpIndex = 0;
 
     for (const item of textContent.items) {
       if (!("str" in item)) continue;
@@ -107,84 +230,107 @@ export default function PdfToDocxTool() {
       if (!ti.str.trim() && !ti.hasEOL) continue;
 
       const tx = ti.transform;
-      // Font size from transform matrix: for non-rotated text it's |tx[3]|,
-      // for rotated text use the magnitude of the vertical component
       const fontSize = Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3]) || Math.abs(tx[0]) || 12;
       const x = tx[4];
       const y = tx[5];
+
+      const fontName = ti.fontName || "";
+      const fontFamily = styles?.[fontName]?.fontFamily || "";
+      const nameToCheck = fontName + " " + fontFamily;
+
+      // Detect bold from font name patterns
+      const isBold = /bold|black|heavy|demi|semibold/i.test(nameToCheck) ||
+        /[\-_]B($|[\-_])/i.test(fontName) ||
+        /,Bold/i.test(fontName);
+
+      // Detect italic from font name patterns
+      const isItalic = /italic|oblique|slant/i.test(nameToCheck) ||
+        /[\-_]I($|[\-_])/i.test(fontName) ||
+        /,Italic/i.test(fontName);
+
+      // Detect underline (rare in PDF font names, but check)
+      const isUnderline = /underline/i.test(nameToCheck);
+
+      // Get color from operator list mapping
+      const color = colorMap?.get(textOpIndex);
 
       items.push({
         str: ti.str,
         x,
         y,
         fontSize: Math.round(fontSize * 10) / 10,
-        fontName: ti.fontName || "",
+        fontName,
         width: ti.width || 0,
         height: ti.height || fontSize,
+        isBold,
+        isItalic,
+        isUnderline,
+        color,
         hasEOL: ti.hasEOL,
       });
+
+      // Track operator index: each text item with content corresponds to a showText op
+      if (ti.str.trim()) {
+        textOpIndex++;
+      }
     }
     return items;
   };
 
+  // ---------- Histogram-based column detection ----------
+
   const detectColumns = (items: TextItem[], pageWidth: number): TextItem[][] => {
     if (items.length === 0) return [[]];
 
-    // Collect all starting X positions
-    const xPositions = items.map((it) => it.x);
-    xPositions.sort((a, b) => a - b);
+    // Build a histogram of X positions using fine-grained bins
+    const binSize = Math.max(1, pageWidth / 200);
+    const numBins = Math.ceil(pageWidth / binSize) + 1;
+    const histogram = new Array(numBins).fill(0);
 
-    // Cluster X positions: group items whose X values are within a threshold
-    const clusterThreshold = pageWidth * 0.05; // 5% of page width
-    const clusters: { center: number; count: number; minX: number; maxX: number }[] = [];
+    // Also track rightmost X per item for gap detection
+    for (const item of items) {
+      const bin = Math.floor(item.x / binSize);
+      if (bin >= 0 && bin < numBins) histogram[bin]++;
+      // Fill bins covered by this item
+      const endBin = Math.floor((item.x + item.width) / binSize);
+      for (let b = bin; b <= Math.min(endBin, numBins - 1); b++) {
+        histogram[b]++;
+      }
+    }
 
-    for (const x of xPositions) {
-      const existing = clusters.find(
-        (c) => Math.abs(x - c.center) < clusterThreshold
-      );
-      if (existing) {
-        existing.center =
-          (existing.center * existing.count + x) / (existing.count + 1);
-        existing.count++;
-        existing.minX = Math.min(existing.minX, x);
-        existing.maxX = Math.max(existing.maxX, x);
+    // Find gaps: regions with zero or near-zero density that span > 10% page width
+    const gapThreshold = Math.max(1, items.length * 0.01);
+    const gaps: { start: number; end: number; center: number }[] = [];
+    let gapStart = -1;
+
+    for (let b = 0; b < numBins; b++) {
+      if (histogram[b] <= gapThreshold) {
+        if (gapStart === -1) gapStart = b;
       } else {
-        clusters.push({ center: x, count: 1, minX: x, maxX: x });
+        if (gapStart !== -1) {
+          const gapWidthPx = (b - gapStart) * binSize;
+          // Only consider gaps wider than 5% of page width and not at margins
+          const gapCenterPx = (gapStart + b) / 2 * binSize;
+          if (gapWidthPx > pageWidth * 0.05 &&
+              gapCenterPx > pageWidth * 0.1 &&
+              gapCenterPx < pageWidth * 0.9) {
+            gaps.push({
+              start: gapStart * binSize,
+              end: b * binSize,
+              center: gapCenterPx,
+            });
+          }
+          gapStart = -1;
+        }
       }
     }
 
-    // Only keep clusters with meaningful item count (at least 5% of items)
-    const minCount = Math.max(2, items.length * 0.05);
-    const significantClusters = clusters
-      .filter((c) => c.count >= minCount)
-      .sort((a, b) => a.center - b.center);
+    if (gaps.length === 0) return [items];
 
-    if (significantClusters.length < 2) return [items];
+    // Use gap centers as column boundaries
+    const boundaries = gaps.map((g) => g.center);
 
-    // Check if clusters are separated by > 20% of page width
-    let hasColumnGap = false;
-    for (let i = 1; i < significantClusters.length; i++) {
-      const gap = significantClusters[i].center - significantClusters[i - 1].center;
-      if (gap > pageWidth * 0.2) {
-        hasColumnGap = true;
-        break;
-      }
-    }
-
-    if (!hasColumnGap) return [items];
-
-    // Find column boundaries: midpoints between significant clusters
-    const boundaries: number[] = [];
-    for (let i = 1; i < significantClusters.length; i++) {
-      const gap = significantClusters[i].center - significantClusters[i - 1].center;
-      if (gap > pageWidth * 0.2) {
-        boundaries.push(
-          (significantClusters[i - 1].center + significantClusters[i].center) / 2
-        );
-      }
-    }
-
-    // Assign items to columns based on boundaries
+    // Assign items to columns
     const columns: TextItem[][] = Array.from(
       { length: boundaries.length + 1 },
       () => []
@@ -197,14 +343,199 @@ export default function PdfToDocxTool() {
       columns[colIdx].push(item);
     }
 
-    // Filter out empty columns
     return columns.filter((col) => col.length > 0);
   };
+
+  // ---------- Table detection ----------
+
+  const detectTables = (items: TextItem[], pageWidth: number): { tables: DetectedTable[]; nonTableItems: TextItem[] } => {
+    if (items.length < 6) return { tables: [], nonTableItems: items };
+
+    // Group items into lines first
+    const lines = groupItemsIntoLines(items);
+    if (lines.length < 2) return { tables: [], nonTableItems: items };
+
+    // For each line, find the X positions where text starts
+    const lineXPositions: { line: LineGroup; xStarts: number[]; xEnds: number[] }[] = [];
+    for (const line of lines) {
+      // Find distinct text segments separated by gaps
+      const sortedItems = [...line.items].sort((a, b) => a.x - b.x);
+      const segments: { startX: number; endX: number }[] = [];
+      let segStart = sortedItems[0].x;
+      let segEnd = sortedItems[0].x + sortedItems[0].width;
+
+      for (let i = 1; i < sortedItems.length; i++) {
+        const gap = sortedItems[i].x - segEnd;
+        // Gap > 1.5x average font size indicates column separator
+        if (gap > line.avgFontSize * 1.5) {
+          segments.push({ startX: segStart, endX: segEnd });
+          segStart = sortedItems[i].x;
+        }
+        segEnd = Math.max(segEnd, sortedItems[i].x + sortedItems[i].width);
+      }
+      segments.push({ startX: segStart, endX: segEnd });
+
+      if (segments.length >= 2) {
+        lineXPositions.push({
+          line,
+          xStarts: segments.map((s) => s.startX),
+          xEnds: segments.map((s) => s.endX),
+        });
+      }
+    }
+
+    if (lineXPositions.length < 2) return { tables: [], nonTableItems: items };
+
+    // Find lines that share similar column boundaries (table rows)
+    // Use a voting approach: collect all column start positions and find clusters
+    const allXStarts: number[] = [];
+    for (const lp of lineXPositions) {
+      allXStarts.push(...lp.xStarts);
+    }
+
+    // Cluster the X start positions
+    const tolerance = pageWidth * 0.02;
+    const xClusters: { center: number; count: number }[] = [];
+    const sortedXStarts = [...allXStarts].sort((a, b) => a - b);
+
+    for (const x of sortedXStarts) {
+      const existing = xClusters.find((c) => Math.abs(x - c.center) < tolerance);
+      if (existing) {
+        existing.center = (existing.center * existing.count + x) / (existing.count + 1);
+        existing.count++;
+      } else {
+        xClusters.push({ center: x, count: 1 });
+      }
+    }
+
+    // Keep clusters that appear in multiple lines
+    const minLines = Math.max(2, lineXPositions.length * 0.3);
+    const significantClusters = xClusters
+      .filter((c) => c.count >= minLines)
+      .sort((a, b) => a.center - b.center);
+
+    if (significantClusters.length < 2) return { tables: [], nonTableItems: items };
+
+    // Column boundaries are the midpoints of gaps between significant clusters
+    const columnBoundaries = significantClusters.map((c) => c.center);
+
+    // Now identify which lines belong to the table
+    // A line is a table row if it has text in >= 2 column positions
+    const tableLines: LineGroup[] = [];
+    const nonTableLines: LineGroup[] = [];
+
+    for (const lp of lineXPositions) {
+      let matchingColumns = 0;
+      for (const xs of lp.xStarts) {
+        if (columnBoundaries.some((cb) => Math.abs(xs - cb) < tolerance * 2)) {
+          matchingColumns++;
+        }
+      }
+      if (matchingColumns >= 2) {
+        tableLines.push(lp.line);
+      } else {
+        nonTableLines.push(lp.line);
+      }
+    }
+
+    // Also add lines that had only 1 segment (not in lineXPositions) to nonTable
+    const lineXPosSet = new Set(lineXPositions.map((lp) => lp.line));
+    for (const line of lines) {
+      if (!lineXPosSet.has(line)) {
+        nonTableLines.push(line);
+      }
+    }
+
+    if (tableLines.length < 2) return { tables: [], nonTableItems: items };
+
+    // Group consecutive table lines into tables
+    const sortedTableLines = [...tableLines].sort((a, b) => b.y - a.y);
+    const tables: DetectedTable[] = [];
+    let currentTableLines: LineGroup[] = [sortedTableLines[0]];
+
+    for (let i = 1; i < sortedTableLines.length; i++) {
+      const gap = currentTableLines[currentTableLines.length - 1].y - sortedTableLines[i].y;
+      const avgSize = sortedTableLines[i].avgFontSize;
+      // Lines more than 3x font size apart start a new table
+      if (gap > avgSize * 3) {
+        if (currentTableLines.length >= 2) {
+          tables.push(buildTable(currentTableLines, columnBoundaries));
+        } else {
+          // Too few lines, add back to non-table
+          for (const tl of currentTableLines) nonTableLines.push(tl);
+        }
+        currentTableLines = [sortedTableLines[i]];
+      } else {
+        currentTableLines.push(sortedTableLines[i]);
+      }
+    }
+    if (currentTableLines.length >= 2) {
+      tables.push(buildTable(currentTableLines, columnBoundaries));
+    } else {
+      for (const tl of currentTableLines) nonTableLines.push(tl);
+    }
+
+    // Collect non-table items
+    const tableItemSet = new Set<TextItem>();
+    for (const table of tables) {
+      for (const row of table.rows) {
+        for (const col of row) {
+          for (const item of col) {
+            tableItemSet.add(item);
+          }
+        }
+      }
+    }
+    const nonTableItems = items.filter((it) => !tableItemSet.has(it));
+
+    return { tables, nonTableItems };
+  };
+
+  const buildTable = (tableLines: LineGroup[], columnBoundaries: number[]): DetectedTable => {
+    // Sort column boundaries
+    const sortedBounds = [...columnBoundaries].sort((a, b) => a - b);
+
+    // Build column ranges: each column starts at a boundary and extends to the next
+    const colRanges: { min: number; max: number }[] = [];
+    for (let c = 0; c < sortedBounds.length; c++) {
+      const min = c === 0 ? 0 : (sortedBounds[c - 1] + sortedBounds[c]) / 2;
+      const max = c === sortedBounds.length - 1 ? Infinity : (sortedBounds[c] + sortedBounds[c + 1]) / 2;
+      colRanges.push({ min, max });
+    }
+
+    // Build rows
+    const rows: TextItem[][][] = [];
+    for (const line of tableLines) {
+      const row: TextItem[][] = colRanges.map(() => []);
+      for (const item of line.items) {
+        // Find which column this item belongs to
+        let bestCol = 0;
+        let bestDist = Infinity;
+        for (let c = 0; c < sortedBounds.length; c++) {
+          const dist = Math.abs(item.x - sortedBounds[c]);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestCol = c;
+          }
+        }
+        row[bestCol].push(item);
+      }
+      rows.push(row);
+    }
+
+    return {
+      rows,
+      startY: Math.max(...tableLines.map((l) => l.y)),
+      endY: Math.min(...tableLines.map((l) => l.y)),
+      columnBoundaries: sortedBounds,
+    };
+  };
+
+  // ---------- Line grouping ----------
 
   const groupItemsIntoLines = (items: TextItem[]): LineGroup[] => {
     if (items.length === 0) return [];
 
-    // Sort by Y descending (PDF coords: bottom-up), then X ascending
     const sorted = [...items].sort((a, b) => {
       const yDiff = b.y - a.y;
       if (Math.abs(yDiff) > 2) return yDiff;
@@ -238,10 +569,8 @@ export default function PdfToDocxTool() {
   const groupIntoLines = (items: TextItem[], pageWidth: number): LineGroup[] => {
     if (items.length === 0) return [];
 
-    // Detect columns and process each independently
     const columns = detectColumns(items, pageWidth);
 
-    // Process each column top-to-bottom, left column first
     const allLines: LineGroup[] = [];
     for (const colItems of columns) {
       const colLines = groupItemsIntoLines(colItems);
@@ -264,6 +593,8 @@ export default function PdfToDocxTool() {
     };
   };
 
+  // ---------- Alignment detection ----------
+
   const detectAlignment = (
     lines: LineGroup[],
     pageWidth: number,
@@ -279,7 +610,6 @@ export default function PdfToDocxTool() {
       return "left";
     }
 
-    // Check if lines are centered
     const centers = lines.map((l) => (l.minX + l.maxX) / 2);
     const avgCenter = centers.reduce((s, c) => s + c, 0) / centers.length;
     const centerDeviation = centers.reduce((s, c) => s + Math.abs(c - avgCenter), 0) / centers.length;
@@ -288,7 +618,6 @@ export default function PdfToDocxTool() {
       return "center";
     }
 
-    // Check right alignment
     const rightEdges = lines.map((l) => l.maxX);
     const avgRight = rightEdges.reduce((s, r) => s + r, 0) / rightEdges.length;
     const rightDeviation = rightEdges.reduce((s, r) => s + Math.abs(r - avgRight), 0) / rightEdges.length;
@@ -299,10 +628,11 @@ export default function PdfToDocxTool() {
     return "left";
   };
 
+  // ---------- Paragraph grouping ----------
+
   const groupIntoParagraphs = (lines: LineGroup[], pageWidth: number): ParagraphGroup[] => {
     if (lines.length === 0) return [];
 
-    // Find most common left margin and font size (body text)
     const leftPositions = lines.map((l) => Math.round(l.minX));
     const leftCounts: Record<number, number> = {};
     leftPositions.forEach((p) => {
@@ -322,7 +652,6 @@ export default function PdfToDocxTool() {
       Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 12
     );
 
-    // Calculate median line spacing for better paragraph detection
     const lineGaps: number[] = [];
     for (let i = 1; i < lines.length; i++) {
       const gap = lines[i - 1].y - lines[i].y;
@@ -374,8 +703,8 @@ export default function PdfToDocxTool() {
     const primaryItem = firstLine.items[0];
     const fontName = primaryItem?.fontName || "";
     const fontSize = firstLine.avgFontSize;
-    const isBold = /bold/i.test(fontName) || /\-B$/.test(fontName);
-    const isItalic = /italic|oblique/i.test(fontName) || /\-I$/.test(fontName);
+    const isBold = primaryItem?.isBold || false;
+    const isItalic = primaryItem?.isItalic || false;
     const indent = Math.max(0, Math.round(firstLine.minX - bodyLeftMargin));
     const text = firstLine.text;
     const bullet = isBulletLine(text);
@@ -385,7 +714,7 @@ export default function PdfToDocxTool() {
     let listNumber = "";
     if (bullet) {
       const match = text.match(/^\s*([•\-\*\u2022\u2023\u25E6\u2043\u2219])\s/);
-      bulletChar = match ? match[1] : "•";
+      bulletChar = match ? match[1] : "\u2022";
     }
     if (numbered) {
       const match = text.match(/^\s*(\d+[\.\)])\s/);
@@ -393,6 +722,10 @@ export default function PdfToDocxTool() {
     }
 
     const alignment = detectAlignment(lines, pageWidth, bodyLeftMargin);
+
+    // Get predominant color from first line items
+    const colors = firstLine.items.filter((it) => it.color).map((it) => it.color!);
+    const color = colors.length > 0 ? colors[0] : undefined;
 
     return {
       lines,
@@ -406,9 +739,11 @@ export default function PdfToDocxTool() {
       bulletChar,
       isNumberedList: numbered,
       listNumber,
-      color: undefined,
+      color,
     };
   };
+
+  // ---------- Image extraction ----------
 
   const extractImages = async (page: import("pdfjs-dist").PDFPageProxy): Promise<ExtractedImage[]> => {
     const images: ExtractedImage[] = [];
@@ -424,8 +759,6 @@ export default function PdfToDocxTool() {
         ) {
           const imgName = ops.argsArray[i][0];
           try {
-            // pdfjs-dist v5: objs.get() can work as sync (returns value if resolved)
-            // or with callback. Try both patterns for compatibility.
             let imgData: {
               width: number;
               height: number;
@@ -434,12 +767,10 @@ export default function PdfToDocxTool() {
               kind?: number;
             } | null = null;
 
-            // Try direct/promise-based access first (pdfjs v5+)
             try {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const obj = page.objs as any;
               const result = obj.get(imgName);
-              // If it returns a promise, await it with a timeout
               if (result && typeof result.then === "function") {
                 imgData = await Promise.race([
                   result,
@@ -449,10 +780,9 @@ export default function PdfToDocxTool() {
                 imgData = result;
               }
             } catch {
-              // Direct access failed, try callback pattern
+              // Direct access failed
             }
 
-            // Fallback: try callback-based access
             if (!imgData) {
               try {
                 imgData = await new Promise<{
@@ -481,7 +811,6 @@ export default function PdfToDocxTool() {
 
             if (!imgData || imgData.width < 10 || imgData.height < 10) continue;
 
-            // If it's already a JPEG (has src property)
             if (imgData.src) {
               try {
                 const response = await fetch(imgData.src);
@@ -494,12 +823,11 @@ export default function PdfToDocxTool() {
                   format: "jpeg",
                 });
               } catch {
-                // Skip if fetch fails
+                // Skip
               }
               continue;
             }
 
-            // Convert raw RGBA data to PNG using canvas
             if (imgData.data) {
               const canvas = document.createElement("canvas");
               canvas.width = imgData.width;
@@ -507,12 +835,10 @@ export default function PdfToDocxTool() {
               const ctx = canvas.getContext("2d");
               if (!ctx) continue;
 
-              // imgData.data might be RGB or RGBA
               let imageDataArr: Uint8ClampedArray;
               if (imgData.data.length === imgData.width * imgData.height * 4) {
                 imageDataArr = imgData.data;
               } else if (imgData.data.length === imgData.width * imgData.height * 3) {
-                // Convert RGB to RGBA
                 imageDataArr = new Uint8ClampedArray(imgData.width * imgData.height * 4);
                 for (let j = 0; j < imgData.width * imgData.height; j++) {
                   imageDataArr[j * 4] = imgData.data[j * 3];
@@ -531,7 +857,6 @@ export default function PdfToDocxTool() {
               const blob = await new Promise<Blob | null>((resolve) =>
                 canvas.toBlob(resolve, "image/png")
               );
-              // Release canvas memory
               canvas.width = 0;
               canvas.height = 0;
               if (blob) {
@@ -545,12 +870,12 @@ export default function PdfToDocxTool() {
               }
             }
           } catch {
-            // Skip problematic images
+            // Skip
           }
         }
       }
     } catch {
-      // Image extraction failed, continue without images
+      // Image extraction failed
     }
     return images;
   };
@@ -558,7 +883,7 @@ export default function PdfToDocxTool() {
   const renderPageToImage = async (
     page: import("pdfjs-dist").PDFPageProxy
   ): Promise<ExtractedImage> => {
-    const scale = 2; // 2x scale for good quality
+    const scale = 2;
     const viewport = page.getViewport({ scale });
     const canvas = document.createElement("canvas");
     canvas.width = viewport.width;
@@ -573,14 +898,12 @@ export default function PdfToDocxTool() {
       canvas.toBlob(resolve, "image/png")
     );
     if (!blob) {
-      // Release canvas memory
       canvas.width = 0;
       canvas.height = 0;
       throw new Error("Failed to render page to image");
     }
 
     const arrayBuf = await blob.arrayBuffer();
-    // Release canvas memory after extracting the blob
     canvas.width = 0;
     canvas.height = 0;
     return {
@@ -591,6 +914,8 @@ export default function PdfToDocxTool() {
     };
   };
 
+  // ---------- Page content extraction ----------
+
   const extractPageContent = async (
     page: import("pdfjs-dist").PDFPageProxy,
     mode: QualityMode
@@ -599,8 +924,21 @@ export default function PdfToDocxTool() {
     const pageWidth = viewport.width;
     const pageHeight = viewport.height;
 
-    const textItems = await extractTextItems(page);
-    const lines = groupIntoLines(textItems, pageWidth);
+    // Extract colors from operator list (full mode only)
+    let colorMap: Map<number, { r: number; g: number; b: number }> | undefined;
+    if (mode === "full") {
+      colorMap = await extractTextColors(page);
+    }
+
+    const textItems = await extractTextItems(page, colorMap);
+
+    // Extract links
+    const links = mode === "full" ? await extractLinks(page) : [];
+
+    // Detect tables first, then process remaining text as paragraphs
+    const { tables, nonTableItems } = detectTables(textItems, pageWidth);
+
+    const lines = groupIntoLines(nonTableItems, pageWidth);
     const paragraphs = groupIntoParagraphs(lines, pageWidth);
 
     let images: ExtractedImage[] = [];
@@ -610,11 +948,44 @@ export default function PdfToDocxTool() {
 
     return {
       paragraphs,
+      tables,
+      links,
       images,
       width: pageWidth,
       height: pageHeight,
     };
   };
+
+  // ---------- Helper: check if text item overlaps a link annotation ----------
+
+  const findLinkForItem = (
+    item: TextItem,
+    links: LinkAnnotation[]
+  ): LinkAnnotation | undefined => {
+    if (links.length === 0) return undefined;
+    const itemCenterX = item.x + item.width / 2;
+    const itemCenterY = item.y;
+    for (const link of links) {
+      const [x1, y1, x2, y2] = link.rect;
+      const minX = Math.min(x1, x2);
+      const maxX = Math.max(x1, x2);
+      const minY = Math.min(y1, y2);
+      const maxY = Math.max(y1, y2);
+      if (itemCenterX >= minX - 2 && itemCenterX <= maxX + 2 &&
+          itemCenterY >= minY - 2 && itemCenterY <= maxY + 2) {
+        return link;
+      }
+    }
+    return undefined;
+  };
+
+  // ---------- Helper: format color to hex ----------
+
+  const colorToHex = (color: { r: number; g: number; b: number }): string => {
+    return `${color.r.toString(16).padStart(2, "0")}${color.g.toString(16).padStart(2, "0")}${color.b.toString(16).padStart(2, "0")}`;
+  };
+
+  // ---------- Build DOCX ----------
 
   const buildDocx = async (pages: PageContent[]) => {
     const {
@@ -626,6 +997,13 @@ export default function PdfToDocxTool() {
       AlignmentType,
       PageBreak,
       ImageRun,
+      ExternalHyperlink,
+      Table,
+      TableRow,
+      TableCell,
+      BorderStyle,
+      ShadingType,
+      WidthType,
       convertInchesToTwip,
     } = await import("docx");
 
@@ -645,9 +1023,8 @@ export default function PdfToDocxTool() {
       Object.entries(sizeFreq).sort((a, b) => b[1] - a[1])[0]?.[0] || 12
     );
 
-    const docChildren: (
-      | InstanceType<typeof Paragraph>
-    )[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const docChildren: any[] = [];
 
     for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
       const page = pages[pageIdx];
@@ -655,7 +1032,6 @@ export default function PdfToDocxTool() {
       // Add images at the start of the page
       for (const img of page.images) {
         try {
-          // Scale image to fit within page width (~6.5 inches)
           const maxWidthInches = 6;
           const aspectRatio = img.height / img.width;
           let imgWidthInches = Math.min(img.width / 96, maxWidthInches);
@@ -681,87 +1057,202 @@ export default function PdfToDocxTool() {
             })
           );
         } catch {
-          // Skip problematic images
+          // Skip
         }
       }
 
-      for (let pIdx = 0; pIdx < page.paragraphs.length; pIdx++) {
-        const para = page.paragraphs[pIdx];
-
-        // Determine heading level
-        let headingLevel: (typeof HeadingLevel)[keyof typeof HeadingLevel] | undefined;
-        const sizeRatio = para.fontSize / bodySize;
-        if (sizeRatio >= 1.8) headingLevel = HeadingLevel.HEADING_1;
-        else if (sizeRatio >= 1.4) headingLevel = HeadingLevel.HEADING_2;
-        else if (sizeRatio >= 1.15 && para.isBold) headingLevel = HeadingLevel.HEADING_3;
-
-        // Build alignment
-        let alignment: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT;
-        if (para.alignment === "center") alignment = AlignmentType.CENTER;
-        else if (para.alignment === "right") alignment = AlignmentType.RIGHT;
-
-        // Build text runs from all lines
-        const runs: InstanceType<typeof TextRun>[] = [];
-        const fullText = para.lines
-          .map((l) => l.text)
-          .join(" ")
-          .trim();
-
-        // Strip bullet/number prefix for clean text
-        let displayText = fullText;
-        if (para.isBullet) {
-          displayText = fullText.replace(/^\s*[•\-\*\u2022\u2023\u25E6\u2043\u2219]\s*/, "");
-        }
-        if (para.isNumberedList) {
-          displayText = fullText.replace(/^\s*\d+[\.\)]\s*/, "");
-        }
-
-        if (!displayText.trim()) continue;
-
-        // Map PDF font size to Word half-points (Word uses half-points)
-        // PDF points ≈ Word points, Word size field is in half-points
-        const wordSize = headingLevel ? undefined : Math.round(para.fontSize * 2);
-
-        runs.push(
-          new TextRun({
-            text: displayText,
-            bold: para.isBold || !!headingLevel,
-            italics: para.isItalic,
-            size: wordSize,
-            color: para.color
-              ? `${para.color.r.toString(16).padStart(2, "0")}${para.color.g.toString(16).padStart(2, "0")}${para.color.b.toString(16).padStart(2, "0")}`
-              : undefined,
-          })
-        );
-
-        // Calculate spacing based on gaps
-        let spacingAfter = 120; // default ~6pt after
-        if (pIdx < page.paragraphs.length - 1) {
-          const nextPara = page.paragraphs[pIdx + 1];
-          const gap =
-            para.lines[para.lines.length - 1].y - nextPara.lines[0].y;
-          if (gap > para.fontSize * 3) spacingAfter = 360;
-          else if (gap > para.fontSize * 2) spacingAfter = 240;
-        }
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const paragraphOptions: any = {
-          children: runs,
-          heading: headingLevel,
-          alignment,
-          spacing: { after: spacingAfter },
-          indent: para.indent > 10 ? { left: para.indent * 15 } : undefined,
-        };
-
-        // Bullet/number handling
-        if (para.isBullet) {
-          paragraphOptions.bullet = { level: 0 };
-        }
-
-        docChildren.push(new Paragraph(paragraphOptions));
+      // Interleave tables and paragraphs by Y position
+      // Build a combined list of content blocks sorted by Y position
+      interface ContentBlock {
+        type: "paragraph" | "table";
+        y: number;
+        paragraph?: ParagraphGroup;
+        table?: DetectedTable;
       }
 
-      // Page break between pages (not after last)
+      const blocks: ContentBlock[] = [];
+      for (const para of page.paragraphs) {
+        blocks.push({
+          type: "paragraph",
+          y: para.lines[0]?.y || 0,
+          paragraph: para,
+        });
+      }
+      for (const table of page.tables) {
+        blocks.push({
+          type: "table",
+          y: table.startY,
+          table,
+        });
+      }
+      // Sort by Y descending (top of page first in PDF coords)
+      blocks.sort((a, b) => b.y - a.y);
+
+      for (let bIdx = 0; bIdx < blocks.length; bIdx++) {
+        const block = blocks[bIdx];
+
+        if (block.type === "table" && block.table) {
+          // Render table
+          const table = block.table;
+          const numCols = table.columnBoundaries.length;
+          const tableWidthDxa = 9360; // ~6.5 inches
+          const colWidthDxa = Math.floor(tableWidthDxa / numCols);
+
+          const border = { style: BorderStyle.SINGLE, size: 1, color: "999999" };
+          const borders = { top: border, bottom: border, left: border, right: border };
+
+          const tableRows: InstanceType<typeof TableRow>[] = [];
+          for (let rIdx = 0; rIdx < table.rows.length; rIdx++) {
+            const row = table.rows[rIdx];
+            const isHeader = rIdx === 0;
+            const cells: InstanceType<typeof TableCell>[] = [];
+
+            for (let cIdx = 0; cIdx < numCols; cIdx++) {
+              const cellItems = cIdx < row.length ? row[cIdx] : [];
+              const cellText = cellItems.map((it) => it.str).join("").trim();
+
+              // Build runs with inline formatting for cell content
+              const cellRuns = buildInlineRuns(cellItems, page.links, TextRun, ExternalHyperlink);
+
+              cells.push(
+                new TableCell({
+                  children: [
+                    new Paragraph({
+                      children: cellRuns.length > 0 ? cellRuns : [new TextRun({ text: cellText || "" })],
+                    }),
+                  ],
+                  borders,
+                  width: { size: colWidthDxa, type: WidthType.DXA },
+                  shading: isHeader
+                    ? { fill: "D9E2F3", type: ShadingType.CLEAR, color: "auto" }
+                    : undefined,
+                })
+              );
+            }
+
+            tableRows.push(
+              new TableRow({
+                children: cells,
+                tableHeader: isHeader,
+              })
+            );
+          }
+
+          if (tableRows.length > 0) {
+            docChildren.push(
+              new Table({
+                rows: tableRows,
+                width: { size: tableWidthDxa, type: WidthType.DXA },
+              })
+            );
+            // Add spacing after table
+            docChildren.push(new Paragraph({ spacing: { after: 200 }, children: [] }));
+          }
+        } else if (block.type === "paragraph" && block.paragraph) {
+          const para = block.paragraph;
+
+          // Determine heading level
+          let headingLevel: (typeof HeadingLevel)[keyof typeof HeadingLevel] | undefined;
+          const sizeRatio = para.fontSize / bodySize;
+          if (sizeRatio >= 1.8) headingLevel = HeadingLevel.HEADING_1;
+          else if (sizeRatio >= 1.4) headingLevel = HeadingLevel.HEADING_2;
+          else if (sizeRatio >= 1.15 && para.isBold) headingLevel = HeadingLevel.HEADING_3;
+
+          // Build alignment
+          let alignment: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT;
+          if (para.alignment === "center") alignment = AlignmentType.CENTER;
+          else if (para.alignment === "right") alignment = AlignmentType.RIGHT;
+
+          // Collect all text items from all lines for multi-run inline formatting
+          const allItems: TextItem[] = [];
+          for (let lineIdx = 0; lineIdx < para.lines.length; lineIdx++) {
+            const line = para.lines[lineIdx];
+            allItems.push(...line.items);
+            // Add a space between lines (unless it's the last line)
+            if (lineIdx < para.lines.length - 1) {
+              // Create a synthetic space item to separate lines
+              const lastItem = line.items[line.items.length - 1];
+              if (lastItem && !lastItem.str.endsWith(" ")) {
+                allItems.push({
+                  ...lastItem,
+                  str: " ",
+                  width: 0,
+                  x: lastItem.x + lastItem.width,
+                });
+              }
+            }
+          }
+
+          // Strip bullet/number prefix items
+          let startIdx = 0;
+          if (para.isBullet || para.isNumberedList) {
+            // Find where the actual content starts (after the bullet/number marker)
+            let accumulated = "";
+            for (let i = 0; i < allItems.length; i++) {
+              accumulated += allItems[i].str;
+              if (para.isBullet) {
+                if (/[•\-\*\u2022\u2023\u25E6\u2043\u2219]\s/.test(accumulated)) {
+                  startIdx = i + 1;
+                  break;
+                }
+              } else if (para.isNumberedList) {
+                if (/\d+[\.\)]\s/.test(accumulated)) {
+                  startIdx = i + 1;
+                  break;
+                }
+              }
+            }
+          }
+
+          const contentItems = allItems.slice(startIdx);
+          if (contentItems.length === 0 || contentItems.every((it) => !it.str.trim())) continue;
+
+          // Build multi-run inline formatting
+          const runs = buildInlineRuns(contentItems, page.links, TextRun, ExternalHyperlink, headingLevel);
+
+          if (runs.length === 0) continue;
+
+          const wordSize = headingLevel ? undefined : Math.round(para.fontSize * 2);
+
+          // If all runs are plain TextRuns without specific formatting and heading,
+          // apply paragraph-level size
+          if (!headingLevel && wordSize) {
+            for (const run of runs) {
+              if (run instanceof TextRun) {
+                // TextRun size is already set in buildInlineRuns
+              }
+            }
+          }
+
+          // Calculate spacing
+          let spacingAfter = 120;
+          if (bIdx < blocks.length - 1) {
+            const nextBlock = blocks[bIdx + 1];
+            if (nextBlock.type === "paragraph" && nextBlock.paragraph) {
+              const gap = para.lines[para.lines.length - 1].y - nextBlock.paragraph.lines[0].y;
+              if (gap > para.fontSize * 3) spacingAfter = 360;
+              else if (gap > para.fontSize * 2) spacingAfter = 240;
+            }
+          }
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const paragraphOptions: any = {
+            children: runs,
+            heading: headingLevel,
+            alignment,
+            spacing: { after: spacingAfter },
+            indent: para.indent > 10 ? { left: para.indent * 15 } : undefined,
+          };
+
+          if (para.isBullet) {
+            paragraphOptions.bullet = { level: 0 };
+          }
+
+          docChildren.push(new Paragraph(paragraphOptions));
+        }
+      }
+
+      // Page break between pages
       if (pageIdx < pages.length - 1) {
         docChildren.push(
           new Paragraph({
@@ -771,13 +1262,12 @@ export default function PdfToDocxTool() {
       }
     }
 
-    // If no content was extracted, add a notice
     if (docChildren.length === 0) {
       docChildren.push(
         new Paragraph({
           children: [
             new TextRun({
-              text: "No extractable text was found in this PDF. It may be a scanned document — OCR is not supported in the browser.",
+              text: "No extractable text was found in this PDF. It may be a scanned document \u2014 OCR is not supported in the browser.",
               italics: true,
               color: "888888",
             }),
@@ -807,6 +1297,126 @@ export default function PdfToDocxTool() {
     return Packer.toBlob(doc);
   };
 
+  // ---------- Multi-run inline formatting with hyperlinks ----------
+
+  const buildInlineRuns = (
+    items: TextItem[],
+    links: LinkAnnotation[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    TextRun: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ExternalHyperlink: any,
+    headingLevel?: unknown
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): any[] => {
+    if (items.length === 0) return [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const runs: any[] = [];
+
+    // Group consecutive items with same formatting into runs
+    let currentGroup: TextItem[] = [];
+    let currentBold = items[0].isBold;
+    let currentItalic = items[0].isItalic;
+    let currentUnderline = items[0].isUnderline;
+    let currentFontSize = items[0].fontSize;
+    let currentColor = items[0].color;
+    let currentLink = findLinkForItem(items[0], links);
+
+    const flushGroup = () => {
+      if (currentGroup.length === 0) return;
+      const text = currentGroup.map((it) => it.str).join("");
+      if (!text) return;
+
+      const wordSize = headingLevel ? undefined : Math.round(currentFontSize * 2);
+      const colorHex = currentColor ? colorToHex(currentColor) : undefined;
+
+      const runOptions: Record<string, unknown> = {
+        text,
+        bold: currentBold || !!headingLevel,
+        italics: currentItalic,
+        size: wordSize,
+        color: colorHex,
+      };
+
+      if (currentUnderline) {
+        runOptions.underline = { type: "single" };
+      }
+
+      if (currentLink) {
+        runs.push(
+          new ExternalHyperlink({
+            children: [
+              new TextRun({
+                ...runOptions,
+                style: "Hyperlink",
+              }),
+            ],
+            link: currentLink.url,
+          })
+        );
+      } else {
+        runs.push(new TextRun(runOptions));
+      }
+
+      currentGroup = [];
+    };
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const itemLink = findLinkForItem(item, links);
+      const itemBold = item.isBold;
+      const itemItalic = item.isItalic;
+      const itemUnderline = item.isUnderline;
+      const itemFontSize = item.fontSize;
+      const itemColor = item.color;
+
+      // Check if formatting changed
+      const sameFormatting =
+        itemBold === currentBold &&
+        itemItalic === currentItalic &&
+        itemUnderline === currentUnderline &&
+        Math.abs(itemFontSize - currentFontSize) < 0.5 &&
+        colorEqual(itemColor, currentColor) &&
+        linkEqual(itemLink, currentLink);
+
+      if (!sameFormatting && currentGroup.length > 0) {
+        flushGroup();
+        currentBold = itemBold;
+        currentItalic = itemItalic;
+        currentUnderline = itemUnderline;
+        currentFontSize = itemFontSize;
+        currentColor = itemColor;
+        currentLink = itemLink;
+      }
+
+      currentGroup.push(item);
+    }
+
+    flushGroup();
+    return runs;
+  };
+
+  const colorEqual = (
+    a?: { r: number; g: number; b: number },
+    b?: { r: number; g: number; b: number }
+  ): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    return a.r === b.r && a.g === b.g && a.b === b.b;
+  };
+
+  const linkEqual = (
+    a?: LinkAnnotation,
+    b?: LinkAnnotation
+  ): boolean => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    return a.url === b.url;
+  };
+
+  // ---------- Main conversion handler ----------
+
   const handleConvert = async () => {
     if (!file) return;
     setLoading(true);
@@ -835,7 +1445,6 @@ export default function PdfToDocxTool() {
       const isScannedPdf = totalTextItems < 10;
 
       if (isScannedPdf) {
-        // Scanned PDF: render each page as an image and embed in DOCX
         setWarning(
           "This appears to be a scanned PDF. Pages will be embedded as images."
         );
@@ -849,6 +1458,8 @@ export default function PdfToDocxTool() {
           const pageImage = await renderPageToImage(page);
           pages.push({
             paragraphs: [],
+            tables: [],
+            links: [],
             images: [pageImage],
             width: viewport.width,
             height: viewport.height,
@@ -862,13 +1473,12 @@ export default function PdfToDocxTool() {
           `Done! Embedded ${totalPages} page${totalPages !== 1 ? "s" : ""} as images.`
         );
       } else {
-        // Normal text-based PDF extraction
         const pages: PageContent[] = [];
         for (let i = 1; i <= totalPages; i++) {
           setProgress(i);
           setStatus(
             quality === "full"
-              ? `Extracting text & images from page ${i} of ${totalPages}...`
+              ? `Extracting text, tables & images from page ${i} of ${totalPages}...`
               : `Extracting text from page ${i} of ${totalPages}...`
           );
           const page = await doc.getPage(i);
@@ -877,11 +1487,13 @@ export default function PdfToDocxTool() {
         }
 
         const totalParagraphs = pages.reduce((s, p) => s + p.paragraphs.length, 0);
+        const totalTables = pages.reduce((s, p) => s + p.tables.length, 0);
         const totalImages = pages.reduce((s, p) => s + p.images.length, 0);
+        const totalLinks = pages.reduce((s, p) => s + p.links.length, 0);
 
-        if (totalParagraphs === 0 && totalImages === 0) {
+        if (totalParagraphs === 0 && totalImages === 0 && totalTables === 0) {
           setError(
-            "No text or images could be extracted. This PDF may be a scanned document — OCR is not supported in the browser."
+            "No text or images could be extracted. This PDF may be a scanned document \u2014 OCR is not supported in the browser."
           );
           setLoading(false);
           setProgress(0);
@@ -891,11 +1503,13 @@ export default function PdfToDocxTool() {
         setStatus("Building DOCX file...");
         const blob = await buildDocx(pages);
         downloadBlob(blob, file.name.replace(/\.pdf$/i, "") + ".docx");
-        setStatus(
-          `Done! Extracted ${totalParagraphs} paragraph${totalParagraphs !== 1 ? "s" : ""}${
-            totalImages > 0 ? ` and ${totalImages} image${totalImages !== 1 ? "s" : ""}` : ""
-          }.`
-        );
+
+        const parts: string[] = [];
+        if (totalParagraphs > 0) parts.push(`${totalParagraphs} paragraph${totalParagraphs !== 1 ? "s" : ""}`);
+        if (totalTables > 0) parts.push(`${totalTables} table${totalTables !== 1 ? "s" : ""}`);
+        if (totalImages > 0) parts.push(`${totalImages} image${totalImages !== 1 ? "s" : ""}`);
+        if (totalLinks > 0) parts.push(`${totalLinks} link${totalLinks !== 1 ? "s" : ""}`);
+        setStatus(`Done! Extracted ${parts.join(", ")}.`);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -972,7 +1586,7 @@ export default function PdfToDocxTool() {
               {(
                 [
                   { key: "fast" as QualityMode, label: "Fast", desc: "Text only" },
-                  { key: "full" as QualityMode, label: "Full", desc: "Text + images + formatting" },
+                  { key: "full" as QualityMode, label: "Full", desc: "Text + tables + images + links" },
                 ] as const
               ).map((opt) => (
                 <button
@@ -1063,8 +1677,8 @@ export default function PdfToDocxTool() {
 
           {/* Info note */}
           <p className="text-xs theme-text-muted text-center leading-relaxed">
-            Works best with text-based PDFs. Scanned documents will be embedded as page images
-            in the Word file (text in scanned pages is not searchable).
+            Works best with text-based PDFs. Extracts text formatting, tables, hyperlinks, and images.
+            Scanned documents will be embedded as page images.
           </p>
         </div>
       )}
