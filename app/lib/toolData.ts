@@ -148,7 +148,7 @@ export const TOOLS: Record<string, ToolPageData> = {
     shortDesc: "Reduce file size",
     color: "#6ee7b7",
     category: "popular",
-    seoTitle: "Compress PDF Online for Free — No Upload Required | PDF Tools",
+    seoTitle: "Compress PDF Online for Free — No Upload | PDF Tools",
     seoDescription:
       "Reduce PDF file size directly in your browser. Free, browser-based PDF compression with no upload — your documents never leave your device.",
     h1: "Compress PDF Online — Free PDF Compressor",
@@ -194,7 +194,7 @@ export const TOOLS: Record<string, ToolPageData> = {
     shortDesc: "Rotate all or specific pages",
     color: "#fbbf24",
     category: "organize",
-    seoTitle: "Rotate PDF Pages Online for Free — No Upload Required | PDF Tools",
+    seoTitle: "Rotate PDF Pages Online for Free — No Upload | PDF Tools",
     seoDescription:
       "Rotate PDF pages 90, 180, or 270 degrees in your browser. Free, private, and no upload needed — files are processed entirely on your device.",
     h1: "Rotate PDF Pages Online — Free PDF Rotation Tool",
