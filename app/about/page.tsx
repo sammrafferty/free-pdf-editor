@@ -6,12 +6,12 @@ export const metadata: Metadata = {
   title: "About — PDF Tools | Free Browser-Based PDF Suite",
   description: "Learn about PDF Tools — a free, privacy-first, browser-based PDF suite. No uploads, no servers, just fast PDF processing entirely on your device.",
   alternates: {
-    canonical: "https://pdf-tool-pi.vercel.app/about",
+    canonical: "/about",
   },
   openGraph: {
     title: "About — PDF Tools | Free Browser-Based PDF Suite",
     description: "Learn about PDF Tools — a free, privacy-first, browser-based PDF suite. No uploads, no servers, just fast PDF processing entirely on your device.",
-    url: "https://pdf-tool-pi.vercel.app/about",
+    url: "/about",
     siteName: "PDF Tools",
     type: "website",
     locale: "en_US",

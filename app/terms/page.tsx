@@ -6,12 +6,12 @@ export const metadata: Metadata = {
   title: "Terms of Service — PDF Tools",
   description: "Terms of service for PDF Tools. Read the terms governing your use of our free browser-based PDF tools.",
   alternates: {
-    canonical: "https://pdf-tool-pi.vercel.app/terms",
+    canonical: "/terms",
   },
   openGraph: {
     title: "Terms of Service — PDF Tools",
     description: "Terms of service for PDF Tools. Read the terms governing your use of our free browser-based PDF tools.",
-    url: "https://pdf-tool-pi.vercel.app/terms",
+    url: "/terms",
     siteName: "PDF Tools",
     type: "website",
     locale: "en_US",

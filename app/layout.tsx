@@ -9,14 +9,14 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.svg",
   },
-  metadataBase: new URL("https://pdf-tool-pi.vercel.app"),
+  metadataBase: new URL("https://free-pdf-editor.org"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "PDF Tools — Free Browser-Based PDF Suite",
     description: "Split, merge, compress, convert, edit, and sign PDFs — all free, all in your browser. Nothing gets uploaded.",
-    url: "https://pdf-tool-pi.vercel.app",
+    url: "/",
     siteName: "PDF Tools",
     type: "website",
     locale: "en_US",
@@ -59,7 +59,7 @@ const jsonLd = {
     priceCurrency: "USD",
   },
   browserRequirements: "Requires JavaScript. Works in Chrome, Firefox, Safari, Edge.",
-  url: "https://pdf-tool-pi.vercel.app",
+  url: "https://free-pdf-editor.org",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

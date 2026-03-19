@@ -6,12 +6,12 @@ export const metadata: Metadata = {
   title: "Privacy Policy — PDF Tools",
   description: "Privacy policy for PDF Tools. Learn how we handle your data, cookies, and advertising.",
   alternates: {
-    canonical: "https://pdf-tool-pi.vercel.app/privacy",
+    canonical: "/privacy",
   },
   openGraph: {
     title: "Privacy Policy — PDF Tools",
     description: "Privacy policy for PDF Tools. Learn how we handle your data, cookies, and advertising.",
-    url: "https://pdf-tool-pi.vercel.app/privacy",
+    url: "/privacy",
     siteName: "PDF Tools",
     type: "website",
     locale: "en_US",

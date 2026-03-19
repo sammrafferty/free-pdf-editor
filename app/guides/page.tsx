@@ -7,12 +7,12 @@ export const metadata: Metadata = {
   description: "Step-by-step guides for splitting, merging, compressing, converting, and editing PDFs. Learn how to use free browser-based PDF tools with no uploads required.",
   keywords: "PDF guide, how to split PDF, how to merge PDF, how to compress PDF, PDF to Word, PDF tutorial",
   alternates: {
-    canonical: "https://pdf-tool-pi.vercel.app/guides",
+    canonical: "/guides",
   },
   openGraph: {
     title: "PDF Guides — How to Edit, Convert & Manage PDFs | PDF Tools",
     description: "Step-by-step guides for splitting, merging, compressing, converting, and editing PDFs. Free browser-based tools with no uploads required.",
-    url: "https://pdf-tool-pi.vercel.app/guides",
+    url: "/guides",
     siteName: "PDF Tools",
     type: "website",
     locale: "en_US",

@@ -7,12 +7,12 @@ export const metadata: Metadata = {
   description: "Combine multiple PDF files into one document for free. Browser-based, no upload required. Step-by-step guide with tips for merging PDFs efficiently.",
   keywords: "merge PDF, combine PDFs, join PDF files, PDF combiner, merge PDF online free",
   alternates: {
-    canonical: "https://pdf-tool-pi.vercel.app/guides/how-to-merge-pdfs",
+    canonical: "/guides/how-to-merge-pdfs",
   },
   openGraph: {
     title: "How to Merge PDFs — Free Online PDF Combiner | PDF Tools",
     description: "Combine multiple PDF files into one document for free. Browser-based, no upload required.",
-    url: "https://pdf-tool-pi.vercel.app/guides/how-to-merge-pdfs",
+    url: "/guides/how-to-merge-pdfs",
     siteName: "PDF Tools",
     type: "article",
     locale: "en_US",

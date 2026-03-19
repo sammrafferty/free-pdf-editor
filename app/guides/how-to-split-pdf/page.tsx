@@ -7,12 +7,12 @@ export const metadata: Metadata = {
   description: "Learn how to split a PDF into individual pages or extract specific page ranges. Free, browser-based, no upload required. Step-by-step guide with tips.",
   keywords: "split PDF, extract PDF pages, PDF splitter, separate PDF pages, break up PDF",
   alternates: {
-    canonical: "https://pdf-tool-pi.vercel.app/guides/how-to-split-pdf",
+    canonical: "/guides/how-to-split-pdf",
   },
   openGraph: {
     title: "How to Split a PDF — Free Online PDF Splitter | PDF Tools",
     description: "Learn how to split a PDF into individual pages or extract specific page ranges. Free, browser-based, no upload required.",
-    url: "https://pdf-tool-pi.vercel.app/guides/how-to-split-pdf",
+    url: "/guides/how-to-split-pdf",
     siteName: "PDF Tools",
     type: "article",
     locale: "en_US",

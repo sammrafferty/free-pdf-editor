@@ -7,12 +7,12 @@ export const metadata: Metadata = {
   description: "Rotate PDF pages 90, 180, or 270 degrees for free. Fix sideways or upside-down scans in your browser. Step-by-step guide.",
   keywords: "rotate PDF, turn PDF pages, fix sideways PDF, PDF rotator, rotate PDF online free",
   alternates: {
-    canonical: "https://pdf-tool-pi.vercel.app/guides/how-to-rotate-pdf",
+    canonical: "/guides/how-to-rotate-pdf",
   },
   openGraph: {
     title: "How to Rotate PDF Pages — Free Online PDF Rotator | PDF Tools",
     description: "Rotate PDF pages 90, 180, or 270 degrees for free. Fix sideways or upside-down scans in your browser.",
-    url: "https://pdf-tool-pi.vercel.app/guides/how-to-rotate-pdf",
+    url: "/guides/how-to-rotate-pdf",
     siteName: "PDF Tools",
     type: "article",
     locale: "en_US",

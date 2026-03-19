@@ -7,12 +7,12 @@ export const metadata: Metadata = {
   description: "Convert PDF files to editable Word documents for free. Browser-based, no upload required. Learn step-by-step how to convert PDF to DOCX.",
   keywords: "PDF to Word, convert PDF to DOCX, PDF to Word converter, edit PDF text, PDF to editable document",
   alternates: {
-    canonical: "https://pdf-tool-pi.vercel.app/guides/how-to-convert-pdf-to-word",
+    canonical: "/guides/how-to-convert-pdf-to-word",
   },
   openGraph: {
     title: "How to Convert PDF to Word — Free Online Converter | PDF Tools",
     description: "Convert PDF files to editable Word documents for free. Browser-based, no upload required.",
-    url: "https://pdf-tool-pi.vercel.app/guides/how-to-convert-pdf-to-word",
+    url: "/guides/how-to-convert-pdf-to-word",
     siteName: "PDF Tools",
     type: "article",
     locale: "en_US",

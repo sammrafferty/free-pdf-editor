@@ -7,12 +7,12 @@ export const metadata: Metadata = {
   description: "Answers to common questions about PDF Tools. Learn about privacy, file processing, supported formats, browser compatibility, and more.",
   keywords: "PDF tools FAQ, PDF questions, browser PDF processing, PDF privacy, PDF file formats",
   alternates: {
-    canonical: "https://pdf-tool-pi.vercel.app/faq",
+    canonical: "/faq",
   },
   openGraph: {
     title: "FAQ — Frequently Asked Questions | PDF Tools",
     description: "Answers to common questions about PDF Tools. Learn about privacy, file processing, supported formats, and more.",
-    url: "https://pdf-tool-pi.vercel.app/faq",
+    url: "/faq",
     siteName: "PDF Tools",
     type: "website",
     locale: "en_US",

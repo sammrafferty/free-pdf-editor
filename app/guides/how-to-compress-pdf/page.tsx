@@ -7,12 +7,12 @@ export const metadata: Metadata = {
   description: "Reduce PDF file size for free. Learn how to compress PDFs in your browser without uploading files. Step-by-step guide with compression tips.",
   keywords: "compress PDF, reduce PDF size, PDF compressor, shrink PDF, make PDF smaller",
   alternates: {
-    canonical: "https://pdf-tool-pi.vercel.app/guides/how-to-compress-pdf",
+    canonical: "/guides/how-to-compress-pdf",
   },
   openGraph: {
     title: "How to Compress a PDF — Free Online PDF Compressor | PDF Tools",
     description: "Reduce PDF file size for free. Learn how to compress PDFs in your browser without uploading files.",
-    url: "https://pdf-tool-pi.vercel.app/guides/how-to-compress-pdf",
+    url: "/guides/how-to-compress-pdf",
     siteName: "PDF Tools",
     type: "article",
     locale: "en_US",
