@@ -28,31 +28,27 @@ const icon = (children: React.ReactNode) => (
   </svg>
 );
 
-// Merge: stacked documents
+// Merge: stacked pages
 const mergeIcon = icon(<>
-  <rect x="6" y="2" width="12" height="16" rx="2" />
-  <rect x="4" y="5" width="12" height="16" rx="2" opacity="0.6" />
+  <rect x="5" y="9" width="14" height="11" rx="1.5"/>
+  <path d="M7 9V7a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2"/>
+  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
 </>);
 
 // Split: scissors
 const splitIcon = icon(<>
-  <circle cx="6" cy="6" r="3" />
-  <circle cx="6" cy="18" r="3" />
-  <line x1="20" y1="4" x2="8.59" y2="15.41" />
-  <line x1="14.47" y1="14.48" x2="20" y2="20" />
-  <line x1="8.59" y1="8.59" x2="14.47" y2="14.48" />
+  <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+  <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+  <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+  <line x1="8.12" y1="8.12" x2="12" y2="12"/>
 </>);
 
-// Compress: minimize (four inward corner arrows)
+// Compress: minimize / 4-corners inward
 const compressIcon = icon(<>
-  <polyline points="4 14 4 20 10 20" />
-  <polyline points="20 10 20 4 14 4" />
-  <polyline points="14 20 20 20 20 14" />
-  <polyline points="10 4 4 4 4 10" />
-  <line x1="14" y1="10" x2="20" y2="4" />
-  <line x1="4" y1="20" x2="10" y2="14" />
-  <line x1="14" y1="14" x2="20" y2="20" />
-  <line x1="4" y1="4" x2="10" y2="10" />
+  <path d="M4 10 L4 4 L10 4"/><path d="M4 4 L9 9"/>
+  <path d="M20 10 L20 4 L14 4"/><path d="M20 4 L15 9"/>
+  <path d="M4 14 L4 20 L10 20"/><path d="M4 20 L9 15"/>
+  <path d="M20 14 L20 20 L14 20"/><path d="M20 20 L15 15"/>
 </>);
 
 // Rotate: circular arrow
@@ -99,11 +95,12 @@ const redactIcon = icon(<>
   <line x1="1" y1="1" x2="23" y2="23" />
 </>);
 
-// Sign: pen tip with motion line
+// Sign: pen tip / nib
 const signIcon = icon(<>
-  <path d="M15.5 3.5L20.5 8.5L8 21L3 22L4 17L15.5 3.5z" />
-  <path d="M15 4L20 9" />
-  <path d="M4 17L8 21" />
+  <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+  <path d="M2 2l11 11"/>
+  <circle cx="11" cy="11" r="2"/>
 </>);
 
 // Image to PDF: image frame with arrow
@@ -143,9 +140,9 @@ const excelIcon = icon(<>
 
 // Slides: presentation board
 const slideIcon = icon(<>
-  <rect x="2" y="2" width="20" height="14" rx="2" />
-  <line x1="8" y1="20" x2="16" y2="20" />
-  <line x1="12" y1="16" x2="12" y2="20" />
+  <rect x="2" y="2" width="20" height="14" rx="2"/>
+  <line x1="12" y1="16" x2="12" y2="22"/>
+  <line x1="8" y1="22" x2="16" y2="22"/>
 </>);
 
 /* ── Data ─────────────────────────────────────────────── */
