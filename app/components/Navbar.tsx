@@ -47,7 +47,7 @@ export default function Navbar({ onLogoClick }: NavbarProps) {
   const logoContent = (
     <div className="navbar-logo-wrap">
       <Logo size={44} />
-      <span className="navbar-brand">PDF Tools</span>
+      <span className="navbar-brand">Free PDF Editor</span>
     </div>
   );
 

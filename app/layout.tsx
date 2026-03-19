@@ -4,9 +4,9 @@ import PostHogProvider from "./components/PostHogProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PDF Tools — Free Browser-Based PDF Suite",
-  description: "Free browser-based PDF tools. Split, merge, compress, convert, rotate, edit, watermark, sign, and redact PDFs — all in your browser. Nothing gets uploaded. 100% private.",
-  keywords: "PDF tools, split PDF, merge PDF, compress PDF, convert PDF, PDF to Word, PDF to Excel, PDF to PowerPoint, image to PDF, rotate PDF, watermark PDF, sign PDF, free PDF tools, online PDF editor, browser PDF tools",
+  title: "Free PDF Editor — Edit PDFs Online, No Upload Required",
+  description: "Free online PDF editor. Split, merge, compress, convert, rotate, edit, watermark, sign, and redact PDFs — all in your browser. Nothing gets uploaded. 100% private.",
+  keywords: "free PDF editor, edit PDF online, split PDF, merge PDF, compress PDF, convert PDF, PDF to Word, PDF to Excel, rotate PDF, watermark PDF, sign PDF, free PDF tools, online PDF editor, browser PDF tools",
   icons: {
     icon: "/favicon.svg",
   },
@@ -15,10 +15,10 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "PDF Tools — Free Browser-Based PDF Suite",
+    title: "Free PDF Editor — Edit PDFs Online, No Upload Required",
     description: "Split, merge, compress, convert, edit, and sign PDFs — all free, all in your browser. Nothing gets uploaded.",
     url: "/",
-    siteName: "PDF Tools",
+    siteName: "Free PDF Editor",
     type: "website",
     locale: "en_US",
     images: [
@@ -26,13 +26,13 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "PDF Tools — Free Browser-Based PDF Suite",
+        alt: "Free PDF Editor — Edit PDFs Online",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "PDF Tools — Free Browser-Based PDF Suite",
+    title: "Free PDF Editor — Edit PDFs Online, No Upload Required",
     description: "Split, merge, compress, convert, edit, and sign PDFs — all free, all in your browser.",
     images: ["/og-image.png"],
   },
@@ -50,8 +50,8 @@ export const viewport: Viewport = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "PDF Tools",
-  description: "Free browser-based PDF tools. Split, merge, compress, convert, edit, and sign PDFs — all in your browser.",
+  name: "Free PDF Editor",
+  description: "Free online PDF editor. Split, merge, compress, convert, edit, and sign PDFs — all in your browser.",
   applicationCategory: "UtilityApplication",
   operatingSystem: "Any",
   offers: {
