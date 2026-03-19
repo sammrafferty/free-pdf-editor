@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { downloadBlob } from "@/app/lib/pdfHelpers";
 import Dropzone from "../Dropzone";
@@ -51,9 +51,29 @@ export default function WatermarkTool() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Track object URL for cleanup to prevent memory leaks
+  const imagePreviewUrlRef = useRef<string | null>(null);
+
+  // Cleanup object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrlRef.current) {
+        URL.revokeObjectURL(imagePreviewUrlRef.current);
+      }
+    };
+  }, []);
+
   const selectedColor = COLOR_SWATCHES[colorIdx];
 
-  const handleFile = async (files: File[]) => {
+  const revokeImagePreview = useCallback(() => {
+    if (imagePreviewUrlRef.current) {
+      URL.revokeObjectURL(imagePreviewUrlRef.current);
+      imagePreviewUrlRef.current = null;
+    }
+  }, []);
+
+  const handleFile = useCallback(async (files: File[]) => {
+    if (!files.length) return;
     const f = files[0];
     setError("");
     try {
@@ -64,8 +84,9 @@ export default function WatermarkTool() {
     } catch {
       setError("Could not read this PDF. It may be corrupted or password-protected.");
       setFile(null);
+      setPageCount(0);
     }
-  };
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -77,14 +98,26 @@ export default function WatermarkTool() {
     }
     setError("");
     setImageFile(f);
+    // Revoke previous URL before creating a new one
+    revokeImagePreview();
     const url = URL.createObjectURL(f);
+    imagePreviewUrlRef.current = url;
     setImagePreviewUrl(url);
   };
 
   const handleWatermark = async () => {
-    if (!file) return;
-    if (mode === "text" && !text) return;
+    if (!file || loading) return;
+    if (mode === "text" && !text.trim()) {
+      setError("Please enter watermark text.");
+      return;
+    }
     if (mode === "image" && !imageFile) return;
+
+    // Clamp fontSize to valid range
+    const clampedFontSize = Math.max(12, Math.min(120, fontSize || 48));
+    // Clamp opacity to valid range (0-1)
+    const clampedOpacity = Math.max(0, Math.min(1, opacity));
+
     setLoading(true);
     setError("");
     try {
@@ -92,20 +125,22 @@ export default function WatermarkTool() {
       const pdf = await PDFDocument.load(buf);
 
       if (mode === "text") {
+        const watermarkText = text.trim();
         const font = await pdf.embedFont(FONT_MAP[fontChoice]);
         const color = rgb(selectedColor.r, selectedColor.g, selectedColor.b);
 
         for (let i = 0; i < pdf.getPageCount(); i++) {
           const page = pdf.getPage(i);
           const { width, height } = page.getSize();
-          const textWidth = font.widthOfTextAtSize(text, fontSize);
+          const textWidth = font.widthOfTextAtSize(watermarkText, clampedFontSize);
+          const textHeight = font.heightAtSize(clampedFontSize);
 
           if (position === "tiled") {
             const angle = 45;
             const radians = (angle * Math.PI) / 180;
-            const gap = fontSize * 2;
+            const gap = clampedFontSize * 2;
             const cols = Math.ceil(width / (textWidth * Math.cos(radians) + gap));
-            const rows = Math.ceil(height / (fontSize + gap));
+            const rows = Math.ceil(height / (clampedFontSize + gap));
             const spacingX = width / Math.max(cols, 1);
             const spacingY = height / Math.max(rows, 1);
 
@@ -113,36 +148,45 @@ export default function WatermarkTool() {
               for (let col = -1; col <= cols + 1; col++) {
                 const x = col * spacingX + (row % 2 === 0 ? 0 : spacingX / 2);
                 const y = row * spacingY;
-                page.drawText(text, {
+                page.drawText(watermarkText, {
                   x,
                   y,
-                  size: fontSize,
+                  size: clampedFontSize,
                   font,
                   color,
-                  opacity,
+                  opacity: clampedOpacity,
                   rotate: degrees(angle),
                 });
               }
             }
           } else if (position === "diagonal") {
-            const angle = Math.atan2(height, width);
-            page.drawText(text, {
-              x: width / 2 - (textWidth / 2) * Math.cos(angle),
-              y: height / 2 - fontSize / 2,
-              size: fontSize,
+            const angleDeg = (Math.atan2(height, width) * 180) / Math.PI;
+            const angleRad = (angleDeg * Math.PI) / 180;
+            // Center the rotated text: offset by half width/height components
+            const cx = width / 2;
+            const cy = height / 2;
+            // pdf-lib draws text from bottom-left of the text bounding box,
+            // and rotates around that point. To center, we offset so the
+            // midpoint of the text lands at (cx, cy).
+            const x = cx - (textWidth / 2) * Math.cos(angleRad) + (textHeight / 2) * Math.sin(angleRad);
+            const y = cy - (textWidth / 2) * Math.sin(angleRad) - (textHeight / 2) * Math.cos(angleRad);
+            page.drawText(watermarkText, {
+              x,
+              y,
+              size: clampedFontSize,
               font,
               color,
-              opacity,
-              rotate: degrees((angle * 180) / Math.PI),
+              opacity: clampedOpacity,
+              rotate: degrees(angleDeg),
             });
           } else {
-            page.drawText(text, {
+            page.drawText(watermarkText, {
               x: width / 2 - textWidth / 2,
-              y: height / 2 - fontSize / 2,
-              size: fontSize,
+              y: height / 2 - textHeight / 2,
+              size: clampedFontSize,
               font,
               color,
-              opacity,
+              opacity: clampedOpacity,
             });
           }
         }
@@ -153,10 +197,16 @@ export default function WatermarkTool() {
         const isPng = imageFile.name.toLowerCase().endsWith(".png");
         const img = isPng ? await pdf.embedPng(imgBytes) : await pdf.embedJpg(imgBytes);
 
+        if (img.width === 0 || img.height === 0) {
+          throw new Error("Image has invalid dimensions.");
+        }
+
+        const clampedImageOpacity = Math.max(0, Math.min(1, imageOpacity));
+
         for (let i = 0; i < pdf.getPageCount(); i++) {
           const page = pdf.getPage(i);
           const { width, height } = page.getSize();
-          const imgWidth = width * (imageSize / 100);
+          const imgWidth = width * (Math.max(1, Math.min(100, imageSize)) / 100);
           const imgHeight = imgWidth * (img.height / img.width);
 
           if (imagePosition === "tiled") {
@@ -175,7 +225,7 @@ export default function WatermarkTool() {
                   y: y - imgHeight / 2,
                   width: imgWidth,
                   height: imgHeight,
-                  opacity: imageOpacity,
+                  opacity: clampedImageOpacity,
                 });
               }
             }
@@ -185,7 +235,7 @@ export default function WatermarkTool() {
               y: height / 2 - imgHeight / 2,
               width: imgWidth,
               height: imgHeight,
-              opacity: imageOpacity,
+              opacity: clampedImageOpacity,
             });
           }
         }
@@ -197,8 +247,9 @@ export default function WatermarkTool() {
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Failed to add watermark. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const previewOverlay = useMemo(() => {
@@ -330,7 +381,7 @@ export default function WatermarkTool() {
   }, [mode, text, fontSize, opacity, position, selectedColor, fontChoice, imagePreviewUrl, imagePosition, imageSize, imageOpacity]);
 
   const canApply =
-    mode === "text" ? !!text : !!imageFile;
+    mode === "text" ? !!text.trim() : !!imageFile;
 
   return (
     <div>
@@ -359,7 +410,7 @@ export default function WatermarkTool() {
                 <p className="text-xs theme-text-muted">{pageCount} pages</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setImageFile(null); setImagePreviewUrl(null); }} className="theme-text-muted text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setImageFile(null); revokeImagePreview(); setImagePreviewUrl(null); setError(""); setPageCount(0); }} className="theme-text-muted text-sm font-medium">Remove</button>
           </div>
 
           {/* Preview */}
@@ -452,7 +503,7 @@ export default function WatermarkTool() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium theme-text-secondary mb-2">Font size</label>
-                  <input type="number" value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} min={12} max={120} className="w-full theme-input rounded-xl px-4 py-3 theme-text text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400" />
+                  <input type="number" value={fontSize} onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v)) setFontSize(v); }} onBlur={() => setFontSize(Math.max(12, Math.min(120, fontSize || 48)))} min={12} max={120} className="w-full theme-input rounded-xl px-4 py-3 theme-text text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400/20 focus:border-cyan-400" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium theme-text-secondary mb-2">Opacity ({Math.round(opacity * 100)}%)</label>

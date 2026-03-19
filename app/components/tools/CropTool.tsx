@@ -32,11 +32,18 @@ export default function CropTool() {
 
   const handleFile = async (files: File[]) => {
     const f = files[0];
+    if (!f) return;
     setError("");
     try {
       const buf = await f.arrayBuffer();
       const pdf = await PDFDocument.load(buf);
       const count = pdf.getPageCount();
+      if (count === 0) {
+        setError("This PDF has no pages.");
+        setFile(null);
+        setPageCount(0);
+        return;
+      }
       const firstPage = pdf.getPage(0);
       const { width, height } = firstPage.getSize();
       setFile(f);
@@ -47,6 +54,10 @@ export default function CropTool() {
     } catch {
       setError("Could not read this PDF. It may be corrupted or password-protected.");
       setFile(null);
+      setPageCount(0);
+      setPageDims({ width: 612, height: 792 });
+      setCurrentPage(1);
+      setMargins({ top: 0, bottom: 0, left: 0, right: 0 });
     }
   };
 
@@ -84,18 +95,24 @@ export default function CropTool() {
     e.preventDefault();
     e.stopPropagation();
     draggingEdge.current = edge;
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const touch = "touches" in e ? e.touches[0] : null;
+    if ("touches" in e && !touch) return;
+    const clientX = touch ? touch.clientX : (e as React.MouseEvent).clientX;
+    const clientY = touch ? touch.clientY : (e as React.MouseEvent).clientY;
     dragStart.current = { x: clientX, y: clientY, margins: { ...margins } };
   }, [margins]);
 
   const handlePointerMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (!draggingEdge.current) return;
+    e.preventDefault();
     const rect = getOverlayRect();
     if (!rect) return;
+    if (rect.width === 0 || rect.height === 0) return;
 
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const touch = "touches" in e ? e.touches[0] : null;
+    if ("touches" in e && !touch) return;
+    const clientX = touch ? touch.clientX : (e as MouseEvent).clientX;
+    const clientY = touch ? touch.clientY : (e as MouseEvent).clientY;
     const dx = clientX - dragStart.current.x;
     const dy = clientY - dragStart.current.y;
     const prev = dragStart.current.margins;
@@ -126,11 +143,13 @@ export default function CropTool() {
     window.addEventListener("mouseup", handlePointerUp);
     window.addEventListener("touchmove", handlePointerMove, { passive: false });
     window.addEventListener("touchend", handlePointerUp);
+    window.addEventListener("touchcancel", handlePointerUp);
     return () => {
       window.removeEventListener("mousemove", handlePointerMove);
       window.removeEventListener("mouseup", handlePointerUp);
       window.removeEventListener("touchmove", handlePointerMove);
       window.removeEventListener("touchend", handlePointerUp);
+      window.removeEventListener("touchcancel", handlePointerUp);
     };
   }, [handlePointerMove, handlePointerUp]);
 
@@ -138,16 +157,29 @@ export default function CropTool() {
     return Math.round((pct / 100) * dimension * 10) / 10;
   }, []);
 
+  const hasCrop = margins.top > 0 || margins.bottom > 0 || margins.left > 0 || margins.right > 0;
+
   const handleCrop = async () => {
-    if (!file) return;
+    if (!file || loading) return;
+    if (!hasCrop) {
+      setError("Please adjust the crop margins before cropping.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
       const buf = await file.arrayBuffer();
       const pdf = await PDFDocument.load(buf);
 
+      const totalPages = pdf.getPageCount();
       const startPage = applyToAll ? 0 : currentPage - 1;
-      const endPage = applyToAll ? pdf.getPageCount() : currentPage;
+      const endPage = applyToAll ? totalPages : currentPage;
+
+      // Validate currentPage is within range for single-page mode
+      if (!applyToAll && (currentPage < 1 || currentPage > totalPages)) {
+        setError("Selected page is out of range.");
+        return;
+      }
 
       for (let i = startPage; i < endPage; i++) {
         const page = pdf.getPage(i);
@@ -161,12 +193,14 @@ export default function CropTool() {
         const cropW = width - l - r;
         const cropH = height - t - b;
 
-        if (cropW <= 0 || cropH <= 0) {
+        if (cropW < 1 || cropH < 1) {
           setError("Crop margins are too large — no visible area remains.");
-          setLoading(false);
           return;
         }
 
+        // PDF coordinate system: (x, y) is bottom-left corner
+        // t is distance from top, so new top in PDF coords = height - t
+        // The new box starts at (l, b) with the remaining width/height
         page.setMediaBox(l, b, cropW, cropH);
         page.setCropBox(l, b, cropW, cropH);
       }
@@ -177,14 +211,20 @@ export default function CropTool() {
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Failed to crop PDF. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleRemove = () => {
     setFile(null);
+    setPageCount(0);
+    setPageDims({ width: 612, height: 792 });
+    setCurrentPage(1);
     setMargins({ top: 0, bottom: 0, left: 0, right: 0 });
+    setApplyToAll(true);
     setError("");
+    draggingEdge.current = null;
   };
 
   const cropOverlay = (
@@ -445,9 +485,9 @@ export default function CropTool() {
 
           <button
             onClick={handleCrop}
-            disabled={loading}
+            disabled={loading || !hasCrop}
             className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
-            style={!loading ? { backgroundColor: "#14b8a6" } : {}}
+            style={!loading && hasCrop ? { backgroundColor: "#14b8a6" } : {}}
           >
             {loading ? "Cropping..." : "Crop & Download"}
           </button>

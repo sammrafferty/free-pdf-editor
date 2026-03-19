@@ -132,7 +132,6 @@ export default function NumberPagesTool() {
 
       if (clampedSkipPages >= total) {
         setError("All pages are skipped. Reduce the skip pages value.");
-        setLoading(false);
         return;
       }
 
@@ -192,13 +191,14 @@ export default function NumberPagesTool() {
       }
 
       const bytes = await pdf.save();
-      const blob = new Blob([new Uint8Array(bytes) as BlobPart], { type: "application/pdf" });
+      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
       downloadBlob(blob, `numbered_${file.name}`);
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Failed to add page numbers. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const FORMAT_OPTIONS: { value: NumberFormat; label: string; example: string }[] = [
