@@ -95,7 +95,7 @@ export default function EmailCapture() {
                 className="text-xs mt-1 leading-snug"
                 style={{ color: "var(--text-muted)" }}
               >
-                Join 0 others who get updates about free PDF tools. No spam, ever.
+                Get updates when we launch new PDF tools. No spam, ever.
               </p>
             </div>
           </div>
