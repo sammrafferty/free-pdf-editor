@@ -26,6 +26,14 @@ const FONT_MAP: Record<FontChoice, typeof StandardFonts[keyof typeof StandardFon
   Courier: StandardFonts.Courier,
 };
 
+// Default letter-size page dimensions (in PDF points)
+const DEFAULT_PAGE_WIDTH = 612;
+const DEFAULT_PAGE_HEIGHT = 792;
+
+function calcDiagonalAngle(width: number, height: number): number {
+  return (Math.atan2(height, width) * 180) / Math.PI;
+}
+
 export default function WatermarkTool() {
   const [file, setFile] = useState<File | null>(null);
   const [pageCount, setPageCount] = useState(0);
@@ -40,6 +48,17 @@ export default function WatermarkTool() {
   const [position, setPosition] = useState<Position>("diagonal");
   const [colorIdx, setColorIdx] = useState(1); // Dark Gray default
   const [fontChoice, setFontChoice] = useState<FontChoice>("Helvetica");
+
+  // Offset controls (percentage of page dimensions)
+  const [offsetX, setOffsetX] = useState(0);
+  const [offsetY, setOffsetY] = useState(0);
+
+  // Rotation angle for diagonal mode
+  const [autoAngle, setAutoAngle] = useState(true);
+  const [manualAngle, setManualAngle] = useState(0);
+
+  // Tiled spacing
+  const [tileSpacing, setTileSpacing] = useState(100);
 
   // Image options
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -64,6 +83,10 @@ export default function WatermarkTool() {
   }, []);
 
   const selectedColor = COLOR_SWATCHES[colorIdx];
+
+  // Compute the diagonal angle used for both preview and PDF
+  const autoAngleValue = calcDiagonalAngle(DEFAULT_PAGE_WIDTH, DEFAULT_PAGE_HEIGHT);
+  const diagonalAngle = autoAngle ? autoAngleValue : manualAngle;
 
   const revokeImagePreview = useCallback(() => {
     if (imagePreviewUrlRef.current) {
@@ -135,19 +158,23 @@ export default function WatermarkTool() {
           const textWidth = font.widthOfTextAtSize(watermarkText, clampedFontSize);
           const textHeight = font.heightAtSize(clampedFontSize);
 
+          // Offset in actual points
+          const ox = (offsetX / 100) * width;
+          const oy = (offsetY / 100) * height;
+
           if (position === "tiled") {
             const angle = 45;
             const radians = (angle * Math.PI) / 180;
-            const gap = clampedFontSize * 2;
-            const cols = Math.ceil(width / (textWidth * Math.cos(radians) + gap));
-            const rows = Math.ceil(height / (clampedFontSize + gap));
+            const spacingPx = Math.max(50, Math.min(300, tileSpacing));
+            const cols = Math.ceil(width / (textWidth * Math.cos(radians) + spacingPx));
+            const rows = Math.ceil(height / (clampedFontSize + spacingPx));
             const spacingX = width / Math.max(cols, 1);
             const spacingY = height / Math.max(rows, 1);
 
             for (let row = -1; row <= rows + 1; row++) {
               for (let col = -1; col <= cols + 1; col++) {
-                const x = col * spacingX + (row % 2 === 0 ? 0 : spacingX / 2);
-                const y = row * spacingY;
+                const x = col * spacingX + (row % 2 === 0 ? 0 : spacingX / 2) + ox;
+                const y = row * spacingY + oy;
                 page.drawText(watermarkText, {
                   x,
                   y,
@@ -160,7 +187,8 @@ export default function WatermarkTool() {
               }
             }
           } else if (position === "diagonal") {
-            const angleDeg = (Math.atan2(height, width) * 180) / Math.PI;
+            // Use the same angle calculation as preview
+            const angleDeg = autoAngle ? calcDiagonalAngle(width, height) : manualAngle;
             const angleRad = (angleDeg * Math.PI) / 180;
             // Center the rotated text: offset by half width/height components
             const cx = width / 2;
@@ -168,8 +196,8 @@ export default function WatermarkTool() {
             // pdf-lib draws text from bottom-left of the text bounding box,
             // and rotates around that point. To center, we offset so the
             // midpoint of the text lands at (cx, cy).
-            const x = cx - (textWidth / 2) * Math.cos(angleRad) + (textHeight / 2) * Math.sin(angleRad);
-            const y = cy - (textWidth / 2) * Math.sin(angleRad) - (textHeight / 2) * Math.cos(angleRad);
+            const x = cx - (textWidth / 2) * Math.cos(angleRad) + (textHeight / 2) * Math.sin(angleRad) + ox;
+            const y = cy - (textWidth / 2) * Math.sin(angleRad) - (textHeight / 2) * Math.cos(angleRad) + oy;
             page.drawText(watermarkText, {
               x,
               y,
@@ -181,8 +209,8 @@ export default function WatermarkTool() {
             });
           } else {
             page.drawText(watermarkText, {
-              x: width / 2 - textWidth / 2,
-              y: height / 2 - textHeight / 2,
+              x: width / 2 - textWidth / 2 + ox,
+              y: height / 2 - textHeight / 2 + oy,
               size: clampedFontSize,
               font,
               color,
@@ -209,17 +237,20 @@ export default function WatermarkTool() {
           const imgWidth = width * (Math.max(1, Math.min(100, imageSize)) / 100);
           const imgHeight = imgWidth * (img.height / img.width);
 
+          const ox = (offsetX / 100) * width;
+          const oy = (offsetY / 100) * height;
+
           if (imagePosition === "tiled") {
-            const gap = imgWidth * 0.5;
-            const cols = Math.ceil(width / (imgWidth + gap)) + 1;
-            const rows = Math.ceil(height / (imgHeight + gap)) + 1;
+            const spacingPx = Math.max(50, Math.min(300, tileSpacing));
+            const cols = Math.ceil(width / (imgWidth + spacingPx)) + 1;
+            const rows = Math.ceil(height / (imgHeight + spacingPx)) + 1;
             const spacingX = width / Math.max(cols, 1);
             const spacingY = height / Math.max(rows, 1);
 
             for (let row = 0; row < rows + 1; row++) {
               for (let col = 0; col < cols + 1; col++) {
-                const x = col * spacingX;
-                const y = row * spacingY;
+                const x = col * spacingX + ox;
+                const y = row * spacingY + oy;
                 page.drawImage(img, {
                   x: x - imgWidth / 2,
                   y: y - imgHeight / 2,
@@ -231,8 +262,8 @@ export default function WatermarkTool() {
             }
           } else {
             page.drawImage(img, {
-              x: width / 2 - imgWidth / 2,
-              y: height / 2 - imgHeight / 2,
+              x: width / 2 - imgWidth / 2 + ox,
+              y: height / 2 - imgHeight / 2 + oy,
               width: imgWidth,
               height: imgHeight,
               opacity: clampedImageOpacity,
@@ -253,6 +284,10 @@ export default function WatermarkTool() {
   };
 
   const previewOverlay = useMemo(() => {
+    // Offset as percentages for CSS positioning
+    const oxPct = offsetX;
+    const oyPct = offsetY;
+
     if (mode === "image" && imagePreviewUrl) {
       const imgStyle: React.CSSProperties =
         imagePosition === "tiled"
@@ -260,6 +295,9 @@ export default function WatermarkTool() {
           : { width: `${imageSize}%`, opacity: imageOpacity };
 
       if (imagePosition === "tiled") {
+        // Convert tileSpacing (50-300 PDF points) to a percentage-based gap for preview
+        // Preview is ~220px wide representing ~612pt page, so scale factor is roughly 220/612
+        const gapPct = `${(tileSpacing / DEFAULT_PAGE_WIDTH) * 100}%`;
         return (
           <div
             style={{
@@ -269,9 +307,10 @@ export default function WatermarkTool() {
               flexWrap: "wrap",
               alignItems: "center",
               justifyContent: "center",
-              gap: "8%",
+              gap: gapPct,
               padding: "4%",
               overflow: "hidden",
+              transform: `translate(${oxPct}%, ${-oyPct}%)`,
             }}
           >
             {Array.from({ length: 9 }).map((_, i) => (
@@ -292,60 +331,77 @@ export default function WatermarkTool() {
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imagePreviewUrl} alt="" style={imgStyle} />
+          <img
+            src={imagePreviewUrl}
+            alt=""
+            style={{
+              ...imgStyle,
+              transform: `translate(${oxPct * 2}%, ${-oyPct * 2}%)`,
+            }}
+          />
         </div>
       );
     }
 
     // Text preview overlay
-    const transform =
-      position === "diagonal"
-        ? "translate(-50%,-50%) rotate(-35deg)"
-        : position === "tiled"
-          ? "translate(-50%,-50%) rotate(-45deg)"
-          : "translate(-50%,-50%)";
+    const previewAngle = diagonalAngle;
 
     if (position === "tiled") {
+      const gapPct = (tileSpacing / DEFAULT_PAGE_WIDTH) * 100;
+      // Compute grid positions based on spacing
+      const cellPct = gapPct > 0 ? gapPct : 35;
+      const tiles: { left: number; top: number }[] = [];
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 4; col++) {
+          tiles.push({
+            left: 5 + col * cellPct,
+            top: 5 + row * cellPct,
+          });
+        }
+      }
       return (
         <div
           style={{
             position: "absolute",
             inset: 0,
             overflow: "hidden",
+            transform: `translate(${oxPct}%, ${-oyPct}%)`,
           }}
         >
-          {Array.from({ length: 9 }).map((_, i) => {
-            const row = Math.floor(i / 3);
-            const col = i % 3;
-            return (
-              <span
-                key={i}
-                style={{
-                  position: "absolute",
-                  left: `${15 + col * 35}%`,
-                  top: `${15 + row * 35}%`,
-                  transform: "rotate(-45deg)",
-                  color: selectedColor.hex,
-                  opacity,
-                  fontSize: `${Math.max(8, fontSize / 6)}px`,
-                  fontFamily:
-                    fontChoice === "Courier"
-                      ? "Courier, monospace"
-                      : fontChoice === "TimesRoman"
-                        ? "Times New Roman, serif"
-                        : "Helvetica, Arial, sans-serif",
-                  fontWeight: "bold",
-                  whiteSpace: "nowrap",
-                  pointerEvents: "none",
-                }}
-              >
-                {text}
-              </span>
-            );
-          })}
+          {tiles.map((t, i) => (
+            <span
+              key={i}
+              style={{
+                position: "absolute",
+                left: `${t.left}%`,
+                top: `${t.top}%`,
+                transform: "rotate(-45deg)",
+                color: selectedColor.hex,
+                opacity,
+                fontSize: `${Math.max(8, fontSize / 6)}px`,
+                fontFamily:
+                  fontChoice === "Courier"
+                    ? "Courier, monospace"
+                    : fontChoice === "TimesRoman"
+                      ? "Times New Roman, serif"
+                      : "Helvetica, Arial, sans-serif",
+                fontWeight: "bold",
+                whiteSpace: "nowrap",
+                pointerEvents: "none",
+              }}
+            >
+              {text}
+            </span>
+          ))}
         </div>
       );
     }
+
+    // For diagonal, use the same angle as PDF rendering (negated for CSS which rotates clockwise)
+    const transform =
+      position === "diagonal"
+        ? `translate(-50%,-50%) translate(${oxPct * 2}%, ${-oyPct * 2}%) rotate(-${previewAngle.toFixed(1)}deg)`
+        : `translate(-50%,-50%) translate(${oxPct * 2}%, ${-oyPct * 2}%)`;
 
     return (
       <div
@@ -378,10 +434,13 @@ export default function WatermarkTool() {
         </span>
       </div>
     );
-  }, [mode, text, fontSize, opacity, position, selectedColor, fontChoice, imagePreviewUrl, imagePosition, imageSize, imageOpacity]);
+  }, [mode, text, fontSize, opacity, position, selectedColor, fontChoice, imagePreviewUrl, imagePosition, imageSize, imageOpacity, diagonalAngle, offsetX, offsetY, tileSpacing]);
 
   const canApply =
     mode === "text" ? !!text.trim() : !!imageFile;
+
+  // Determine if tiled position is active (for showing tile spacing slider)
+  const isTiled = mode === "text" ? position === "tiled" : imagePosition === "tiled";
 
   return (
     <div>
@@ -529,6 +588,39 @@ export default function WatermarkTool() {
                   ))}
                 </div>
               </div>
+
+              {/* Rotation angle (diagonal mode only) */}
+              {position === "diagonal" && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium theme-text-secondary">Rotation angle ({Math.round(diagonalAngle)}°)</label>
+                    <label className="flex items-center gap-2 text-sm theme-text-secondary cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoAngle}
+                        onChange={(e) => {
+                          setAutoAngle(e.target.checked);
+                          if (e.target.checked) {
+                            setManualAngle(Math.round(autoAngleValue));
+                          }
+                        }}
+                        className="accent-cyan-400"
+                      />
+                      Auto angle
+                    </label>
+                  </div>
+                  <input
+                    type="range"
+                    value={autoAngle ? Math.round(autoAngleValue) : manualAngle}
+                    onChange={(e) => setManualAngle(Number(e.target.value))}
+                    disabled={autoAngle}
+                    min={-90}
+                    max={90}
+                    step={1}
+                    className="w-full accent-cyan-400 disabled:opacity-50"
+                  />
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -591,6 +683,50 @@ export default function WatermarkTool() {
               </div>
             </>
           )}
+
+          {/* Tile spacing (visible when tiled is selected) */}
+          {isTiled && (
+            <div>
+              <label className="block text-sm font-medium theme-text-secondary mb-2">Tile spacing ({tileSpacing}px)</label>
+              <input
+                type="range"
+                value={tileSpacing}
+                onChange={(e) => setTileSpacing(Number(e.target.value))}
+                min={50}
+                max={300}
+                step={1}
+                className="w-full accent-cyan-400"
+              />
+            </div>
+          )}
+
+          {/* Horizontal offset */}
+          <div>
+            <label className="block text-sm font-medium theme-text-secondary mb-2">Horizontal offset ({offsetX > 0 ? "+" : ""}{offsetX}%)</label>
+            <input
+              type="range"
+              value={offsetX}
+              onChange={(e) => setOffsetX(Number(e.target.value))}
+              min={-50}
+              max={50}
+              step={1}
+              className="w-full accent-cyan-400"
+            />
+          </div>
+
+          {/* Vertical offset */}
+          <div>
+            <label className="block text-sm font-medium theme-text-secondary mb-2">Vertical offset ({offsetY > 0 ? "+" : ""}{offsetY}%)</label>
+            <input
+              type="range"
+              value={offsetY}
+              onChange={(e) => setOffsetY(Number(e.target.value))}
+              min={-50}
+              max={50}
+              step={1}
+              className="w-full accent-cyan-400"
+            />
+          </div>
 
           {error && (
             <div className="p-3 theme-error rounded-xl text-sm">
