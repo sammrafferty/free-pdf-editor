@@ -268,14 +268,6 @@ const convertPairs: ConvertPair[] = [
     a: { id: "pdftoexcel", label: "PDF to Excel", desc: "Extract tables to spreadsheet", color: "#4ade80", from: "pdf", to: "excel" },
     b: { id: "exceltopdf", label: "Excel to PDF", desc: "Convert spreadsheet to PDF", color: "#4ade80", from: "excel", to: "pdf" },
   },
-  {
-    a: { id: "pdftopptx", label: "PDF to PPT", desc: "Convert to presentation slides", color: "#fb923c", from: "pdf", to: "ppt" },
-    b: { id: "pptxtopdf", label: "PPT to PDF", desc: "Convert slides to PDF", color: "#fb923c", from: "ppt", to: "pdf" },
-  },
-  {
-    a: { id: "pdftoimage", label: "PDF to Image", desc: "Convert pages to PNG", color: "#f472b6", from: "pdf", to: "image" },
-    b: { id: "imagetopdf", label: "Image to PDF", desc: "Combine images into PDF", color: "#fb923c", from: "image", to: "pdf" },
-  },
 ];
 
 /* ── Components ───────────────────────────────────────── */

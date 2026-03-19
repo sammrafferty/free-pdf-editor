@@ -160,6 +160,16 @@ export default function PdfToDocxTool() {
               };
             }
             break;
+          case (OPS as Record<string, number>)["setFillColorN"]:
+          case (OPS as Record<string, number>)["setFillColor"]:
+            if (args && args.length >= 3) {
+              currentColor = {
+                r: Math.round(args[0] * 255),
+                g: Math.round(args[1] * 255),
+                b: Math.round(args[2] * 255),
+              };
+            }
+            break;
           case OPS.showText:
           case OPS.showSpacedText:
           case (OPS as Record<string, number>)["nextLineShowText"]:
@@ -269,10 +279,9 @@ export default function PdfToDocxTool() {
         hasEOL: ti.hasEOL,
       });
 
-      // Track operator index: each text item with content corresponds to a showText op
-      if (ti.str.trim()) {
-        textOpIndex++;
-      }
+      // Track operator index: every item with "str" corresponds to a showText op,
+      // including empty strings, to stay in sync with extractTextColors()
+      textOpIndex++;
     }
     return items;
   };
@@ -448,6 +457,69 @@ export default function PdfToDocxTool() {
 
     if (tableLines.length < 2) return { tables: [], nonTableItems: items };
 
+    // Scoring function to distinguish real tables from multi-column text
+    const isLikelyTable = (candidateLines: LineGroup[], colBounds: number[]): boolean => {
+      // Build a temporary table to analyze cell contents
+      const tempTable = buildTable(candidateLines, colBounds);
+      const allCellWordCounts: number[] = [];
+      const rowNonEmptyCounts: number[] = [];
+      // Track text lengths per column for CV calculation
+      const columnTextLengths: number[][] = colBounds.map(() => []);
+
+      for (const row of tempTable.rows) {
+        let nonEmpty = 0;
+        for (let cIdx = 0; cIdx < row.length; cIdx++) {
+          const cellText = row[cIdx].map((it) => it.str).join("").trim();
+          const wordCount = cellText ? cellText.split(/\s+/).length : 0;
+          if (cellText) {
+            allCellWordCounts.push(wordCount);
+            nonEmpty++;
+          }
+          if (cIdx < columnTextLengths.length) {
+            columnTextLengths[cIdx].push(cellText.length);
+          }
+        }
+        rowNonEmptyCounts.push(nonEmpty);
+      }
+
+      if (allCellWordCounts.length === 0) return false;
+
+      let score = 0;
+
+      // 1. Median words per cell
+      const sortedWords = [...allCellWordCounts].sort((a, b) => a - b);
+      const medianWords = sortedWords[Math.floor(sortedWords.length / 2)];
+      if (medianWords < 5) score += 2;
+      else if (medianWords <= 10) score += 1;
+      else if (medianWords <= 15) score -= 1;
+      else score -= 3;
+
+      // 2. Cell count consistency (std dev of non-empty cells per row)
+      const avgNonEmpty = rowNonEmptyCounts.reduce((s, v) => s + v, 0) / rowNonEmptyCounts.length;
+      const variance = rowNonEmptyCounts.reduce((s, v) => s + (v - avgNonEmpty) ** 2, 0) / rowNonEmptyCounts.length;
+      const stdDev = Math.sqrt(variance);
+      if (stdDev < 0.5) score += 2;
+      else if (stdDev > 1.5) score -= 2;
+
+      // 3. Two-column long text penalty
+      const avgWords = allCellWordCounts.reduce((s, v) => s + v, 0) / allCellWordCounts.length;
+      if (colBounds.length === 2 && avgWords > 10) score -= 3;
+
+      // 4. Text length variance within columns (coefficient of variation)
+      for (const lengths of columnTextLengths) {
+        const nonZero = lengths.filter((l) => l > 0);
+        if (nonZero.length < 2) continue;
+        const mean = nonZero.reduce((s, v) => s + v, 0) / nonZero.length;
+        if (mean === 0) continue;
+        const colVariance = nonZero.reduce((s, v) => s + (v - mean) ** 2, 0) / nonZero.length;
+        const cv = Math.sqrt(colVariance) / mean;
+        if (cv < 0.5) score += 1;
+        else if (cv > 1.0) score -= 1;
+      }
+
+      return score >= 0;
+    };
+
     // Group consecutive table lines into tables
     const sortedTableLines = [...tableLines].sort((a, b) => b.y - a.y);
     const tables: DetectedTable[] = [];
@@ -458,7 +530,7 @@ export default function PdfToDocxTool() {
       const avgSize = sortedTableLines[i].avgFontSize;
       // Lines more than 3x font size apart start a new table
       if (gap > avgSize * 3) {
-        if (currentTableLines.length >= 2) {
+        if (currentTableLines.length >= 2 && isLikelyTable(currentTableLines, columnBoundaries)) {
           tables.push(buildTable(currentTableLines, columnBoundaries));
         } else {
           // Too few lines, add back to non-table
@@ -469,7 +541,7 @@ export default function PdfToDocxTool() {
         currentTableLines.push(sortedTableLines[i]);
       }
     }
-    if (currentTableLines.length >= 2) {
+    if (currentTableLines.length >= 2 && isLikelyTable(currentTableLines, columnBoundaries)) {
       tables.push(buildTable(currentTableLines, columnBoundaries));
     } else {
       for (const tl of currentTableLines) nonTableLines.push(tl);

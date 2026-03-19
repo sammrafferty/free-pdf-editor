@@ -25,6 +25,7 @@ interface PageTableData {
   isHeader: boolean;
   columnPositions: number[];
   pageIndex: number;
+  regionIndex?: number;
 }
 
 /** Parsed cell with type information for Excel output */
@@ -290,6 +291,84 @@ export default function PdfToExcelTool() {
     }
 
     return merged;
+  };
+
+  /**
+   * Split page items into separate table regions when multiple distinct tables
+   * exist on the same page (e.g., a summary table at top and detail table at bottom).
+   */
+  const splitIntoTableRegions = (items: TextItem[], pageHeight: number): TextItem[][] => {
+    if (items.length === 0) return [];
+
+    const fontSizes = items.map((it) => it.fontSize);
+    const medFontSize = median(fontSizes, 12);
+    const yTolerance = medFontSize * 0.5;
+
+    // Step 1: Group items into rows by Y position
+    const sorted = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
+    const rows = clusterRowsByY(sorted, yTolerance);
+    if (rows.length <= 1) return [items];
+
+    // Step 2: Compute average Y per row and sort rows top-to-bottom (descending Y in PDF coords)
+    const rowMeta = rows.map((row) => {
+      const avgY = row.reduce((s, it) => s + it.y, 0) / row.length;
+      return { items: row, avgY };
+    });
+    // Already sorted top-to-bottom because we sorted by descending Y
+
+    // Step 3: Compute line spacings between consecutive rows
+    const spacings: number[] = [];
+    for (let i = 1; i < rowMeta.length; i++) {
+      const gap = Math.abs(rowMeta[i - 1].avgY - rowMeta[i].avgY);
+      if (gap > 0) spacings.push(gap);
+    }
+    const medSpacing = median(spacings, medFontSize * 1.5);
+
+    // Step 4: Compute page width range for title detection
+    const allMinX = Math.min(...items.map((it) => it.x));
+    const allMaxX = Math.max(...items.map((it) => it.x + it.width));
+    const pageWidth = allMaxX - allMinX;
+
+    // Step 5: Identify separator indices (between row i-1 and row i)
+    const separatorIndices: number[] = [];
+    for (let i = 1; i < rowMeta.length; i++) {
+      const gap = Math.abs(rowMeta[i - 1].avgY - rowMeta[i].avgY);
+
+      // Large Y-gap: > 3x median line spacing
+      if (gap > medSpacing * 3) {
+        separatorIndices.push(i);
+        continue;
+      }
+
+      // Full-width single-item row that looks like a title/header
+      const prevRow = rowMeta[i - 1].items;
+      if (prevRow.length === 1) {
+        const item = prevRow[0];
+        const itemWidth = item.width || 0;
+        const avgFontSizeOfRest = items
+          .filter((it) => it !== item)
+          .reduce((s, it) => s + it.fontSize, 0) / Math.max(1, items.length - 1);
+        if (itemWidth > pageWidth * 0.6 && item.fontSize > avgFontSizeOfRest * 1.2) {
+          separatorIndices.push(i);
+        }
+      }
+    }
+
+    if (separatorIndices.length === 0) return [items];
+
+    // Step 6: Split rows into regions at separator indices
+    const regions: TextItem[][] = [];
+    let startIdx = 0;
+    for (const sepIdx of separatorIndices) {
+      const regionItems = rowMeta.slice(startIdx, sepIdx).flatMap((rm) => rm.items);
+      if (regionItems.length > 0) regions.push(regionItems);
+      startIdx = sepIdx;
+    }
+    // Remaining rows
+    const lastRegion = rowMeta.slice(startIdx).flatMap((rm) => rm.items);
+    if (lastRegion.length > 0) regions.push(lastRegion);
+
+    return regions;
   };
 
   /**
@@ -861,35 +940,50 @@ export default function PdfToExcelTool() {
         const page = await doc.getPage(i);
         const items = await extractTextItems(page);
 
-        let data: string[][];
-        let isHeader = false;
-        let columnPositions: number[] = [];
-
         if (mode === "smart") {
-          const result = detectTableSmart(items);
-          data = result.data;
-          isHeader = result.isHeader;
-          columnPositions = result.columnPositions;
+          // Split into separate table regions before processing
+          const viewport = page.getViewport({ scale: 1 });
+          const regions = splitIntoTableRegions(items, viewport.height);
+
+          for (let ri = 0; ri < regions.length; ri++) {
+            const result = detectTableSmart(regions[ri]);
+            let data = result.data;
+            if (data.length === 0) {
+              data = [["(No text found on this page)"]];
+            }
+            pageTables.push({
+              data,
+              isHeader: result.isHeader,
+              columnPositions: result.columnPositions,
+              pageIndex: i,
+              regionIndex: regions.length > 1 ? ri + 1 : undefined,
+            });
+          }
         } else if (mode === "table") {
           const lines = await detectLines(page);
           const result = detectTable(items, lines);
-          data = result.data;
-          isHeader = result.isHeader;
-          columnPositions = result.columnPositions;
+          let data = result.data;
+          if (data.length === 0) {
+            data = [["(No text found on this page)"]];
+          }
+          pageTables.push({
+            data,
+            isHeader: result.isHeader,
+            columnPositions: result.columnPositions,
+            pageIndex: i,
+          });
         } else {
-          data = extractRawText(items);
+          let data = extractRawText(items);
+          if (data.length === 0) {
+            data = [["(No text found on this page)"]];
+          }
+          pageTables.push({
+            data,
+            isHeader: false,
+            columnPositions: [],
+            pageIndex: i,
+          });
         }
-
-        if (data.length === 0) {
-          data = [["(No text found on this page)"]];
-        }
-
-        pageTables.push({
-          data,
-          isHeader,
-          columnPositions,
-          pageIndex: i,
-        });
       }
 
       // Consolidate pages if enabled and using smart/table mode
@@ -906,7 +1000,9 @@ export default function PdfToExcelTool() {
         }));
       } else {
         sheets = pageTables.map((pt) => ({
-          name: `Page ${pt.pageIndex}`,
+          name: pt.regionIndex
+            ? `Page ${pt.pageIndex} - Table ${pt.regionIndex}`
+            : `Page ${pt.pageIndex}`,
           data: pt.data,
           isHeader: pt.isHeader,
           columnPositions: pt.columnPositions,
@@ -952,6 +1048,18 @@ export default function PdfToExcelTool() {
             const cellRef = XLSX.utils.encode_cell({ r: 0, c });
             if (ws[cellRef]) {
               ws[cellRef].s = { font: { bold: true } };
+            }
+          }
+        }
+
+        // Apply thin borders to all data cells (best-effort; may not render in all viewers)
+        const borderStyle = { style: "thin", color: { rgb: "CCCCCC" } };
+        const borderObj = { top: borderStyle, bottom: borderStyle, left: borderStyle, right: borderStyle };
+        for (let r = 0; r < data.length; r++) {
+          for (let c = 0; c < data[r].length; c++) {
+            const cellRef = XLSX.utils.encode_cell({ r, c });
+            if (ws[cellRef]) {
+              ws[cellRef].s = { ...ws[cellRef].s, border: borderObj };
             }
           }
         }
