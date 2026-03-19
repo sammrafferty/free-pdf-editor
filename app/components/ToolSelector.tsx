@@ -28,23 +28,31 @@ const icon = (children: React.ReactNode) => (
   </svg>
 );
 
-// Merge: two documents converging into one
+// Merge: stacked documents
 const mergeIcon = icon(<>
-  <path d="M4 4h6v16H4z" /><path d="M14 4h6v16h-6z" /><path d="M10 12h4" />
+  <rect x="6" y="2" width="12" height="16" rx="2" />
+  <rect x="4" y="5" width="12" height="16" rx="2" opacity="0.6" />
 </>);
 
-// Split: scissors cutting a page
+// Split: scissors
 const splitIcon = icon(<>
-  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-  <polyline points="14 2 14 8 20 8" />
-  <line x1="4" y1="13" x2="20" y2="13" strokeDasharray="3 2" />
+  <circle cx="6" cy="6" r="3" />
+  <circle cx="6" cy="18" r="3" />
+  <line x1="20" y1="4" x2="8.59" y2="15.41" />
+  <line x1="14.47" y1="14.48" x2="20" y2="20" />
+  <line x1="8.59" y1="8.59" x2="14.47" y2="14.48" />
 </>);
 
-// Compress: arrows pushing inward
+// Compress: minimize (four inward corner arrows)
 const compressIcon = icon(<>
-  <path d="M4 14l4-4" /><path d="M4 10h4v4" />
-  <path d="M20 10l-4 4" /><path d="M20 14h-4v-4" />
-  <rect x="8" y="6" width="8" height="12" rx="1" />
+  <polyline points="4 14 4 20 10 20" />
+  <polyline points="20 10 20 4 14 4" />
+  <polyline points="14 20 20 20 20 14" />
+  <polyline points="10 4 4 4 4 10" />
+  <line x1="14" y1="10" x2="20" y2="4" />
+  <line x1="4" y1="20" x2="10" y2="14" />
+  <line x1="14" y1="14" x2="20" y2="20" />
+  <line x1="4" y1="4" x2="10" y2="10" />
 </>);
 
 // Rotate: circular arrow
@@ -91,9 +99,11 @@ const redactIcon = icon(<>
   <line x1="1" y1="1" x2="23" y2="23" />
 </>);
 
-// Sign: pen tool
+// Sign: pen tip with motion line
 const signIcon = icon(<>
-  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+  <path d="M15.5 3.5L20.5 8.5L8 21L3 22L4 17L15.5 3.5z" />
+  <path d="M15 4L20 9" />
+  <path d="M4 17L8 21" />
 </>);
 
 // Image to PDF: image frame with arrow
@@ -131,10 +141,11 @@ const excelIcon = icon(<>
   <line x1="9" y1="3" x2="9" y2="21" /><line x1="15" y1="3" x2="15" y2="21" />
 </>);
 
-// Slides: presentation
+// Slides: presentation board
 const slideIcon = icon(<>
-  <rect x="2" y="3" width="20" height="14" rx="2" />
-  <line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+  <rect x="2" y="2" width="20" height="14" rx="2" />
+  <line x1="8" y1="20" x2="16" y2="20" />
+  <line x1="12" y1="16" x2="12" y2="20" />
 </>);
 
 /* ── Data ─────────────────────────────────────────────── */
