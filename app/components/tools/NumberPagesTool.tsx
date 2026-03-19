@@ -93,20 +93,34 @@ export default function NumberPagesTool() {
 
   const handleFile = async (files: File[]) => {
     const f = files[0];
+    if (!f) return;
     setError("");
     try {
       const buf = await f.arrayBuffer();
       const pdf = await PDFDocument.load(buf);
+      const count = pdf.getPageCount();
+      if (count === 0) {
+        setError("This PDF has no pages.");
+        setFile(null);
+        setPageCount(0);
+        return;
+      }
       setFile(f);
-      setPageCount(pdf.getPageCount());
+      setPageCount(count);
+      setSkipPages(0);
     } catch {
       setError("Could not read this PDF. It may be corrupted or password-protected.");
       setFile(null);
+      setPageCount(0);
     }
   };
 
   const handleNumber = async () => {
     if (!file) return;
+    setError("");
+    const clampedFontSize = Math.min(72, Math.max(4, fontSize || 12));
+    const clampedSkipPages = Math.min(Math.max(0, skipPages), pageCount - 1);
+    const clampedStartNum = Math.max(1, startNum || 1);
     setLoading(true);
     try {
       const buf = await file.arrayBuffer();
@@ -114,37 +128,71 @@ export default function NumberPagesTool() {
       const font = await pdf.embedFont(StandardFonts[FONT_MAP[fontOption]]);
       const total = pdf.getPageCount();
       const color = COLOR_PRESETS[colorIndex];
+      const margin = 30;
 
-      for (let i = 0; i < total; i++) {
-        if (i < skipPages) continue;
+      if (clampedSkipPages >= total) {
+        setError("All pages are skipped. Reduce the skip pages value.");
+        setLoading(false);
+        return;
+      }
 
+      for (let i = clampedSkipPages; i < total; i++) {
         const page = pdf.getPage(i);
         const { width, height } = page.getSize();
-        const numText = formatPageNumber(i - skipPages, total - skipPages, startNum, numberFormat);
-        const textWidth = font.widthOfTextAtSize(numText, fontSize);
+        const rotation = page.getRotation().angle;
+
+        // Account for page rotation: getSize() returns unrotated dimensions
+        let effectiveWidth = width;
+        let effectiveHeight = height;
+        if (rotation === 90 || rotation === 270) {
+          effectiveWidth = height;
+          effectiveHeight = width;
+        }
+
+        const numText = formatPageNumber(i - clampedSkipPages, total - clampedSkipPages, clampedStartNum, numberFormat);
+        const textWidth = font.widthOfTextAtSize(numText, clampedFontSize);
 
         let x: number;
         if (position.endsWith("center")) {
-          x = width / 2 - textWidth / 2;
+          x = effectiveWidth / 2 - textWidth / 2;
         } else if (position.endsWith("right")) {
-          x = width - 50 - textWidth;
+          x = effectiveWidth - margin - textWidth;
         } else {
-          x = 50;
+          x = margin;
         }
 
-        const y = position.startsWith("top") ? height - 30 : 30;
+        let y: number;
+        if (position.startsWith("top")) {
+          y = effectiveHeight - margin;
+        } else {
+          y = margin;
+        }
+
+        // Transform coordinates for rotated pages
+        let drawX = x;
+        let drawY = y;
+        if (rotation === 90) {
+          drawX = y;
+          drawY = height - x - textWidth;
+        } else if (rotation === 180) {
+          drawX = width - x - textWidth;
+          drawY = height - y;
+        } else if (rotation === 270) {
+          drawX = width - y;
+          drawY = x;
+        }
 
         page.drawText(numText, {
-          x,
-          y,
-          size: fontSize,
+          x: drawX,
+          y: drawY,
+          size: clampedFontSize,
           font,
           color: rgb(color.r, color.g, color.b),
         });
       }
 
       const bytes = await pdf.save();
-      const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
+      const blob = new Blob([new Uint8Array(bytes) as BlobPart], { type: "application/pdf" });
       downloadBlob(blob, `numbered_${file.name}`);
     } catch (e) {
       console.error(e);
@@ -187,7 +235,7 @@ export default function NumberPagesTool() {
                 <p className="text-xs theme-text-muted">{pageCount} pages</p>
               </div>
             </div>
-            <button onClick={() => setFile(null)} className="theme-text-muted text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setPageCount(0); setError(""); setSkipPages(0); }} className="theme-text-muted text-sm font-medium">Remove</button>
           </div>
 
           {/* Number format */}
@@ -283,7 +331,7 @@ export default function NumberPagesTool() {
                 type="number"
                 value={startNum}
                 onChange={(e) => setStartNum(Number(e.target.value))}
-                min={0}
+                min={1}
                 className="w-full theme-input rounded-xl px-4 py-3 theme-text text-sm focus:outline-none focus:ring-1 focus:ring-white/20"
               />
             </div>
@@ -292,9 +340,12 @@ export default function NumberPagesTool() {
               <input
                 type="number"
                 value={fontSize}
-                onChange={(e) => setFontSize(Number(e.target.value))}
-                min={8}
-                max={36}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  if (!isNaN(v)) setFontSize(v);
+                }}
+                min={4}
+                max={72}
                 className="w-full theme-input rounded-xl px-4 py-3 theme-text text-sm focus:outline-none focus:ring-1 focus:ring-white/20"
               />
             </div>

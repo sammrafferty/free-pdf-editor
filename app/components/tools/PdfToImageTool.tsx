@@ -41,10 +41,12 @@ export default function PdfToImageTool() {
   const [totalSize, setTotalSize] = useState<number | null>(null);
 
   const handleFile = async (files: File[]) => {
+    if (!files || files.length === 0) return;
     const f = files[0];
     setFile(f);
     setError("");
     setTotalSize(null);
+    setProgress(0);
     try {
       const pdfjsLib = await import("pdfjs-dist");
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
@@ -64,21 +66,24 @@ export default function PdfToImageTool() {
     setProgress(0);
     setError("");
     setTotalSize(null);
+    let canvas: HTMLCanvasElement | null = null;
     try {
       const pdfjsLib = await import("pdfjs-dist");
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
       const buf = await file.arrayBuffer();
       const doc = await pdfjsLib.getDocument({ data: buf }).promise;
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d")!;
+      canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("Could not create canvas rendering context");
+      }
 
       const images: { name: string; blob: Blob }[] = [];
       const mime = MIME_MAP[format];
       const ext = EXT_MAP[format];
 
       for (let i = 1; i <= doc.numPages; i++) {
-        setProgress(i);
         const page = await doc.getPage(i);
         const viewport = page.getViewport({ scale });
         canvas.width = viewport.width;
@@ -90,10 +95,12 @@ export default function PdfToImageTool() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
+        await page.render({ canvasContext: ctx, viewport } as any).promise;
 
+        if (!canvas) throw new Error("Canvas not initialized");
+        const cv = canvas;
         const blob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob(
+          cv.toBlob(
             (b) => {
               if (b) resolve(b);
               else reject(new Error(`Failed to render page ${i}`));
@@ -103,6 +110,7 @@ export default function PdfToImageTool() {
           );
         });
         images.push({ name: `page_${i}.${ext}`, blob });
+        setProgress(i);
       }
 
       const total = images.reduce((sum, img) => sum + img.blob.size, 0);
@@ -124,9 +132,14 @@ export default function PdfToImageTool() {
     } catch (e) {
       console.error(e);
       setError("Conversion failed: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      // Release canvas memory
+      if (canvas) {
+        canvas.width = 0;
+        canvas.height = 0;
+      }
+      setLoading(false);
     }
-    setLoading(false);
-    setProgress(0);
   };
 
   const formatLabel = format.toUpperCase();
@@ -150,7 +163,7 @@ export default function PdfToImageTool() {
                 <p className="text-xs theme-text-muted">{pageCount} pages</p>
               </div>
             </div>
-            <button onClick={() => { setFile(null); setPageCount(0); setError(""); setTotalSize(null); }} className="theme-text-muted  text-sm font-medium">Remove</button>
+            <button onClick={() => { setFile(null); setPageCount(0); setError(""); setTotalSize(null); setProgress(0); }} disabled={loading} className="theme-text-muted text-sm font-medium disabled:opacity-50">Remove</button>
           </div>
 
           <div>
@@ -160,7 +173,8 @@ export default function PdfToImageTool() {
                 <button
                   key={opt.value}
                   onClick={() => setFormat(opt.value)}
-                  className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
+                  disabled={loading}
+                  className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors disabled:opacity-50 ${
                     format === opt.value ? "text-white" : "theme-bg-secondary theme-border theme-text-secondary hover:opacity-80"
                   }`}
                   style={format === opt.value ? { backgroundColor: "#f472b6", borderColor: "#f472b6" } : {}}
@@ -184,7 +198,8 @@ export default function PdfToImageTool() {
                 step={0.05}
                 value={quality}
                 onChange={(e) => setQuality(parseFloat(e.target.value))}
-                className="w-full accent-pink-400"
+                disabled={loading}
+                className="w-full accent-pink-400 disabled:opacity-50"
               />
               <div className="flex justify-between text-xs theme-text-muted mt-1">
                 <span>50%</span>
@@ -194,13 +209,14 @@ export default function PdfToImageTool() {
           )}
 
           <div>
-            <label className="block text-sm font-medium theme-text-secondary mb-2">Quality (scale factor)</label>
+            <label className="block text-sm font-medium theme-text-secondary mb-2">Resolution</label>
             <div className="flex gap-2">
               {[1, 2, 3].map((s) => (
                 <button
                   key={s}
                   onClick={() => setScale(s)}
-                  className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors ${
+                  disabled={loading}
+                  className={`flex-1 py-3 rounded-xl border text-sm font-medium transition-colors disabled:opacity-50 ${
                     scale === s ? "text-white" : "theme-bg-secondary theme-border theme-text-secondary hover:opacity-80"
                   }`}
                   style={scale === s ? { backgroundColor: "#f472b6", borderColor: "#f472b6" } : {}}
@@ -224,7 +240,7 @@ export default function PdfToImageTool() {
                 <span className="text-xs theme-text-secondary">{progress} / {pageCount}</span>
               </div>
               <div className="w-full bg-pink-100 rounded-full h-2">
-                <div className="h-2 rounded-full transition-all" style={{ backgroundColor: "#f472b6", width: `${(progress / pageCount) * 100}%` }} />
+                <div className="h-2 rounded-full transition-all" style={{ backgroundColor: "#f472b6", width: `${pageCount > 0 ? (progress / pageCount) * 100 : 0}%` }} />
               </div>
             </div>
           )}
@@ -243,7 +259,7 @@ export default function PdfToImageTool() {
             className="w-full py-3.5 text-white rounded-xl font-semibold text-sm transition-colors theme-btn-disabled"
             style={!loading ? { backgroundColor: "#f472b6" } : {}}
           >
-            {loading ? `Converting page ${progress}...` : `Convert to ${formatLabel}${pageCount > 1 ? ` (${pageCount} images as ZIP)` : ""}`}
+            {loading ? `Converting page ${Math.max(progress, 1)} of ${pageCount}...` : `Convert to ${formatLabel}${pageCount > 1 ? ` (${pageCount} images as ZIP)` : ""}`}
           </button>
         </div>
       )}

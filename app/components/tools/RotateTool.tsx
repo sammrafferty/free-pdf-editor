@@ -13,8 +13,9 @@ export default function RotateTool() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleFile = async (files: File[]) => {
+  const handleFile = useCallback(async (files: File[]) => {
     const f = files[0];
+    if (!f) return;
     setError("");
     try {
       const buf = await f.arrayBuffer();
@@ -26,8 +27,9 @@ export default function RotateTool() {
     } catch {
       setError("Could not read this PDF. It may be corrupted or password-protected.");
       setFile(null);
+      setPageCount(0);
     }
-  };
+  }, []);
 
   const handleThumbnailClick = useCallback((pageNum: number) => {
     setRotations((prev) => {
@@ -57,9 +59,7 @@ export default function RotateTool() {
     setRotations((prev) => {
       const next = new Map(prev);
       for (const [pageNum] of prev) {
-        if (prev.get(pageNum) !== 0) {
-          next.set(pageNum, rotation);
-        }
+        next.set(pageNum, rotation);
       }
       return next;
     });
@@ -123,8 +123,9 @@ export default function RotateTool() {
       downloadBlob(blob, `rotated_${file.name}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Rotation failed");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -155,7 +156,7 @@ export default function RotateTool() {
               </div>
             </div>
             <button
-              onClick={() => { setFile(null); setRotations(new Map()); }}
+              onClick={() => { setFile(null); setPageCount(0); setRotations(new Map()); setError(""); }}
               className="theme-text-muted  text-sm font-medium"
             >
               Remove

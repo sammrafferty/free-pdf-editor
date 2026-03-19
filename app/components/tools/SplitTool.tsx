@@ -36,6 +36,7 @@ export default function SplitTool() {
 
   const handleFile = async (files: File[]) => {
     const f = files[0];
+    if (!f) return;
     setError("");
     try {
       const buf = await f.arrayBuffer();
@@ -52,11 +53,16 @@ export default function SplitTool() {
 
   const parseRange = (r: string, max: number): number[] => {
     const pages: number[] = [];
-    const parts = r.split(",").map((s) => s.trim());
+    const parts = r.split(",").map((s) => s.trim()).filter(Boolean);
     for (const part of parts) {
       if (part.includes("-")) {
-        const [a, b] = part.split("-").map(Number);
-        for (let i = Math.max(a, 1); i <= Math.min(b, max); i++) pages.push(i);
+        const segments = part.split("-").map(Number);
+        const a = segments[0];
+        const b = segments[1];
+        if (isNaN(a) || isNaN(b)) continue;
+        const lo = Math.max(Math.min(a, b), 1);
+        const hi = Math.min(Math.max(a, b), max);
+        for (let i = lo; i <= hi; i++) pages.push(i);
       } else {
         const n = parseInt(part);
         if (!isNaN(n) && n >= 1 && n <= max) pages.push(n);
@@ -126,14 +132,14 @@ export default function SplitTool() {
   };
 
   const handleSplit = async () => {
-    if (!file || !range) return;
+    if (!file || !range.trim()) return;
     setLoading(true);
     setError("");
     try {
       const buf = await file.arrayBuffer();
       const srcPdf = await PDFDocument.load(buf);
       const pages = parseRange(range, pageCount);
-      if (!pages.length) throw new Error("Invalid page range");
+      if (!pages.length) throw new Error("Invalid page range — no valid pages found");
 
       const newPdf = await PDFDocument.create();
       const copied = await newPdf.copyPages(srcPdf, pages.map((p) => p - 1));
@@ -141,11 +147,13 @@ export default function SplitTool() {
 
       const bytes = await newPdf.save();
       const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
-      downloadBlob(blob, `split_pages_${range.replace(/,/g, "_")}.pdf`);
+      const safeRange = range.replace(/[^0-9\-]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
+      downloadBlob(blob, `split_pages_${safeRange}.pdf`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Split failed");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -176,7 +184,7 @@ export default function SplitTool() {
               </div>
             </div>
             <button
-              onClick={() => { setFile(null); setPageCount(0); setSelected(new Set()); setRange(""); }}
+              onClick={() => { setFile(null); setPageCount(0); setSelected(new Set()); setRange(""); setError(""); }}
               className="theme-text-muted  text-sm font-medium"
             >
               Remove
@@ -215,7 +223,7 @@ export default function SplitTool() {
                   onClick={splitEveryN}
                   className="px-3 py-1.5 text-xs font-medium rounded-lg border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 transition-colors"
                 >
-                  Split every
+                  First
                 </button>
                 <input
                   type="number"
@@ -267,7 +275,7 @@ export default function SplitTool() {
 
           <button
             onClick={handleSplit}
-            disabled={loading || !range}
+            disabled={loading || !range.trim() || selected.size === 0}
             className="w-full py-3.5 bg-indigo-500/100 hover:bg-indigo-600 theme-btn-disabled text-white rounded-xl font-semibold text-sm transition-colors"
           >
             {loading ? "Processing..." : "Extract Pages"}

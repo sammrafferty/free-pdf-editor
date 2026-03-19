@@ -19,7 +19,9 @@ export default function MergeTool() {
   const dragCounter = useRef(0);
 
   const handleFiles = useCallback(async (files: File[]) => {
+    setError("");
     const newEntries: MergeEntry[] = [];
+    const skipped: string[] = [];
     for (const file of files) {
       try {
         const buf = await file.arrayBuffer();
@@ -27,14 +29,23 @@ export default function MergeTool() {
         const pageCount = pdf.getPageCount();
         newEntries.push({ file, pageCount });
       } catch {
-        newEntries.push({ file, pageCount: 0 });
+        skipped.push(file.name);
       }
     }
-    setEntries((prev) => [...prev, ...newEntries]);
+    if (skipped.length > 0) {
+      setError(
+        `Could not read ${skipped.length === 1 ? "file" : "files"}: ${skipped.join(", ")}`
+      );
+    }
+    if (newEntries.length > 0) {
+      setEntries((prev) => [...prev, ...newEntries]);
+    }
   }, []);
 
-  const removeFile = (i: number) =>
+  const removeFile = (i: number) => {
+    setError("");
     setEntries((prev) => prev.filter((_, idx) => idx !== i));
+  };
 
   const fmt = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -99,6 +110,7 @@ export default function MergeTool() {
   /* ── Merge ── */
   const handleMerge = async () => {
     if (entries.length < 2) return;
+    setError("");
     setLoading(true);
     try {
       const merged = await PDFDocument.create();
@@ -116,8 +128,9 @@ export default function MergeTool() {
     } catch (e: unknown) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Merge failed");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -196,7 +209,11 @@ export default function MergeTool() {
 
                 {/* Remove button */}
                 <button
-                  onClick={() => removeFile(i)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile(i);
+                  }}
+                  aria-label={`Remove ${entry.file.name}`}
                   className="w-7 h-7 flex items-center justify-center rounded-md theme-text-muted hover:text-red-500 hover:bg-red-500/10 flex-shrink-0"
                 >
                   <svg
@@ -246,7 +263,9 @@ export default function MergeTool() {
             disabled={loading || entries.length < 2}
             className="w-full py-3.5 mt-1 bg-blue-500 hover:bg-blue-600 theme-btn-disabled text-white rounded-xl font-semibold text-sm transition-colors"
           >
-            {loading ? "Merging..." : `Merge ${entries.length} PDFs`}
+            {loading
+              ? "Merging..."
+              : `Merge ${entries.length} ${entries.length === 1 ? "PDF" : "PDFs"}`}
           </button>
         </div>
       )}

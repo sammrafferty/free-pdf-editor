@@ -37,6 +37,7 @@ export default function CompressTool() {
   const [error, setError] = useState("");
 
   const handleFile = (files: File[]) => {
+    if (!files || files.length === 0) return;
     setFile(files[0]);
     setResult(null);
     setError("");
@@ -65,7 +66,8 @@ export default function CompressTool() {
       const canvas = document.createElement("canvas");
       canvas.width = viewport.width;
       canvas.height = viewport.height;
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error(`Failed to create canvas context for page ${i}`);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await page.render({ canvasContext: ctx, viewport, canvas } as any).promise;
@@ -112,6 +114,7 @@ export default function CompressTool() {
     if (!file) return;
     setLoading(true);
     setResult(null);
+    setError("");
     setProgress({ current: 0, total: 0 });
     try {
       const buf = await file.arrayBuffer();
@@ -131,12 +134,15 @@ export default function CompressTool() {
     } catch (e: unknown) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Compression failed");
+    } finally {
+      setLoading(false);
+      setProgress({ current: 0, total: 0 });
     }
-    setLoading(false);
-    setProgress({ current: 0, total: 0 });
   };
 
-  const pctNum = result ? (1 - result.compressed / result.original) * 100 : 0;
+  const pctNum = result && result.original > 0
+    ? (1 - result.compressed / result.original) * 100
+    : 0;
   const pct = result ? Math.abs(pctNum).toFixed(1) : null;
 
   return (
@@ -160,7 +166,7 @@ export default function CompressTool() {
               </div>
             </div>
             <button
-              onClick={() => { setFile(null); setResult(null); }}
+              onClick={() => { setFile(null); setResult(null); setError(""); }}
               className="theme-text-muted  text-sm font-medium"
             >
               Remove
