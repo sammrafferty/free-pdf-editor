@@ -30,6 +30,8 @@ export default function SplitCard() {
             flex-direction: row !important;
           }
         }
+
+        /* Existing hover CSS — unchanged */
         .group:hover .split-page-1 {
           transform: translate(-30px, -8px) rotate(-8deg) !important;
           stroke: var(--accent-primary) !important;
@@ -40,6 +42,42 @@ export default function SplitCard() {
         .group:hover .split-page-3 {
           transform: translate(30px, 8px) rotate(8deg) !important;
           stroke: var(--accent-primary) !important;
+        }
+        .group:hover .split-indicator {
+          opacity: 1 !important;
+        }
+
+        /* Loop keyframes */
+        @keyframes split-loop-left {
+          0%   { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
+          20%  { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
+          40%  { transform: translate(-30px, -8px) rotate(-8deg); stroke: var(--accent-primary); }
+          60%  { transform: translate(-30px, -8px) rotate(-8deg); stroke: var(--accent-primary); }
+          85%  { transform: translate(-30px, -8px) rotate(-8deg); stroke: var(--accent-primary); }
+          100% { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
+        }
+
+        @keyframes split-loop-right {
+          0%   { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
+          20%  { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
+          40%  { transform: translate(30px, 8px) rotate(8deg); stroke: var(--accent-primary); }
+          60%  { transform: translate(30px, 8px) rotate(8deg); stroke: var(--accent-primary); }
+          85%  { transform: translate(30px, 8px) rotate(8deg); stroke: var(--accent-primary); }
+          100% { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
+        }
+
+        /* In-view loop animations */
+        .in-view .split-page-1 {
+          animation: split-loop-left 3.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+        }
+        .in-view .split-page-3 {
+          animation: split-loop-right 3.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+        }
+
+        /* Hover overrides loop — pause animation and snap to hover state */
+        .group:hover .split-page-1,
+        .group:hover .split-page-3 {
+          animation: none !important;
         }
       `}</style>
 
@@ -339,11 +377,6 @@ export default function SplitCard() {
               />
             </g>
           </svg>
-          <style>{`
-            .group:hover .split-indicator {
-              opacity: 1 !important;
-            }
-          `}</style>
         </div>
       </div>
     </div>

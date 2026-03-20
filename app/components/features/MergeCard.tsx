@@ -77,6 +77,7 @@ export default function MergeCard() {
             .merged-label { opacity: 0; }
             .merge-glow { opacity: 0; }
 
+            /* Existing hover CSS — unchanged */
             .group:hover .doc-a { transform: translate(52px, 10px); }
             .group:hover .doc-b { transform: translate(0, 0); }
             .group:hover .doc-c { transform: translate(-52px, -10px); }
@@ -93,9 +94,104 @@ export default function MergeCard() {
             .group:hover .label-c {
               opacity: 0;
             }
+
+            /* Loop keyframes */
+            @keyframes merge-loop-docA {
+              0%   { transform: translate(0px, 0px); }
+              20%  { transform: translate(0px, 0px); }
+              40%  { transform: translate(52px, 10px); }
+              55%  { transform: translate(52px, 10px); }
+              80%  { transform: translate(52px, 10px); }
+              100% { transform: translate(0px, 0px); }
+            }
+
+            @keyframes merge-loop-docC {
+              0%   { transform: translate(0px, 0px); }
+              20%  { transform: translate(0px, 0px); }
+              40%  { transform: translate(-52px, -10px); }
+              55%  { transform: translate(-52px, -10px); }
+              80%  { transform: translate(-52px, -10px); }
+              100% { transform: translate(0px, 0px); }
+            }
+
+            @keyframes merge-loop-glow {
+              0%   { opacity: 0; }
+              20%  { opacity: 0; }
+              40%  { opacity: 1; }
+              55%  { opacity: 1; }
+              80%  { opacity: 1; }
+              100% { opacity: 0; }
+            }
+
+            @keyframes merge-loop-labels {
+              0%   { opacity: 1; }
+              20%  { opacity: 1; }
+              35%  { opacity: 0; }
+              80%  { opacity: 0; }
+              100% { opacity: 1; }
+            }
+
+            @keyframes merge-loop-merged-label {
+              0%   { opacity: 0; }
+              20%  { opacity: 0; }
+              40%  { opacity: 1; }
+              55%  { opacity: 1; }
+              80%  { opacity: 1; }
+              100% { opacity: 0; }
+            }
+
+            /* In-view loop animations */
+            .in-view .merge-doc-a {
+              animation: merge-loop-docA 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+            }
+            .in-view .merge-doc-c {
+              animation: merge-loop-docC 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+            }
+            .in-view .merge-glow-loop {
+              animation: merge-loop-glow 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+            }
+            .in-view .label-a,
+            .in-view .label-b,
+            .in-view .label-c {
+              animation: merge-loop-labels 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+            }
+            .in-view .merge-loop-merged {
+              animation: merge-loop-merged-label 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+            }
+
+            /* Hover overrides loop */
+            .group:hover .merge-doc-a,
+            .group:hover .merge-doc-c {
+              animation: none !important;
+            }
+            .group:hover .merge-glow-loop {
+              animation: none !important;
+            }
+            .group:hover .label-a,
+            .group:hover .label-b,
+            .group:hover .label-c {
+              animation: none !important;
+              opacity: 0 !important;
+            }
+            .group:hover .merge-loop-merged {
+              animation: none !important;
+              opacity: 1 !important;
+            }
           `}</style>
 
-          {/* Merge-point glow */}
+          {/* Merge-point glow — loop version (separate from hover .merge-glow) */}
+          <ellipse
+            className="merge-glow-loop"
+            cx="140"
+            cy="120"
+            rx="50"
+            ry="70"
+            fill="var(--accent-primary)"
+            opacity="0"
+            style={{ filter: "blur(18px)" }}
+          />
+
+          {/* Merge-point glow — hover version */}
           <ellipse
             className="merge-glow"
             cx="140"
@@ -108,7 +204,7 @@ export default function MergeCard() {
           />
 
           {/* Document A (left) */}
-          <g className="doc-a">
+          <g className="doc-a merge-doc-a">
             <rect
               x="24"
               y="50"
@@ -214,7 +310,7 @@ export default function MergeCard() {
           </g>
 
           {/* Document C (right) */}
-          <g className="doc-c">
+          <g className="doc-c merge-doc-c">
             <rect
               x="184"
               y="50"
@@ -273,6 +369,20 @@ export default function MergeCard() {
             fontSize="14"
             fontWeight="700"
             fill="var(--accent-primary)"
+          >
+            A + B + C
+          </text>
+
+          {/* Merged label — appears during loop */}
+          <text
+            className="merge-loop-merged"
+            x="140"
+            y="175"
+            textAnchor="middle"
+            fontSize="14"
+            fontWeight="700"
+            fill="var(--accent-primary)"
+            opacity="0"
           >
             A + B + C
           </text>

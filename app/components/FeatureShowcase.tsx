@@ -1,4 +1,5 @@
 "use client";
+import { useRef, useEffect } from "react";
 import SplitCard from "./features/SplitCard";
 import MergeCard from "./features/MergeCard";
 import ConvertCard from "./features/ConvertCard";
@@ -7,8 +8,31 @@ import PrivacyCard from "./features/PrivacyCard";
 import WorkflowCard from "./features/WorkflowCard";
 
 export default function FeatureShowcase() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            section.classList.add("in-view");
+          } else {
+            section.classList.remove("in-view");
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="mt-16 sm:mt-20 mb-8">
+    <section ref={sectionRef} className="mt-16 sm:mt-20 mb-8">
       <div className="text-center mb-10">
         <h2
           className="hero-animate text-2xl sm:text-3xl font-bold tracking-tight mb-3"

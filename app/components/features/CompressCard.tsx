@@ -25,52 +25,101 @@ export default function CompressCard() {
     >
       <style>{`
         @media (max-width: 768px) {
-          .compress-card-layout {
+          .compress2-card-layout {
             flex-direction: column !important;
           }
         }
-        .compress-doc-large {
-          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+
+        /* ── looping animations (triggered by .in-view on parent section) ── */
+        @keyframes compress2-squish {
+          0%, 22%  { transform: scaleY(1); }
+          28%, 82% { transform: scaleY(0.88); }
+          90%, 100% { transform: scaleY(1); }
         }
-        .group:hover .compress-doc-large {
-          transform: scale(0.92);
+        @keyframes compress2-badge-hide {
+          0%, 22%  { opacity: 1; }
+          28%, 100% { opacity: 0; }
         }
-        .compress-badge-before {
-          transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-          opacity: 1;
+        @keyframes compress2-badge-show {
+          0%, 22%  { opacity: 0; }
+          28%, 82% { opacity: 1; }
+          90%, 100% { opacity: 0; }
         }
-        .group:hover .compress-badge-before {
+        @keyframes compress2-arrow-left {
+          0%, 22%  { transform: translateX(0); }
+          28%, 82% { transform: translateX(8px); }
+          90%, 100% { transform: translateX(0); }
+        }
+        @keyframes compress2-arrow-right {
+          0%, 22%  { transform: translateX(0); }
+          28%, 82% { transform: translateX(-8px); }
+          90%, 100% { transform: translateX(0); }
+        }
+        @keyframes compress2-result-rise {
+          0%, 22%  { opacity: 0.45; }
+          62%, 82% { opacity: 1; }
+          90%, 100% { opacity: 0.45; }
+        }
+
+        /* doc-before: scaleY from its vertical centre */
+        .compress2-doc-before {
+          transform-origin: 65px 80px;
+        }
+        .in-view .compress2-doc-before {
+          animation: compress2-squish 3.5s ease-in-out infinite;
+        }
+        .in-view .compress2-badge-large {
+          animation: compress2-badge-hide 3.5s ease-in-out infinite;
+        }
+        .in-view .compress2-badge-small {
+          animation: compress2-badge-show 3.5s ease-in-out infinite;
+        }
+        .in-view .compress2-arrow-left {
+          animation: compress2-arrow-left 3.5s ease-in-out infinite;
+        }
+        .in-view .compress2-arrow-right {
+          animation: compress2-arrow-right 3.5s ease-in-out infinite;
+        }
+        .in-view .compress2-result {
+          animation: compress2-result-rise 3.5s ease-in-out infinite;
+        }
+
+        /* ── hover overrides (instant, no loop) ── */
+        .group:hover .compress2-doc-before {
+          animation: none;
+          transform: scaleY(0.88);
+        }
+        .group:hover .compress2-badge-large {
+          animation: none;
           opacity: 0;
         }
-        .compress-badge-after {
-          transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-          opacity: 0;
-        }
-        .group:hover .compress-badge-after {
+        .group:hover .compress2-badge-small {
+          animation: none;
           opacity: 1;
         }
-        .compress-arrow {
-          transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        .group:hover .compress2-arrow-left {
+          animation: none;
+          transform: translateX(8px);
         }
-        .group:hover .compress-arrow {
-          transform: translateY(6px);
+        .group:hover .compress2-arrow-right {
+          animation: none;
+          transform: translateX(-8px);
         }
-        .compress-quality-fill {
-          transition: filter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        .group:hover .compress2-result {
+          animation: none;
+          opacity: 1;
         }
-        .group:hover .compress-quality-fill {
-          filter: brightness(1.3);
+
+        /* base opacity for result doc (so animation starts correctly) */
+        .compress2-result {
+          opacity: 0.45;
         }
-        @keyframes compress-pulse-green {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
-        .group:hover .compress-quality-fill {
-          animation: compress-pulse-green 1s ease-in-out 1;
-        }
+        /* base opacity for badges */
+        .compress2-badge-large { opacity: 1; }
+        .compress2-badge-small { opacity: 0; }
       `}</style>
 
-      {/* Left side - text */}
+      {/* Left side — text */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <h3
           style={{
@@ -96,196 +145,128 @@ export default function CompressCard() {
         </p>
       </div>
 
-      {/* Right side - illustration */}
+      {/* Right side — illustration */}
       <div
-        className="compress-card-layout"
+        className="compress2-card-layout"
         style={{ flexShrink: 0, display: "flex", alignItems: "center" }}
       >
         <svg
-          width="260"
-          height="240"
-          viewBox="0 0 260 240"
+          width="300"
+          height="200"
+          viewBox="0 0 300 200"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           style={{ display: "block" }}
         >
-          {/* Large document (before) */}
-          <g className="compress-doc-large" style={{ transformOrigin: "80px 70px" }}>
-            {/* Document body */}
-            <rect
-              x="40"
-              y="16"
-              width="80"
-              height="100"
-              rx="6"
+          {/* ── Left document: original (large) ── */}
+          <g className="compress2-doc-before">
+            {/* page shadow */}
+            <rect x="23" y="23" width="90" height="122" rx="6"
+              fill="var(--text-muted)" opacity="0.08" />
+            {/* page body */}
+            <rect x="20" y="20" width="90" height="120" rx="6"
               fill="var(--bg-tertiary, var(--bg-secondary))"
-              stroke="var(--border-primary)"
-              strokeWidth="1.5"
-            />
-            {/* Document lines */}
-            <rect x="54" y="36" width="52" height="4" rx="2" fill="var(--text-muted)" opacity="0.4" />
-            <rect x="54" y="48" width="44" height="4" rx="2" fill="var(--text-muted)" opacity="0.3" />
-            <rect x="54" y="60" width="48" height="4" rx="2" fill="var(--text-muted)" opacity="0.4" />
-            <rect x="54" y="72" width="36" height="4" rx="2" fill="var(--text-muted)" opacity="0.3" />
-            <rect x="54" y="84" width="50" height="4" rx="2" fill="var(--text-muted)" opacity="0.4" />
-            {/* Corner fold */}
-            <path d="M104 16 L120 32 L104 32 Z" fill="var(--border-primary)" opacity="0.3" />
+              stroke="var(--border-primary)" strokeWidth="1.5" />
+            {/* corner fold */}
+            <path d="M98 20 L110 32 L98 32 Z"
+              fill="var(--border-primary)" opacity="0.3" />
+            {/* content lines */}
+            <rect x="32" y="38" width="50" height="4" rx="2"
+              fill="var(--text-muted)" opacity="0.4" />
+            <rect x="32" y="50" width="42" height="4" rx="2"
+              fill="var(--text-muted)" opacity="0.3" />
+            <rect x="32" y="62" width="46" height="4" rx="2"
+              fill="var(--text-muted)" opacity="0.4" />
+            <rect x="32" y="74" width="34" height="4" rx="2"
+              fill="var(--text-muted)" opacity="0.3" />
+            <rect x="32" y="86" width="48" height="4" rx="2"
+              fill="var(--text-muted)" opacity="0.4" />
+            <rect x="32" y="98" width="38" height="4" rx="2"
+              fill="var(--text-muted)" opacity="0.3" />
 
-            {/* File size badge - 4.2 MB (visible by default) */}
-            <g className="compress-badge-before">
-              <rect x="88" y="92" width="52" height="22" rx="6" fill="var(--accent-primary)" />
-              <text
-                x="114"
-                y="107"
+            {/* "4.2 MB" badge — fades out */}
+            <g className="compress2-badge-large">
+              <rect x="20" y="148" width="60" height="22" rx="6"
+                fill="var(--accent-primary)" />
+              <text x="50" y="163"
                 textAnchor="middle"
                 fill="white"
-                fontSize="11"
-                fontWeight="700"
-                fontFamily="system-ui, sans-serif"
-              >
+                fontSize="11" fontWeight="700"
+                fontFamily="system-ui, sans-serif">
                 4.2 MB
               </text>
             </g>
 
-            {/* File size badge - 680 KB (visible on hover) */}
-            <g className="compress-badge-after">
-              <rect x="88" y="92" width="52" height="22" rx="6" fill="#4ade80" />
-              <text
-                x="114"
-                y="107"
+            {/* "680 KB" badge — fades in (green) */}
+            <g className="compress2-badge-small">
+              <rect x="20" y="148" width="60" height="22" rx="6"
+                fill="#4ade80" />
+              <text x="50" y="163"
                 textAnchor="middle"
                 fill="white"
-                fontSize="11"
-                fontWeight="700"
-                fontFamily="system-ui, sans-serif"
-              >
+                fontSize="11" fontWeight="700"
+                fontFamily="system-ui, sans-serif">
                 680 KB
               </text>
             </g>
           </g>
 
-          {/* Compression arrow */}
-          <g className="compress-arrow" style={{ transformOrigin: "80px 140px" }}>
-            <path
-              d="M80 126 L80 152"
+          {/* ── Centre: compression chevrons ── */}
+          {/* left chevron (points right, moves right when compressing) */}
+          <g className="compress2-arrow-left"
+            style={{ transformOrigin: "147px 90px" }}>
+            <path d="M140 78 L152 90 L140 102"
               stroke="var(--text-muted)"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M72 146 L80 156 L88 146"
-              stroke="var(--text-muted)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-            {/* Compression lines */}
-            <line x1="68" y1="134" x2="92" y2="134" stroke="var(--text-muted)" strokeWidth="1" opacity="0.4" />
-            <line x1="72" y1="140" x2="88" y2="140" stroke="var(--text-muted)" strokeWidth="1" opacity="0.3" />
-          </g>
-
-          {/* Small document (after) */}
-          <g>
-            {/* Document body - slightly smaller */}
-            <rect
-              x="50"
-              y="166"
-              width="60"
-              height="72"
-              rx="5"
-              fill="var(--bg-tertiary, var(--bg-secondary))"
-              stroke="#4ade80"
-              strokeWidth="1.5"
-            />
-            {/* Document lines */}
-            <rect x="60" y="180" width="40" height="3" rx="1.5" fill="var(--text-muted)" opacity="0.4" />
-            <rect x="60" y="189" width="32" height="3" rx="1.5" fill="var(--text-muted)" opacity="0.3" />
-            <rect x="60" y="198" width="36" height="3" rx="1.5" fill="var(--text-muted)" opacity="0.4" />
-            <rect x="60" y="207" width="28" height="3" rx="1.5" fill="var(--text-muted)" opacity="0.3" />
-
-            {/* File size badge */}
-            <rect x="80" y="218" width="48" height="20" rx="5" fill="#4ade80" />
-            <text
-              x="104"
-              y="232"
-              textAnchor="middle"
-              fill="white"
-              fontSize="10"
-              fontWeight="700"
-              fontFamily="system-ui, sans-serif"
-            >
-              680 KB
-            </text>
-          </g>
-
-          {/* Quality meter section */}
-          <g>
-            {/* Label */}
-            <text
-              x="178"
-              y="106"
-              textAnchor="middle"
-              fill="var(--text-muted)"
-              fontSize="10"
-              fontWeight="600"
-              fontFamily="system-ui, sans-serif"
-            >
-              Quality
-            </text>
-
-            {/* Meter background */}
-            <rect
-              x="152"
-              y="114"
-              width="52"
-              height="100"
-              rx="6"
-              fill="var(--bg-tertiary, var(--bg-secondary))"
-              stroke="var(--border-primary)"
-              strokeWidth="1"
-            />
-
-            {/* Meter fill (full / green) */}
-            <rect
-              className="compress-quality-fill"
-              x="158"
-              y="120"
-              width="40"
-              height="88"
-              rx="4"
-              fill="#4ade80"
-              opacity="0.85"
-            />
-
-            {/* Meter graduation lines */}
-            <line x1="158" y1="142" x2="198" y2="142" stroke="white" strokeWidth="0.5" opacity="0.3" />
-            <line x1="158" y1="164" x2="198" y2="164" stroke="white" strokeWidth="0.5" opacity="0.3" />
-            <line x1="158" y1="186" x2="198" y2="186" stroke="white" strokeWidth="0.5" opacity="0.3" />
-
-            {/* 100% label */}
-            <text
-              x="178"
-              y="226"
-              textAnchor="middle"
-              fill="#4ade80"
-              fontSize="12"
-              fontWeight="700"
-              fontFamily="system-ui, sans-serif"
-            >
-              100%
-            </text>
-
-            {/* Checkmark */}
-            <circle cx="228" cy="164" r="16" fill="#4ade80" opacity="0.15" />
-            <path
-              d="M220 164 L225 169 L236 158"
-              stroke="#4ade80"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"
-            />
+              opacity="0.6" />
+          </g>
+
+          {/* right chevron (points left, moves left when compressing) */}
+          <g className="compress2-arrow-right"
+            style={{ transformOrigin: "153px 90px" }}>
+            <path d="M160 78 L148 90 L160 102"
+              stroke="var(--text-muted)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+              opacity="0.6" />
+          </g>
+
+          {/* ── Right document: compressed result ── */}
+          <g className="compress2-result">
+            {/* page shadow */}
+            <rect x="193" y="38" width="72" height="97" rx="5"
+              fill="var(--text-muted)" opacity="0.08" />
+            {/* page body */}
+            <rect x="190" y="35" width="70" height="95" rx="5"
+              fill="var(--bg-tertiary, var(--bg-secondary))"
+              stroke="#4ade80"
+              strokeWidth="1.5" />
+            {/* content lines */}
+            <rect x="200" y="50" width="38" height="3" rx="1.5"
+              fill="var(--text-muted)" opacity="0.4" />
+            <rect x="200" y="59" width="30" height="3" rx="1.5"
+              fill="var(--text-muted)" opacity="0.3" />
+            <rect x="200" y="68" width="34" height="3" rx="1.5"
+              fill="var(--text-muted)" opacity="0.4" />
+            <rect x="200" y="77" width="26" height="3" rx="1.5"
+              fill="var(--text-muted)" opacity="0.3" />
+            <rect x="200" y="86" width="36" height="3" rx="1.5"
+              fill="var(--text-muted)" opacity="0.4" />
+            {/* "680 KB" result badge */}
+            <rect x="190" y="140" width="56" height="20" rx="5"
+              fill="#4ade80" />
+            <text x="218" y="154"
+              textAnchor="middle"
+              fill="white"
+              fontSize="10" fontWeight="700"
+              fontFamily="system-ui, sans-serif">
+              680 KB
+            </text>
           </g>
         </svg>
       </div>
