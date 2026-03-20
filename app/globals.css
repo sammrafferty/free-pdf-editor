@@ -833,3 +833,122 @@ h1, h2, h3, h4, h5, h6 {
 .light .theme-prose a {
   color: var(--accent-primary);
 }
+
+/* ═══════════════════════════════════════════════════════
+   TOOL ICON HOVER ANIMATIONS
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Split: scissor blades snip ── */
+.icon-split-top,
+.icon-split-bot {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: 12px 12px;
+}
+.group:hover .icon-split-top { transform: rotate(-4deg); }
+.group:hover .icon-split-bot { transform: rotate(4deg); }
+
+/* ── Merge: top pages slide down ── */
+.icon-merge-top,
+.icon-merge-mid {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.group:hover .icon-merge-top { transform: translateY(3px); }
+.group:hover .icon-merge-mid { transform: translateY(1.5px); }
+
+/* ── Compress: corners pulse inward ── */
+.icon-compress-tl,
+.icon-compress-tr,
+.icon-compress-bl,
+.icon-compress-br {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: 12px 12px;
+}
+.group:hover .icon-compress-tl { transform: translate(1.5px, 1.5px); }
+.group:hover .icon-compress-tr { transform: translate(-1.5px, 1.5px); }
+.group:hover .icon-compress-bl { transform: translate(1.5px, -1.5px); }
+.group:hover .icon-compress-br { transform: translate(-1.5px, -1.5px); }
+
+/* ── Rotate: whole icon spins 90deg ── */
+.icon-rotate {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: 12px 12px;
+}
+.group:hover .icon-rotate { transform: rotate(90deg); }
+
+/* ── Delete: X marks scale up ── */
+.icon-delete-x {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: 12px 16px;
+}
+.group:hover .icon-delete-x { transform: scale(1.15); }
+
+/* ── Extract: arrow slides up ── */
+.icon-extract-arrow {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.group:hover .icon-extract-arrow { transform: translateY(-2.5px); }
+
+/* ── Watermark: layers separate vertically ── */
+.icon-wm-top,
+.icon-wm-mid,
+.icon-wm-bot {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.group:hover .icon-wm-top { transform: translateY(-2px); }
+.group:hover .icon-wm-mid { transform: translateY(0); }
+.group:hover .icon-wm-bot { transform: translateY(2px); }
+
+/* ── Number: hash wiggles ── */
+.icon-number {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: 12px 12px;
+}
+.group:hover .icon-number {
+  animation: numberWiggle 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes numberWiggle {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-1.5px); }
+  50% { transform: translateX(1.5px); }
+  75% { transform: translateX(-0.5px); }
+  100% { transform: translateX(0); }
+}
+
+/* ── Crop: lines slide inward ── */
+.icon-crop-v,
+.icon-crop-h {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.group:hover .icon-crop-v { transform: translateX(1.5px); }
+.group:hover .icon-crop-h { transform: translateY(1.5px); }
+
+/* ── Redact: diagonal line draws across ── */
+.icon-redact-line {
+  stroke-dasharray: 31;
+  stroke-dashoffset: 31;
+  transition: stroke-dashoffset 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.group:hover .icon-redact-line { stroke-dashoffset: 0; }
+
+/* ── Sign: pen tip moves as if signing ── */
+.icon-sign {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: 12px 12px;
+}
+.group:hover .icon-sign { transform: translate(1px, -1px); }
+
+/* ── Doc (PDF to Word / Word to PDF): text lines slide in from left ── */
+.icon-doc-line1,
+.icon-doc-line2 {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.icon-doc-line2 { transition-delay: 0.05s; }
+.group:hover .icon-doc-line1 { transform: translateX(1.5px); }
+.group:hover .icon-doc-line2 { transform: translateX(1.5px); }
+
+/* ── Excel: grid lines pulse ── */
+.icon-excel-line {
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.5;
+}
+.group:hover .icon-excel-line { opacity: 1; }

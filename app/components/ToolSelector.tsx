@@ -31,76 +31,82 @@ const icon = (children: React.ReactNode) => (
 // Merge: stacked pages
 const mergeIcon = icon(<>
   <rect x="5" y="9" width="14" height="11" rx="1.5"/>
-  <path d="M7 9V7a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2"/>
-  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+  <path className="icon-merge-mid" d="M7 9V7a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v2"/>
+  <path className="icon-merge-top" d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
 </>);
 
 // Split: scissors
 const splitIcon = icon(<>
   <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
-  <line x1="20" y1="4" x2="8.12" y2="15.88"/>
-  <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+  <line className="icon-split-top" x1="20" y1="4" x2="8.12" y2="15.88"/>
+  <line className="icon-split-bot" x1="14.47" y1="14.48" x2="20" y2="20"/>
   <line x1="8.12" y1="8.12" x2="12" y2="12"/>
 </>);
 
 // Compress: minimize / 4-corners inward
 const compressIcon = icon(<>
-  <path d="M4 10 L4 4 L10 4"/><path d="M4 4 L9 9"/>
-  <path d="M20 10 L20 4 L14 4"/><path d="M20 4 L15 9"/>
-  <path d="M4 14 L4 20 L10 20"/><path d="M4 20 L9 15"/>
-  <path d="M20 14 L20 20 L14 20"/><path d="M20 20 L15 15"/>
+  <g className="icon-compress-tl"><path d="M4 10 L4 4 L10 4"/><path d="M4 4 L9 9"/></g>
+  <g className="icon-compress-tr"><path d="M20 10 L20 4 L14 4"/><path d="M20 4 L15 9"/></g>
+  <g className="icon-compress-bl"><path d="M4 14 L4 20 L10 20"/><path d="M4 20 L9 15"/></g>
+  <g className="icon-compress-br"><path d="M20 14 L20 20 L14 20"/><path d="M20 20 L15 15"/></g>
 </>);
 
 // Rotate: circular arrow
 const rotateIcon = icon(<>
-  <path d="M21 12a9 9 0 1 1-3-6.7" /><path d="M21 3v6h-6" />
+  <g className="icon-rotate">
+    <path d="M21 12a9 9 0 1 1-3-6.7" /><path d="M21 3v6h-6" />
+  </g>
 </>);
 
 // Delete pages: page with X
 const deleteIcon = icon(<>
   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
   <polyline points="14 2 14 8 20 8" />
-  <line x1="9" y1="13" x2="15" y2="19" /><line x1="15" y1="13" x2="9" y2="19" />
+  <line className="icon-delete-x" x1="9" y1="13" x2="15" y2="19" /><line className="icon-delete-x" x1="15" y1="13" x2="9" y2="19" />
 </>);
 
 // Extract pages: page with arrow coming out
 const extractIcon = icon(<>
   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
   <polyline points="14 2 14 8 20 8" />
-  <path d="M12 18v-6" /><path d="M9 15l3-3 3 3" />
+  <g className="icon-extract-arrow"><path d="M12 18v-6" /><path d="M9 15l3-3 3 3" /></g>
 </>);
 
 // Watermark: layers
 const watermarkIcon = icon(<>
-  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-  <path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+  <path className="icon-wm-top" d="M12 2L2 7l10 5 10-5-10-5z" />
+  <path className="icon-wm-bot" d="M2 17l10 5 10-5" /><path className="icon-wm-mid" d="M2 12l10 5 10-5" />
 </>);
 
 // Number pages: hash/number sign
 const numberIcon = icon(<>
-  <line x1="4" y1="9" x2="20" y2="9" /><line x1="4" y1="15" x2="20" y2="15" />
-  <line x1="10" y1="3" x2="8" y2="21" /><line x1="16" y1="3" x2="14" y2="21" />
+  <g className="icon-number">
+    <line x1="4" y1="9" x2="20" y2="9" /><line x1="4" y1="15" x2="20" y2="15" />
+    <line x1="10" y1="3" x2="8" y2="21" /><line x1="16" y1="3" x2="14" y2="21" />
+  </g>
 </>);
 
 // Crop: crop marks
 const cropIcon = icon(<>
-  <path d="M6.13 1L6 16a2 2 0 0 0 2 2h15" />
-  <path d="M1 6.13L16 6a2 2 0 0 1 2 2v15" />
+  <path className="icon-crop-v" d="M6.13 1L6 16a2 2 0 0 0 2 2h15" />
+  <path className="icon-crop-h" d="M1 6.13L16 6a2 2 0 0 1 2 2v15" />
 </>);
 
 // Redact: eye-off (hidden content)
 const redactIcon = icon(<>
   <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
   <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-  <line x1="1" y1="1" x2="23" y2="23" />
+  <line className="icon-redact-line" x1="1" y1="1" x2="23" y2="23" />
 </>);
 
 // Sign: pen tip / nib
 const signIcon = icon(<>
-  <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-  <path d="M2 2l11 11"/>
-  <circle cx="11" cy="11" r="2"/>
+  <g className="icon-sign">
+    <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+    <path d="M2 2l11 11"/>
+    <circle cx="11" cy="11" r="2"/>
+  </g>
 </>);
 
 // Image to PDF: image frame with arrow
@@ -121,7 +127,7 @@ const imageOutIcon = icon(<>
 const docIcon = icon(<>
   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
   <polyline points="14 2 14 8 20 8" />
-  <line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="13" y2="17" />
+  <line className="icon-doc-line1" x1="8" y1="13" x2="16" y2="13" /><line className="icon-doc-line2" x1="8" y1="17" x2="13" y2="17" />
 </>);
 
 // PDF icon
@@ -134,8 +140,8 @@ const pdfIcon = icon(<>
 // Excel: grid/table
 const excelIcon = icon(<>
   <rect x="3" y="3" width="18" height="18" rx="2" />
-  <line x1="3" y1="9" x2="21" y2="9" /><line x1="3" y1="15" x2="21" y2="15" />
-  <line x1="9" y1="3" x2="9" y2="21" /><line x1="15" y1="3" x2="15" y2="21" />
+  <line className="icon-excel-line" x1="3" y1="9" x2="21" y2="9" /><line className="icon-excel-line" x1="3" y1="15" x2="21" y2="15" />
+  <line className="icon-excel-line" x1="9" y1="3" x2="9" y2="21" /><line className="icon-excel-line" x1="15" y1="3" x2="15" y2="21" />
 </>);
 
 // Slides: presentation board
