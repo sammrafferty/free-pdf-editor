@@ -23,14 +23,14 @@ function HomeContent() {
           {/* Hero */}
           <div className="text-center mb-10 sm:mb-14">
             <h1
-              className="text-3xl sm:text-5xl font-bold mb-3 tracking-tight"
-              style={{ color: "var(--text-primary)" }}
+              className="hero-animate text-3xl sm:text-5xl font-bold mb-3 tracking-tight"
+              style={{ color: "var(--text-primary)", animationDelay: "0.1s" }}
             >
               We Make PDF Easy.
             </h1>
             <p
-              className="text-sm sm:text-base max-w-md mx-auto leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
+              className="hero-animate text-sm sm:text-base max-w-md mx-auto leading-relaxed"
+              style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}
             >
               All the tools you need to work with PDFs. Free, fast, and entirely in your browser — nothing gets uploaded.
             </p>
@@ -39,10 +39,12 @@ function HomeContent() {
           {/* Ad: Below hero */}
           <AdSlot slot="hero-banner" format="horizontal" className="my-6 sm:my-8 max-w-3xl mx-auto" />
 
-          <ToolSelector />
+          <div className="hero-animate" style={{ animationDelay: "0.4s" }}>
+            <ToolSelector />
+          </div>
 
           {/* Trust pills */}
-          <div className="mt-12 sm:mt-16 flex justify-center">
+          <div className="hero-animate mt-12 sm:mt-16 flex justify-center" style={{ animationDelay: "0.55s" }}>
             <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
               {[
                 { icon: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>, label: "100% Private" },
@@ -51,7 +53,7 @@ function HomeContent() {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs"
+                  className="trust-pill flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs"
                   style={{
                     color: "var(--text-muted)",
                     background: "var(--bg-secondary)",
@@ -87,11 +89,11 @@ function HomeContent() {
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs" style={{ color: "var(--text-muted)" }}>
-              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
-              <Link href="/faq" className="hover:opacity-80 transition-opacity">FAQ</Link>
-              <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>
-              <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy</Link>
-              <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms</Link>
+              <Link href="/guides" className="footer-link hover:opacity-80 transition-opacity">Guides</Link>
+              <Link href="/faq" className="footer-link hover:opacity-80 transition-opacity">FAQ</Link>
+              <Link href="/about" className="footer-link hover:opacity-80 transition-opacity">About</Link>
+              <Link href="/privacy" className="footer-link hover:opacity-80 transition-opacity">Privacy</Link>
+              <Link href="/terms" className="footer-link hover:opacity-80 transition-opacity">Terms</Link>
             </div>
           </div>
 
