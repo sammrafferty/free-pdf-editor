@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
-
 export default function PrivacyCard() {
-  const [hovered, setHovered] = useState(false);
-
   return (
     <div
       className="group"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-3px)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+      }}
       style={{
         background: "var(--bg-secondary)",
         border: "1px solid var(--border-primary)",
@@ -19,7 +19,6 @@ export default function PrivacyCard() {
         flexDirection: "row",
         gap: 32,
         alignItems: "center",
-        transform: hovered ? "translateY(-3px)" : "translateY(0)",
         transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
         cursor: "default",
       }}
@@ -50,40 +49,90 @@ export default function PrivacyCard() {
         </p>
       </div>
 
-      {/* Right side — SVG illustration */}
+      {/* Right side — SVG padlock illustration */}
       <div style={{ flexShrink: 0 }}>
         <svg
-          width="280"
-          height="240"
-          viewBox="0 0 280 240"
+          width="220"
+          height="200"
+          viewBox="0 0 220 200"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           style={{ display: "block" }}
+          aria-label="Padlock illustration — files stay in your browser"
         >
-          {/* --- Dashed boundary --- */}
-          <rect
-            x="30"
-            y="20"
-            width="160"
-            height="160"
-            rx="12"
-            stroke={hovered ? "var(--accent-primary)" : "var(--text-muted)"}
-            strokeWidth="1.5"
-            strokeDasharray="6 4"
+          <style>{`
+            /* ── Looping lock animation (triggered by .in-view on parent section) ── */
+            @keyframes privacy2-shackle-close {
+              0%, 20%   { transform: translateY(-12px); }
+              25%, 95%  { transform: translateY(0); }
+              100%      { transform: translateY(-12px); }
+            }
+            @keyframes privacy2-lock-glow {
+              0%, 44%   { filter: none; }
+              50%, 95%  { filter: drop-shadow(0 0 8px #4ade80) drop-shadow(0 0 3px #4ade80); }
+              100%      { filter: none; }
+            }
+            @keyframes privacy2-check-draw {
+              0%, 44%   { stroke-dashoffset: 30; opacity: 0; }
+              55%, 95%  { stroke-dashoffset: 0; opacity: 1; }
+              100%      { stroke-dashoffset: 30; opacity: 0; }
+            }
+            @keyframes privacy2-glow-pulse {
+              0%, 44%   { opacity: 0; }
+              55%, 95%  { opacity: 0.18; }
+              100%      { opacity: 0; }
+            }
+
+            .in-view .privacy2-shackle {
+              animation: privacy2-shackle-close 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+            }
+            .in-view .privacy2-lock-body {
+              animation: privacy2-lock-glow 4s ease-in-out infinite;
+            }
+            .in-view .privacy2-checkmark {
+              animation: privacy2-check-draw 4s ease-in-out infinite;
+            }
+            .in-view .privacy2-glow {
+              animation: privacy2-glow-pulse 4s ease-in-out infinite;
+            }
+
+            /* ── Hover: immediately show locked/glowing state ── */
+            .group:hover .privacy2-shackle {
+              transform: translateY(0);
+              animation: none;
+            }
+            .group:hover .privacy2-lock-body {
+              filter: drop-shadow(0 0 8px #4ade80) drop-shadow(0 0 3px #4ade80);
+              animation: none;
+            }
+            .group:hover .privacy2-checkmark {
+              stroke-dashoffset: 0;
+              opacity: 1;
+              animation: none;
+            }
+            .group:hover .privacy2-glow {
+              opacity: 0.18;
+              animation: none;
+            }
+          `}</style>
+
+          {/* Faint dashed boundary circle — "your browser" zone */}
+          <circle
+            cx="110"
+            cy="110"
+            r="80"
+            stroke="var(--border-primary)"
+            strokeWidth="1.2"
+            strokeDasharray="5 4"
             fill="none"
-            style={{
-              transition: "stroke 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-              filter: hovered
-                ? "drop-shadow(0 0 6px var(--accent-primary))"
-                : "none",
-            }}
+            opacity="0.6"
           />
           <text
             x="110"
-            y="192"
+            y="198"
             textAnchor="middle"
             style={{
-              fontSize: 10,
+              fontSize: 9,
               fill: "var(--text-muted)",
               fontFamily: "system-ui, sans-serif",
             }}
@@ -91,261 +140,109 @@ export default function PrivacyCard() {
             Your Browser
           </text>
 
-          {/* --- Browser window frame --- */}
-          <rect
-            x="50"
-            y="42"
-            width="120"
-            height="115"
-            rx="8"
-            fill="var(--bg-secondary)"
-            stroke="var(--border-primary)"
-            strokeWidth="1.5"
+          {/* Glow ellipse behind lock body */}
+          <ellipse
+            cx="130"
+            cy="130"
+            rx="38"
+            ry="32"
+            fill="#4ade80"
+            className="privacy2-glow"
+            style={{ opacity: 0 }}
           />
-          {/* Title bar background */}
-          <rect
-            x="50"
-            y="42"
-            width="120"
-            height="22"
-            rx="8"
-            fill="var(--bg-secondary)"
-            stroke="var(--border-primary)"
-            strokeWidth="1.5"
-          />
-          <rect
-            x="50"
-            y="56"
-            width="120"
-            height="8"
-            fill="var(--bg-secondary)"
-          />
-          {/* Traffic light dots */}
-          <circle cx="64" cy="53" r="3" fill="#ff5f57" />
-          <circle cx="74" cy="53" r="3" fill="#febc2e" />
-          <circle cx="84" cy="53" r="3" fill="#28c840" />
 
-          {/* --- Document icon inside browser --- */}
+          {/* Decorative faint document — left of lock */}
           <rect
-            x="75"
-            y="78"
-            width="32"
-            height="40"
+            x="42"
+            y="100"
+            width="22"
+            height="28"
             rx="3"
             fill="none"
             stroke="var(--text-muted)"
-            strokeWidth="1.5"
+            strokeWidth="1"
+            opacity="0.25"
           />
-          {/* Doc fold corner */}
+          <line x1="47" y1="109" x2="59" y2="109" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.2" />
+          <line x1="47" y1="114" x2="57" y2="114" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.2" />
+          <line x1="47" y1="119" x2="59" y2="119" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.2" />
+
+          {/* Decorative faint document — right of lock */}
+          <rect
+            x="158"
+            y="108"
+            width="22"
+            height="28"
+            rx="3"
+            fill="none"
+            stroke="var(--text-muted)"
+            strokeWidth="1"
+            opacity="0.25"
+          />
+          <line x1="163" y1="117" x2="175" y2="117" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.2" />
+          <line x1="163" y1="122" x2="173" y2="122" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.2" />
+          <line x1="163" y1="127" x2="175" y2="127" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.2" />
+
+          {/* Shackle (U-shape above lock body) */}
           <path
-            d="M97 78 L107 88 L97 88 Z"
-            fill="var(--bg-secondary)"
+            d="M115 100 L115 78 Q130 62 145 78 L145 100"
+            fill="none"
             stroke="var(--text-muted)"
-            strokeWidth="1.2"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            className="privacy2-shackle"
+            style={{
+              transformOrigin: "130px 100px",
+              transform: "translateY(-12px)",
+            }}
+          />
+
+          {/* Lock body */}
+          <rect
+            x="100"
+            y="100"
+            width="60"
+            height="55"
+            rx="8"
+            fill="none"
+            stroke="var(--text-muted)"
+            strokeWidth="2"
+            className="privacy2-lock-body"
+          />
+
+          {/* Keyhole — small circle + teardrop */}
+          <circle
+            cx="130"
+            cy="120"
+            r="5"
+            fill="none"
+            stroke="var(--text-muted)"
+            strokeWidth="1.5"
+            opacity="0.5"
+          />
+          <line
+            x1="130"
+            y1="125"
+            x2="130"
+            y2="134"
+            stroke="var(--text-muted)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity="0.5"
+          />
+
+          {/* Checkmark (revealed when locked) */}
+          <path
+            d="M118 127 L127 136 L142 118"
+            fill="none"
+            stroke="#4ade80"
+            strokeWidth="2.5"
+            strokeLinecap="round"
             strokeLinejoin="round"
-          />
-          {/* Doc lines */}
-          <line
-            x1="81"
-            y1="94"
-            x2="101"
-            y2="94"
-            stroke="var(--text-muted)"
-            strokeWidth="1"
-            opacity="0.5"
-          />
-          <line
-            x1="81"
-            y1="100"
-            x2="97"
-            y2="100"
-            stroke="var(--text-muted)"
-            strokeWidth="1"
-            opacity="0.5"
-          />
-          <line
-            x1="81"
-            y1="106"
-            x2="99"
-            y2="106"
-            stroke="var(--text-muted)"
-            strokeWidth="1"
-            opacity="0.5"
-          />
-
-          {/* --- Shield / lock icon --- */}
-          <g
-            style={{
-              transition: "filter 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-              filter: hovered
-                ? "drop-shadow(0 0 8px #4ade80) drop-shadow(0 0 4px #4ade80)"
-                : "none",
-            }}
-          >
-            <path
-              d="M130 90 L130 80 C130 80 138 74 146 80 L146 90 C146 98 138 104 138 104 C138 104 130 98 130 90Z"
-              fill="none"
-              stroke="#4ade80"
-              strokeWidth="1.8"
-              style={{
-                transition:
-                  "stroke-width 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-                strokeWidth: hovered ? 2.4 : 1.8,
-              }}
-            />
-            {/* Checkmark inside shield */}
-            <path
-              d="M134 89 L137 92 L143 84"
-              fill="none"
-              stroke="#4ade80"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </g>
-
-          {/* --- Cloud/server icons outside boundary with X marks --- */}
-
-          {/* Cloud 1 — top right */}
-          <g
-            style={{
-              opacity: hovered ? 0.3 : 0.5,
-              transition: "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-            }}
-          >
-            <path
-              d="M222 60 C222 52 230 48 236 52 C238 44 250 44 252 52 C258 52 262 58 258 64 L224 64 C220 64 218 60 222 60Z"
-              fill="none"
-              stroke="var(--text-muted)"
-              strokeWidth="1.3"
-            />
-            {/* X mark */}
-            <line
-              x1="232"
-              y1="50"
-              x2="250"
-              y2="68"
-              stroke="#ef4444"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <line
-              x1="250"
-              y1="50"
-              x2="232"
-              y2="68"
-              stroke="#ef4444"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </g>
-
-          {/* Cloud 2 — middle right */}
-          <g
-            style={{
-              opacity: hovered ? 0.3 : 0.5,
-              transition: "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-            }}
-          >
-            <path
-              d="M218 120 C218 112 226 108 232 112 C234 104 246 104 248 112 C254 112 258 118 254 124 L220 124 C216 124 214 120 218 120Z"
-              fill="none"
-              stroke="var(--text-muted)"
-              strokeWidth="1.3"
-            />
-            {/* X mark */}
-            <line
-              x1="228"
-              y1="110"
-              x2="246"
-              y2="128"
-              stroke="#ef4444"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <line
-              x1="246"
-              y1="110"
-              x2="228"
-              y2="128"
-              stroke="#ef4444"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </g>
-
-          {/* Server icon — bottom right */}
-          <g
-            style={{
-              opacity: hovered ? 0.3 : 0.5,
-              transition: "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-            }}
-          >
-            <rect
-              x="228"
-              y="170"
-              width="32"
-              height="12"
-              rx="2"
-              fill="none"
-              stroke="var(--text-muted)"
-              strokeWidth="1.3"
-            />
-            <rect
-              x="228"
-              y="184"
-              width="32"
-              height="12"
-              rx="2"
-              fill="none"
-              stroke="var(--text-muted)"
-              strokeWidth="1.3"
-            />
-            <rect
-              x="228"
-              y="198"
-              width="32"
-              height="12"
-              rx="2"
-              fill="none"
-              stroke="var(--text-muted)"
-              strokeWidth="1.3"
-            />
-            {/* Server dots */}
-            <circle cx="234" cy="176" r="1.5" fill="var(--text-muted)" />
-            <circle cx="234" cy="190" r="1.5" fill="var(--text-muted)" />
-            <circle cx="234" cy="204" r="1.5" fill="var(--text-muted)" />
-            {/* X mark */}
-            <line
-              x1="232"
-              y1="170"
-              x2="256"
-              y2="210"
-              stroke="#ef4444"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <line
-              x1="256"
-              y1="170"
-              x2="232"
-              y2="210"
-              stroke="#ef4444"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </g>
-
-          {/* Dashed arrow from browser toward clouds (blocked) */}
-          <line
-            x1="190"
-            y1="100"
-            x2="215"
-            y2="100"
-            stroke="var(--text-muted)"
-            strokeWidth="1"
-            strokeDasharray="4 3"
-            opacity="0.4"
+            strokeDasharray="30"
+            strokeDashoffset="30"
+            className="privacy2-checkmark"
+            style={{ opacity: 0 }}
           />
         </svg>
       </div>
@@ -353,7 +250,7 @@ export default function PrivacyCard() {
       {/* Responsive: stack on mobile */}
       <style>{`
         @media (max-width: 640px) {
-          .group {
+          .privacy-card-inner {
             flex-direction: column !important;
             text-align: center;
           }
