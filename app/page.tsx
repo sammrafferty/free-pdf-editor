@@ -6,6 +6,7 @@ import AdSlot from "./components/AdSlot";
 import CookieConsent from "./components/CookieConsent";
 import Logo from "./components/Logo";
 import Navbar from "./components/Navbar";
+import FeatureShowcase from "./components/FeatureShowcase";
 
 function HomeContent() {
   const scrollToTop = () => {
@@ -69,6 +70,8 @@ function HomeContent() {
             </div>
           </div>
         </div>
+
+        <FeatureShowcase />
       </div>
 
       {/* Ad: Above footer */}
