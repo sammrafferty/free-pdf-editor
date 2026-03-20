@@ -31,7 +31,7 @@ export default function Dropzone({ onFiles, multiple = false, label, accept }: P
       <input {...getInputProps()} aria-label={label || (multiple ? "Upload PDF files" : "Upload a PDF file")} />
       <div className="flex flex-col items-center">
         <div
-          className="w-16 h-16 flex items-center justify-center mb-4 rounded-xl transition-colors"
+          className="dropzone-icon w-16 h-16 flex items-center justify-center mb-4 rounded-xl transition-colors"
           style={{ backgroundColor: isDragActive ? "var(--accent-primary-muted)" : "var(--bg-tertiary)" }}
         >
           <svg
