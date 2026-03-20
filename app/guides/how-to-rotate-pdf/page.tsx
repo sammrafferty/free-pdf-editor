@@ -59,10 +59,10 @@ export default function RotateGuide() {
           <span style={{ color: "var(--text-secondary)" }}>Rotate PDF</span>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
+        <h1 className="hero-animate text-3xl sm:text-4xl font-bold mb-4 tracking-tight" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}>
           How to Rotate PDF Pages
         </h1>
-        <p className="text-lg mb-8" style={{ color: "var(--text-secondary)" }}>
+        <p className="hero-animate text-lg mb-8" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
           Got a PDF with sideways or upside-down pages? This happens frequently with scanned documents, mobile photos saved as PDFs, and files received from others. Here&apos;s how to fix the orientation in seconds.
         </p>
 
@@ -143,11 +143,11 @@ export default function RotateGuide() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
             <span>All processing happens locally in your browser.</span>
             <div className="flex items-center gap-4">
-              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
-              <Link href="/faq" className="hover:opacity-80 transition-opacity">FAQ</Link>
-              <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy</Link>
-              <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms</Link>
-              <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>
+              <Link href="/guides" className="footer-link hover:opacity-80 transition-opacity">Guides</Link>
+              <Link href="/faq" className="footer-link hover:opacity-80 transition-opacity">FAQ</Link>
+              <Link href="/privacy" className="footer-link hover:opacity-80 transition-opacity">Privacy</Link>
+              <Link href="/terms" className="footer-link hover:opacity-80 transition-opacity">Terms</Link>
+              <Link href="/about" className="footer-link hover:opacity-80 transition-opacity">About</Link>
             </div>
           </div>
         </div>
