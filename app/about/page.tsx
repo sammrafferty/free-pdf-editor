@@ -35,18 +35,18 @@ export default function About() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <h1
-          className="text-3xl sm:text-4xl font-bold mb-6 tracking-tight"
-          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}
+          className="hero-animate text-3xl sm:text-4xl font-bold mb-6 tracking-tight"
+          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}
         >
           About PDF Tools
         </h1>
 
         <div className="theme-prose max-w-none space-y-8 leading-relaxed">
-          <p className="text-lg" style={{ color: "var(--text-secondary)" }}>
+          <p className="hero-animate text-lg" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
             PDF Tools is a free, browser-based suite for working with PDF files. Split, merge, compress, convert, edit, sign, and more — all without uploading a single file to any server.
           </p>
 
-          <div className="theme-section p-6 sm:p-8 space-y-4">
+          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.1s" }}>
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Our Mission</h2>
             <p style={{ color: "var(--text-secondary)" }}>
               We believe basic document tools should be free, private, and accessible to everyone. The PDF format powers modern document exchange — from student assignments and tax forms to business contracts and medical records. Yet working with PDFs often means choosing between expensive desktop software, sketchy free downloads, or online tools that upload your sensitive files to unknown servers.
@@ -56,7 +56,7 @@ export default function About() {
             </p>
           </div>
 
-          <div className="theme-section p-6 sm:p-8 space-y-4">
+          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.15s" }}>
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Privacy-First by Design</h2>
             <p style={{ color: "var(--text-secondary)" }}>
               Unlike most online PDF tools, <strong style={{ color: "var(--text-primary)" }}>your files never leave your device</strong>. This isn&apos;t a marketing claim with caveats — it&apos;s an architectural fact. Here&apos;s how it works:
@@ -73,7 +73,7 @@ export default function About() {
             </p>
           </div>
 
-          <div className="theme-section p-6 sm:p-8 space-y-4">
+          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.2s" }}>
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>How It Compares</h2>
             <div className="space-y-4" style={{ color: "var(--text-secondary)" }}>
               <div>
@@ -91,7 +91,7 @@ export default function About() {
             </div>
           </div>
 
-          <div className="theme-section p-6 sm:p-8 space-y-4">
+          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.25s" }}>
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>How It Works</h2>
             <p style={{ color: "var(--text-secondary)" }}>
               PDF Tools leverages modern web technologies to process PDFs directly in your browser:
@@ -107,7 +107,7 @@ export default function About() {
             </p>
           </div>
 
-          <div className="theme-section p-6 sm:p-8 space-y-4">
+          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.3s" }}>
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Who Uses PDF Tools</h2>
             <div className="space-y-2" style={{ color: "var(--text-secondary)" }}>
               <p><strong style={{ color: "var(--text-primary)" }}>Students</strong> — Combining lecture slides, extracting textbook chapters, compressing assignments for submission portals, converting notes between formats.</p>
@@ -117,7 +117,7 @@ export default function About() {
             </div>
           </div>
 
-          <div className="theme-section p-6 sm:p-8 space-y-4">
+          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.35s" }}>
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Built With</h2>
             <div className="flex flex-wrap gap-2">
               {["Next.js", "React", "TypeScript", "Tailwind CSS", "pdf-lib", "pdf.js", "Vercel"].map((tech) => (
@@ -148,11 +148,11 @@ export default function About() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
             <span>All processing happens locally in your browser.</span>
             <div className="flex items-center gap-4">
-              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
-              <Link href="/faq" className="hover:opacity-80 transition-opacity">FAQ</Link>
-              <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy</Link>
-              <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms</Link>
-              <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>
+              <Link href="/guides" className="footer-link hover:opacity-80 transition-opacity">Guides</Link>
+              <Link href="/faq" className="footer-link hover:opacity-80 transition-opacity">FAQ</Link>
+              <Link href="/privacy" className="footer-link hover:opacity-80 transition-opacity">Privacy</Link>
+              <Link href="/terms" className="footer-link hover:opacity-80 transition-opacity">Terms</Link>
+              <Link href="/about" className="footer-link hover:opacity-80 transition-opacity">About</Link>
             </div>
           </div>
         </div>

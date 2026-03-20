@@ -35,12 +35,12 @@ export default function PrivacyPolicy() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <h1
-          className="text-3xl sm:text-4xl font-bold mb-2 tracking-tight"
-          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}
+          className="hero-animate text-3xl sm:text-4xl font-bold mb-2 tracking-tight"
+          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}
         >
           Privacy Policy
         </h1>
-        <p className="text-sm mb-10" style={{ color: "var(--text-muted)" }}>Last updated: March 9, 2026</p>
+        <p className="hero-animate text-sm mb-10" style={{ color: "var(--text-muted)", animationDelay: "0.25s" }}>Last updated: March 9, 2026</p>
 
         <div className="theme-prose max-w-none space-y-8 leading-relaxed">
           <section>
@@ -133,11 +133,11 @@ export default function PrivacyPolicy() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
             <span>All processing happens locally in your browser.</span>
             <div className="flex items-center gap-4">
-              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
-              <Link href="/faq" className="hover:opacity-80 transition-opacity">FAQ</Link>
-              <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy</Link>
-              <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms</Link>
-              <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>
+              <Link href="/guides" className="footer-link hover:opacity-80 transition-opacity">Guides</Link>
+              <Link href="/faq" className="footer-link hover:opacity-80 transition-opacity">FAQ</Link>
+              <Link href="/privacy" className="footer-link hover:opacity-80 transition-opacity">Privacy</Link>
+              <Link href="/terms" className="footer-link hover:opacity-80 transition-opacity">Terms</Link>
+              <Link href="/about" className="footer-link hover:opacity-80 transition-opacity">About</Link>
             </div>
           </div>
         </div>

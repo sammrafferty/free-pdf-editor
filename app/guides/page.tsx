@@ -69,21 +69,22 @@ export default function Guides() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <h1
-          className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight"
-          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}
+          className="hero-animate text-3xl sm:text-4xl font-bold mb-4 tracking-tight"
+          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}
         >
           PDF Guides
         </h1>
-        <p className="text-lg mb-10" style={{ color: "var(--text-secondary)" }}>
+        <p className="hero-animate text-lg mb-10" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
           Step-by-step tutorials for every PDF task. Learn how to split, merge, compress, convert, and edit PDF files — entirely in your browser with no uploads required.
         </p>
 
         <div className="space-y-4">
-          {guides.map((g) => (
+          {guides.map((g, i) => (
             <Link
               key={g.slug}
               href={`/guides/${g.slug}`}
-              className="group flex items-start gap-4 p-5 sm:p-6 theme-card"
+              className="hero-animate group flex items-start gap-4 p-5 sm:p-6 theme-card"
+              style={{ animationDelay: `${0.1 + i * 0.05}s` }}
             >
               <div
                 className="w-1 h-full min-h-[48px] rounded-full shrink-0"
@@ -124,11 +125,11 @@ export default function Guides() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
             <span>All processing happens locally in your browser.</span>
             <div className="flex items-center gap-4">
-              <Link href="/guides" className="hover:opacity-80 transition-opacity">Guides</Link>
-              <Link href="/faq" className="hover:opacity-80 transition-opacity">FAQ</Link>
-              <Link href="/privacy" className="hover:opacity-80 transition-opacity">Privacy</Link>
-              <Link href="/terms" className="hover:opacity-80 transition-opacity">Terms</Link>
-              <Link href="/about" className="hover:opacity-80 transition-opacity">About</Link>
+              <Link href="/guides" className="footer-link hover:opacity-80 transition-opacity">Guides</Link>
+              <Link href="/faq" className="footer-link hover:opacity-80 transition-opacity">FAQ</Link>
+              <Link href="/privacy" className="footer-link hover:opacity-80 transition-opacity">Privacy</Link>
+              <Link href="/terms" className="footer-link hover:opacity-80 transition-opacity">Terms</Link>
+              <Link href="/about" className="footer-link hover:opacity-80 transition-opacity">About</Link>
             </div>
           </div>
         </div>
