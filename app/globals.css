@@ -613,26 +613,28 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
-  transition: all 0.2s ease;
+  transition: all 0.2s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .theme-card:hover {
   border-color: var(--border-hover);
   box-shadow: var(--shadow-card-hover);
   background: var(--bg-elevated);
+  transform: translateY(-2px);
 }
 
 .theme-card-featured {
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
-  transition: all 0.2s ease;
+  transition: all 0.2s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .theme-card-featured:hover {
   border-color: var(--border-hover);
   box-shadow: var(--shadow-card-hover);
   background: var(--bg-elevated);
+  transform: translateY(-2px);
 }
 
 /* Input fields */
@@ -671,6 +673,12 @@ h1, h2, h3, h4, h5, h6 {
 .theme-dropzone:hover {
   border-color: var(--border-hover);
   background: var(--bg-tertiary);
+  box-shadow: 0 0 20px var(--accent-primary-muted);
+}
+
+.theme-dropzone:hover .dropzone-icon {
+  transform: translateY(-3px);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .theme-dropzone-active {
@@ -775,6 +783,68 @@ h1, h2, h3, h4, h5, h6 {
 
 .ad-container:empty {
   display: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   POLISH — Hover effects & micro-interactions
+   ═══════════════════════════════════════════════════════ */
+
+/* Footer link underline slide */
+.footer-link {
+  position: relative;
+}
+
+.footer-link::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--text-muted);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.footer-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* Trust pill hover lift */
+.trust-pill {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trust-pill:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-hover);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.trust-pill:hover svg {
+  transform: scale(1.15);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Category header line draw-in */
+.category-line {
+  transform-origin: left;
+  transform: scaleX(0);
+  animation: lineDrawIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes lineDrawIn {
+  to { transform: scaleX(1); }
+}
+
+/* Theme toggle icon rotation */
+.theme-toggle-icon {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theme-toggle-icon:hover {
+  transform: rotate(15deg);
 }
 
 /* ═══════════════════════════════════════════════════════
