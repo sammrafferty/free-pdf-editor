@@ -51,6 +51,7 @@ export default function PdfPagePreview({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [rendered, setRendered] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,6 +94,7 @@ export default function PdfPagePreview({
         if (cancelled) return;
 
         setLoading(false);
+        setRendered(true);
         onRenderComplete?.(canvas);
       } catch (e) {
         if (cancelled) return;
@@ -115,7 +117,7 @@ export default function PdfPagePreview({
 
   return (
     <div
-      className={className}
+      className={`${className || ""}${selected ? " thumbnail-selected" : ""}`}
       onClick={handleClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -144,19 +146,12 @@ export default function PdfPagePreview({
     >
       {loading && (
         <div
+          className="skeleton-shimmer"
           style={{
             width: width || 150,
             height: (width || 150) * 1.4,
-            background: "var(--bg-tertiary)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
           }}
-        >
-          <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
-            Loading...
-          </span>
-        </div>
+        />
       )}
 
       {error && (
@@ -186,6 +181,7 @@ export default function PdfPagePreview({
 
       <canvas
         ref={canvasRef}
+        className={rendered ? "thumbnail-loaded" : undefined}
         style={{
           display: loading || error ? "none" : "block",
           width: "100%",

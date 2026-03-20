@@ -116,10 +116,10 @@ export default function PdfThumbnailGrid({
             />
           ) : (
             <div
+              className="skeleton-shimmer"
               style={{
                 width: "100%",
                 aspectRatio: "1 / 1.4",
-                background: "var(--bg-tertiary)",
                 borderRadius: "var(--radius-sm)",
                 border: "2px solid var(--border-primary)",
               }}
