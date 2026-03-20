@@ -22,13 +22,12 @@ export default function WorkflowCard() {
       <div
         style={{
           display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 32,
+          flexDirection: "column",
+          gap: 24,
         }}
       >
-        {/* Left side — text */}
-        <div style={{ flex: "0 1 320px", minWidth: 200 }}>
+        {/* Text */}
+        <div>
           <h3
             style={{
               color: "var(--text-primary)",
@@ -53,15 +52,14 @@ export default function WorkflowCard() {
           </p>
         </div>
 
-        {/* Right side — SVG illustration */}
-        <div style={{ flex: "1 1 auto", display: "flex", justifyContent: "center" }}>
+        {/* SVG — full width */}
+        <div style={{ width: "100%" }}>
           <svg
             viewBox="0 0 420 240"
-            width="420"
-            height="240"
+            width="100%"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            style={{ maxWidth: "100%" }}
+            style={{ display: "block", width: "100%", height: "auto" }}
             aria-label="Three-step workflow illustration: Drop, Process, Download"
           >
             <style>{`
@@ -570,15 +568,6 @@ export default function WorkflowCard() {
         </div>
       </div>
 
-      {/* Responsive: stack vertically on small screens */}
-      <style>{`
-        @media (max-width: 640px) {
-          .group > div:first-child {
-            flex-direction: column !important;
-            text-align: center;
-          }
-        }
-      `}</style>
     </div>
   );
 }

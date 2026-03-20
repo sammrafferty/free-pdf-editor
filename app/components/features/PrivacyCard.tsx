@@ -34,7 +34,7 @@ export default function PrivacyCard() {
           100%     { transform: translateY(-12px); }
         }
         .in-view .privacy2-shackle {
-          animation: privacy2-shackle-close 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          animation: privacy2-shackle-close 5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
         }
         .group:hover .privacy2-shackle {
           transform: translateY(0px);
@@ -52,7 +52,7 @@ export default function PrivacyCard() {
           100%     { filter: none; stroke: var(--text-muted); }
         }
         .in-view .privacy2-lock-body {
-          animation: privacy2-lock-glow 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          animation: privacy2-lock-glow 5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
         }
         .group:hover .privacy2-lock-body {
           filter: drop-shadow(0 0 8px #4ade80) drop-shadow(0 0 3px #4ade80);
@@ -62,19 +62,19 @@ export default function PrivacyCard() {
 
         /* ── Checkmark draws in ── */
         .privacy2-checkmark {
-          stroke-dasharray: 30;
-          stroke-dashoffset: 30;
+          stroke-dasharray: 35;
+          stroke-dashoffset: 35;
           opacity: 0;
           transition: stroke-dashoffset 0.5s cubic-bezier(0.16, 1, 0.3, 1),
                       opacity 0.3s ease;
         }
         @keyframes privacy2-check-draw {
-          0%, 28%  { stroke-dashoffset: 30; opacity: 0; }
-          38%, 88% { stroke-dashoffset: 0;  opacity: 1; }
-          96%, 100%{ stroke-dashoffset: 30; opacity: 0; }
+          0%, 28%  { stroke-dashoffset: 35; opacity: 0; }
+          40%, 88% { stroke-dashoffset: 0;  opacity: 1; }
+          96%, 100%{ stroke-dashoffset: 35; opacity: 0; }
         }
         .in-view .privacy2-checkmark {
-          animation: privacy2-check-draw 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+          animation: privacy2-check-draw 5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
         }
         .group:hover .privacy2-checkmark {
           stroke-dashoffset: 0;
@@ -93,7 +93,7 @@ export default function PrivacyCard() {
           96%, 100%{ opacity: 0; }
         }
         .in-view .privacy2-glow {
-          animation: privacy2-glow-pulse 4s ease-in-out infinite;
+          animation: privacy2-glow-pulse 5s ease-in-out infinite;
         }
         .group:hover .privacy2-glow {
           opacity: 0.18;
@@ -110,7 +110,7 @@ export default function PrivacyCard() {
           100%     { opacity: 0.5; }
         }
         .in-view .privacy2-keyhole {
-          animation: privacy2-keyhole-hide 4s ease-in-out infinite;
+          animation: privacy2-keyhole-hide 5s ease-in-out infinite;
         }
         .group:hover .privacy2-keyhole {
           opacity: 0;
@@ -204,15 +204,15 @@ export default function PrivacyCard() {
           />
 
           {/* Shackle (U-shape) — animates translateY */}
-          <path
-            className="privacy2-shackle"
-            d="M94 104 L94 82 Q110 64 126 82 L126 104"
-            fill="none"
-            stroke="var(--text-muted)"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            style={{ transformOrigin: "110px 104px" }}
-          />
+          <g className="privacy2-shackle" style={{ transformOrigin: "110px 104px" }}>
+            <path
+              d="M94 104 L94 82 Q110 64 126 82 L126 104"
+              fill="none"
+              stroke="var(--text-muted)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+          </g>
 
           {/* Keyhole (visible when unlocked) */}
           <g className="privacy2-keyhole">
