@@ -833,3 +833,68 @@ h1, h2, h3, h4, h5, h6 {
 .light .theme-prose a {
   color: var(--accent-primary);
 }
+
+/* ═══════════════════════════════════════════════════════
+   LOADING / SKELETON ANIMATIONS
+   ═══════════════════════════════════════════════════════ */
+
+/* Skeleton shimmer for loading placeholders */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 0%,
+    var(--bg-elevated) 40%,
+    var(--bg-tertiary) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.light .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 0%,
+    #ffffff 40%,
+    var(--bg-tertiary) 80%
+  );
+  background-size: 200% 100%;
+}
+
+/* Thumbnail fade-in when rendering completes */
+.thumbnail-loaded {
+  animation: thumbnailFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes thumbnailFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Selected thumbnail glow */
+.thumbnail-selected {
+  box-shadow: 0 0 0 2px var(--accent-primary), 0 0 12px rgba(232, 146, 124, 0.2);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Processing interstitial pulsing dots */
+.processing-dots span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  animation: dotPulse 1.2s ease-in-out infinite;
+  margin: 0 3px;
+}
+.processing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.processing-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}

@@ -104,6 +104,12 @@ export default function ProcessingInterstitial() {
               {statusText}
             </p>
 
+            <div className="processing-dots" style={{ margin: "0.75rem 0 0.25rem" }}>
+              <span />
+              <span />
+              <span />
+            </div>
+
             {filename && (
               <p
                 style={{
