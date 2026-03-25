@@ -35,12 +35,12 @@ export default function PrivacyPolicy() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <h1
-          className="hero-animate text-3xl sm:text-4xl font-bold mb-2 tracking-tight"
-          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}
+          className="text-3xl sm:text-4xl font-bold mb-2 tracking-tight"
+          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}
         >
           Privacy Policy
         </h1>
-        <p className="hero-animate text-sm mb-10" style={{ color: "var(--text-muted)", animationDelay: "0.25s" }}>Last updated: March 9, 2026</p>
+        <p className="text-sm mb-10" style={{ color: "var(--text-muted)" }}>Last updated: March 9, 2026</p>
 
         <div className="theme-prose max-w-none space-y-8 leading-relaxed">
           <section>

@@ -59,10 +59,10 @@ export default function MergeGuide() {
           <span style={{ color: "var(--text-secondary)" }}>Merge PDFs</span>
         </div>
 
-        <h1 className="hero-animate text-3xl sm:text-4xl font-bold mb-4 tracking-tight" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
           How to Merge PDF Files
         </h1>
-        <p className="hero-animate text-lg mb-8" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
+        <p className="text-lg mb-8" style={{ color: "var(--text-secondary)" }}>
           Merging PDFs combines multiple documents into a single file. Whether you&apos;re assembling a report, compiling scanned pages, or organizing paperwork, here&apos;s how to do it for free.
         </p>
 

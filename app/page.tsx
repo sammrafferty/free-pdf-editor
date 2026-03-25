@@ -1,5 +1,7 @@
 "use client";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import { motion, useScroll, useTransform } from "framer-motion";
 import ThemeProvider from "./components/ThemeProvider";
 import ToolSelector from "./components/ToolSelector";
 import AdSlot from "./components/AdSlot";
@@ -8,44 +10,85 @@ import Logo from "./components/Logo";
 import Navbar from "./components/Navbar";
 import FeatureShowcase from "./components/FeatureShowcase";
 
+function ScrollProgressBar() {
+  const { scrollYProgress } = useScroll();
+  return (
+    <motion.div
+      style={{
+        scaleX: scrollYProgress,
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 2,
+        background: "var(--accent-primary)",
+        transformOrigin: "left",
+        zIndex: 9999,
+      }}
+    />
+  );
+}
+
 function HomeContent() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: heroProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const titleY = useTransform(heroProgress, [0, 1], [0, -60]);
+  const subtitleY = useTransform(heroProgress, [0, 1], [0, -40]);
+  const toolsY = useTransform(heroProgress, [0, 1], [0, -20]);
+
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth > 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   return (
     <main className="min-h-screen grid-bg">
+      <ScrollProgressBar />
       <Navbar onLogoClick={scrollToTop} />
       <div className="navbar-spacer" />
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="py-12 sm:py-20">
+        <div ref={heroRef} className="py-12 sm:py-20">
           {/* Hero */}
           <div className="text-center mb-10 sm:mb-14">
-            <h1
-              className="hero-animate text-3xl sm:text-5xl font-bold mb-3 tracking-tight"
-              style={{ color: "var(--text-primary)", animationDelay: "0.1s" }}
-            >
-              Free Online PDF Editor &amp; Tools — No Upload Required
-            </h1>
-            <p
-              className="hero-animate text-sm sm:text-base max-w-md mx-auto leading-relaxed"
-              style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}
-            >
-              All the tools you need to work with PDFs. Free, fast, and entirely in your browser — nothing gets uploaded.
-            </p>
+            <motion.div style={isDesktop ? { y: titleY } : undefined}>
+              <h1
+                className="text-3xl sm:text-5xl font-bold mb-3 tracking-tight"
+                style={{ color: "var(--text-primary)" }}
+              >
+                Free Online PDF Editor &amp; Tools — No Upload Required
+              </h1>
+            </motion.div>
+            <motion.div style={isDesktop ? { y: subtitleY } : undefined}>
+              <p
+                className="text-sm sm:text-base max-w-md mx-auto leading-relaxed"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                All the tools you need to work with PDFs. Free, fast, and entirely in your browser — nothing gets uploaded.
+              </p>
+            </motion.div>
           </div>
 
           {/* Ad: Below hero */}
           <AdSlot slot="hero-banner" format="horizontal" className="my-6 sm:my-8 max-w-3xl mx-auto" />
 
-          <div className="hero-animate" style={{ animationDelay: "0.4s" }}>
+          <motion.div style={isDesktop ? { y: toolsY } : undefined}>
             <ToolSelector />
-          </div>
+          </motion.div>
 
           {/* Trust pills */}
-          <div className="hero-animate mt-12 sm:mt-16 flex justify-center" style={{ animationDelay: "0.55s" }}>
+          <div className="mt-12 sm:mt-16 flex justify-center">
             <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
               {[
                 { icon: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>, label: "100% Private" },

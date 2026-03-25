@@ -297,8 +297,7 @@ function ToolCard({ tool, index = 0 }: { tool: ToolDef; index?: number }) {
   return (
     <Link
       href={`/${slug}`}
-      className="group flex items-center gap-3.5 p-3.5 sm:p-4 text-left w-full tool-card-enter theme-card cursor-pointer"
-      style={{ animationDelay: `${index * 30}ms` }}
+      className="group flex items-center gap-3.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
     >
       <div
         className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0 rounded-lg group-hover:scale-110 transition-transform duration-200"
@@ -323,8 +322,7 @@ function FeaturedCard({ tool, index = 0 }: { tool: ToolDef; index?: number }) {
   return (
     <Link
       href={`/${slug}`}
-      className="group flex flex-col items-center text-center p-5 sm:p-6 tool-card-enter theme-card-featured cursor-pointer"
-      style={{ animationDelay: `${index * 30}ms` }}
+      className="group flex flex-col items-center text-center p-5 sm:p-6 theme-card-featured cursor-pointer"
     >
       <div
         className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center mb-3 rounded-xl group-hover:scale-110 transition-transform duration-200"
@@ -347,8 +345,7 @@ function ConvertCard({ pair, index = 0 }: { pair: ConvertPair; index: number }) 
   const slugB = toolIdToSlug[pair.b.id];
   return (
     <div
-      className="grid grid-cols-2 gap-2 sm:gap-3 tool-card-enter"
-      style={{ animationDelay: `${index * 40}ms` }}
+      className="grid grid-cols-2 gap-2 sm:gap-3"
     >
       <Link
         href={`/${slugA}`}

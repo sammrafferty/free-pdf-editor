@@ -60,7 +60,7 @@ export default async function ToolPage({ params }: PageProps) {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <div className="py-8 sm:py-12 max-w-2xl mx-auto">
           {/* Breadcrumb */}
-          <nav className="hero-animate flex items-center gap-2 text-xs mb-6" style={{ color: "var(--text-muted)", animationDelay: "0.05s" }}>
+          <nav className="flex items-center gap-2 text-xs mb-6" style={{ color: "var(--text-muted)" }}>
             <Link href="/" className="hover:opacity-80 transition-opacity">All Tools</Link>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
@@ -71,8 +71,8 @@ export default async function ToolPage({ params }: PageProps) {
           {/* Tool header */}
           <div className="text-center mb-8">
             <div
-              className="hero-animate inline-flex w-10 h-10 rounded-xl items-center justify-center mb-3"
-              style={{ backgroundColor: toolData.color + "15", color: toolData.color, animationDelay: "0.05s" }}
+              className="inline-flex w-10 h-10 rounded-xl items-center justify-center mb-3"
+              style={{ backgroundColor: toolData.color + "15", color: toolData.color }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -80,12 +80,12 @@ export default async function ToolPage({ params }: PageProps) {
               </svg>
             </div>
             <h1
-              className="hero-animate text-xl sm:text-2xl font-bold mb-1.5"
-              style={{ color: "var(--text-primary)", animationDelay: "0.15s" }}
+              className="text-xl sm:text-2xl font-bold mb-1.5"
+              style={{ color: "var(--text-primary)" }}
             >
               {toolData.h1}
             </h1>
-            <p className="hero-animate text-sm" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
               {toolData.shortDesc}
             </p>
           </div>
@@ -99,7 +99,7 @@ export default async function ToolPage({ params }: PageProps) {
           {/* SEO content section */}
           <div className="mt-12 space-y-10">
             {/* Intro */}
-            <section className="hero-animate" style={{ animationDelay: "0.1s" }}>
+            <section>
               {toolData.introText.split("\n\n").map((paragraph, i) => (
                 <p
                   key={i}
@@ -113,8 +113,7 @@ export default async function ToolPage({ params }: PageProps) {
 
             {/* How to Use */}
             <section
-              className="hero-animate theme-card rounded-xl p-6"
-              style={{ animationDelay: "0.2s" }}
+              className="theme-card rounded-xl p-6"
             >
               <h2
                 className="text-lg font-semibold mb-4"
@@ -136,7 +135,7 @@ export default async function ToolPage({ params }: PageProps) {
             </section>
 
             {/* Why Use Our Tool */}
-            <section className="hero-animate" style={{ animationDelay: "0.3s" }}>
+            <section>
               <h2
                 className="text-lg font-semibold mb-3"
                 style={{ color: "var(--text-primary)" }}
@@ -153,8 +152,7 @@ export default async function ToolPage({ params }: PageProps) {
 
             {/* Privacy */}
             <section
-              className="hero-animate theme-card rounded-xl p-6"
-              style={{ animationDelay: "0.4s" }}
+              className="theme-card rounded-xl p-6"
             >
               <h2
                 className="text-lg font-semibold mb-3"
@@ -172,7 +170,7 @@ export default async function ToolPage({ params }: PageProps) {
 
             {/* FAQ Accordion */}
             {toolData.faqs.length > 0 && (
-              <section className="hero-animate" style={{ animationDelay: "0.5s" }}>
+              <section>
                 <h2
                   className="text-lg font-semibold mb-4"
                   style={{ color: "var(--text-primary)" }}

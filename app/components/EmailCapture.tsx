@@ -34,7 +34,7 @@ export default function EmailCapture() {
 
   return (
     <div
-      className="mt-8 p-5 sm:p-6 theme-card animate-fade-in"
+      className="mt-8 p-5 sm:p-6 theme-card"
       style={{ borderColor: "var(--border-primary)" }}
     >
       {submitted ? (

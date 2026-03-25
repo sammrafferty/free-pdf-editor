@@ -827,16 +827,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Category header line draw-in */
-.category-line {
-  transform-origin: left;
-  transform: scaleX(0);
-  animation: lineDrawIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes lineDrawIn {
-  to { transform: scaleX(1); }
-}
+/* Category header line — visible immediately */
 
 /* Theme toggle icon rotation */
 .theme-toggle-icon {
@@ -851,47 +842,7 @@ h1, h2, h3, h4, h5, h6 {
    ANIMATIONS
    ═══════════════════════════════════════════════════════ */
 
-/* Hero entrance animation */
-.hero-animate {
-  opacity: 0;
-  animation: heroEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes heroEntrance {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
-.tool-card-enter {
-  animation: fadeIn 0.3s ease-out forwards;
-  opacity: 0;
-}
+/* Entrance animations removed — content visible immediately */
 
 /* ═══════════════════════════════════════════════════════
    PROSE OVERRIDES

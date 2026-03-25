@@ -14,14 +14,7 @@ export default function SplitCard() {
         display: "flex",
         flexDirection: "column",
         gap: 32,
-        transition: "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
         cursor: "default",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-3px)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
       }}
     >
       <style>{`
@@ -29,55 +22,6 @@ export default function SplitCard() {
           .split-card-inner {
             flex-direction: row !important;
           }
-        }
-
-        /* Existing hover CSS — unchanged */
-        .group:hover .split-page-1 {
-          transform: translate(-30px, -8px) rotate(-8deg) !important;
-          stroke: var(--accent-primary) !important;
-        }
-        .group:hover .split-page-2 {
-          transform: translate(0px, 0px) rotate(0deg) !important;
-        }
-        .group:hover .split-page-3 {
-          transform: translate(30px, 8px) rotate(8deg) !important;
-          stroke: var(--accent-primary) !important;
-        }
-        .group:hover .split-indicator {
-          opacity: 1 !important;
-        }
-
-        /* Loop keyframes */
-        @keyframes split-loop-left {
-          0%   { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
-          20%  { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
-          40%  { transform: translate(-30px, -8px) rotate(-8deg); stroke: var(--accent-primary); }
-          60%  { transform: translate(-30px, -8px) rotate(-8deg); stroke: var(--accent-primary); }
-          85%  { transform: translate(-30px, -8px) rotate(-8deg); stroke: var(--accent-primary); }
-          100% { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
-        }
-
-        @keyframes split-loop-right {
-          0%   { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
-          20%  { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
-          40%  { transform: translate(30px, 8px) rotate(8deg); stroke: var(--accent-primary); }
-          60%  { transform: translate(30px, 8px) rotate(8deg); stroke: var(--accent-primary); }
-          85%  { transform: translate(30px, 8px) rotate(8deg); stroke: var(--accent-primary); }
-          100% { transform: translate(0px, 0px) rotate(0deg); stroke: var(--border-primary); }
-        }
-
-        /* In-view loop animations */
-        .in-view .split-page-1 {
-          animation: split-loop-left 3.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-        }
-        .in-view .split-page-3 {
-          animation: split-loop-right 3.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-        }
-
-        /* Hover overrides loop — pause animation and snap to hover state */
-        .group:hover .split-page-1,
-        .group:hover .split-page-3 {
-          animation: none !important;
         }
       `}</style>
 
@@ -145,11 +89,9 @@ export default function SplitCard() {
             <g
               className="split-page-1"
               style={{
-                transform: "translate(0px, 0px) rotate(0deg)",
+                transform: "translate(-30px, -8px) rotate(-8deg)",
                 transformOrigin: "140px 120px",
-                transition:
-                  "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-                stroke: "var(--border-primary)",
+                stroke: "var(--accent-primary)",
               }}
             >
               <rect
@@ -161,56 +103,11 @@ export default function SplitCard() {
                 fill="var(--bg-secondary)"
                 strokeWidth="1.5"
               />
-              {/* Text lines */}
-              <line
-                x1="74"
-                y1="58"
-                x2="140"
-                y2="58"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="74"
-                y1="70"
-                x2="130"
-                y2="70"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="74"
-                y1="82"
-                x2="136"
-                y2="82"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="74"
-                y1="94"
-                x2="120"
-                y2="94"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              {/* Page number */}
-              <text
-                x="107"
-                y="148"
-                textAnchor="middle"
-                style={{
-                  fontSize: 11,
-                  fill: "var(--text-muted)",
-                  fontFamily: "inherit",
-                }}
-              >
-                1
-              </text>
+              <line x1="74" y1="58" x2="140" y2="58" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="74" y1="70" x2="130" y2="70" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="74" y1="82" x2="136" y2="82" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="74" y1="94" x2="120" y2="94" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <text x="107" y="148" textAnchor="middle" style={{ fontSize: 11, fill: "var(--text-muted)", fontFamily: "inherit" }}>1</text>
             </g>
 
             {/* Page 2 (center, middle) */}
@@ -219,161 +116,39 @@ export default function SplitCard() {
               style={{
                 transform: "translate(0px, 0px) rotate(0deg)",
                 transformOrigin: "140px 120px",
-                transition:
-                  "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
                 stroke: "var(--border-primary)",
               }}
             >
-              <rect
-                x="90"
-                y="40"
-                width="100"
-                height="130"
-                rx="6"
-                fill="var(--bg-secondary)"
-                strokeWidth="1.5"
-              />
-              {/* Text lines */}
-              <line
-                x1="104"
-                y1="68"
-                x2="170"
-                y2="68"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="104"
-                y1="80"
-                x2="160"
-                y2="80"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="104"
-                y1="92"
-                x2="166"
-                y2="92"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="104"
-                y1="104"
-                x2="148"
-                y2="104"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="104"
-                y1="116"
-                x2="155"
-                y2="116"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              {/* Page number */}
-              <text
-                x="140"
-                y="158"
-                textAnchor="middle"
-                style={{
-                  fontSize: 11,
-                  fill: "var(--text-muted)",
-                  fontFamily: "inherit",
-                }}
-              >
-                2
-              </text>
+              <rect x="90" y="40" width="100" height="130" rx="6" fill="var(--bg-secondary)" strokeWidth="1.5" />
+              <line x1="104" y1="68" x2="170" y2="68" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="104" y1="80" x2="160" y2="80" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="104" y1="92" x2="166" y2="92" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="104" y1="104" x2="148" y2="104" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="104" y1="116" x2="155" y2="116" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <text x="140" y="158" textAnchor="middle" style={{ fontSize: 11, fill: "var(--text-muted)", fontFamily: "inherit" }}>2</text>
             </g>
 
             {/* Page 3 (right, front) */}
             <g
               className="split-page-3"
               style={{
-                transform: "translate(0px, 0px) rotate(0deg)",
+                transform: "translate(30px, 8px) rotate(8deg)",
                 transformOrigin: "140px 120px",
-                transition:
-                  "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-                stroke: "var(--border-primary)",
+                stroke: "var(--accent-primary)",
               }}
             >
-              <rect
-                x="120"
-                y="50"
-                width="100"
-                height="130"
-                rx="6"
-                fill="var(--bg-secondary)"
-                strokeWidth="1.5"
-              />
-              {/* Text lines */}
-              <line
-                x1="134"
-                y1="78"
-                x2="200"
-                y2="78"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="134"
-                y1="90"
-                x2="190"
-                y2="90"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="134"
-                y1="102"
-                x2="196"
-                y2="102"
-                stroke="var(--text-muted)"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              {/* Page number */}
-              <text
-                x="170"
-                y="168"
-                textAnchor="middle"
-                style={{
-                  fontSize: 11,
-                  fill: "var(--text-muted)",
-                  fontFamily: "inherit",
-                }}
-              >
-                3
-              </text>
+              <rect x="120" y="50" width="100" height="130" rx="6" fill="var(--bg-secondary)" strokeWidth="1.5" />
+              <line x1="134" y1="78" x2="200" y2="78" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="134" y1="90" x2="190" y2="90" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="134" y1="102" x2="196" y2="102" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <text x="170" y="168" textAnchor="middle" style={{ fontSize: 11, fill: "var(--text-muted)", fontFamily: "inherit" }}>3</text>
             </g>
 
-            {/* Split indicator — scissors / divider lines that appear on hover */}
-            <g
-              style={{
-                opacity: 0,
-                transition: "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-              }}
-              className="split-indicator"
-            >
+            {/* Split indicator — dashed line */}
+            <g style={{ opacity: 1 }} className="split-indicator">
               <line
-                x1="100"
-                y1="195"
-                x2="180"
-                y2="195"
-                stroke="var(--accent-primary)"
-                strokeWidth="1"
-                strokeDasharray="4 3"
-                strokeLinecap="round"
+                x1="100" y1="195" x2="180" y2="195"
+                stroke="var(--accent-primary)" strokeWidth="1" strokeDasharray="4 3" strokeLinecap="round"
               />
             </g>
           </svg>

@@ -35,18 +35,18 @@ export default function About() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <h1
-          className="hero-animate text-3xl sm:text-4xl font-bold mb-6 tracking-tight"
-          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}
+          className="text-3xl sm:text-4xl font-bold mb-6 tracking-tight"
+          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}
         >
           About PDF Tools
         </h1>
 
         <div className="theme-prose max-w-none space-y-8 leading-relaxed">
-          <p className="hero-animate text-lg" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
+          <p className="text-lg" style={{ color: "var(--text-secondary)" }}>
             PDF Tools is a free, browser-based suite for working with PDF files. Split, merge, compress, convert, edit, sign, and more — all without uploading a single file to any server.
           </p>
 
-          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.1s" }}>
+          <div className="theme-section p-6 sm:p-8 space-y-4" >
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Our Mission</h2>
             <p style={{ color: "var(--text-secondary)" }}>
               We believe basic document tools should be free, private, and accessible to everyone. The PDF format powers modern document exchange — from student assignments and tax forms to business contracts and medical records. Yet working with PDFs often means choosing between expensive desktop software, sketchy free downloads, or online tools that upload your sensitive files to unknown servers.
@@ -56,7 +56,7 @@ export default function About() {
             </p>
           </div>
 
-          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.15s" }}>
+          <div className="theme-section p-6 sm:p-8 space-y-4" >
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Privacy-First by Design</h2>
             <p style={{ color: "var(--text-secondary)" }}>
               Unlike most online PDF tools, <strong style={{ color: "var(--text-primary)" }}>your files never leave your device</strong>. This isn&apos;t a marketing claim with caveats — it&apos;s an architectural fact. Here&apos;s how it works:
@@ -73,7 +73,7 @@ export default function About() {
             </p>
           </div>
 
-          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.2s" }}>
+          <div className="theme-section p-6 sm:p-8 space-y-4" >
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>How It Compares</h2>
             <div className="space-y-4" style={{ color: "var(--text-secondary)" }}>
               <div>
@@ -91,7 +91,7 @@ export default function About() {
             </div>
           </div>
 
-          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.25s" }}>
+          <div className="theme-section p-6 sm:p-8 space-y-4" >
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>How It Works</h2>
             <p style={{ color: "var(--text-secondary)" }}>
               PDF Tools leverages modern web technologies to process PDFs directly in your browser:
@@ -107,7 +107,7 @@ export default function About() {
             </p>
           </div>
 
-          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.3s" }}>
+          <div className="theme-section p-6 sm:p-8 space-y-4" >
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Who Uses PDF Tools</h2>
             <div className="space-y-2" style={{ color: "var(--text-secondary)" }}>
               <p><strong style={{ color: "var(--text-primary)" }}>Students</strong> — Combining lecture slides, extracting textbook chapters, compressing assignments for submission portals, converting notes between formats.</p>
@@ -117,7 +117,7 @@ export default function About() {
             </div>
           </div>
 
-          <div className="hero-animate theme-section p-6 sm:p-8 space-y-4" style={{ animationDelay: "0.35s" }}>
+          <div className="theme-section p-6 sm:p-8 space-y-4" >
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Built With</h2>
             <div className="flex flex-wrap gap-2">
               {["Next.js", "React", "TypeScript", "Tailwind CSS", "pdf-lib", "pdf.js", "Vercel"].map((tech) => (

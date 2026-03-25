@@ -69,12 +69,12 @@ export default function Guides() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <h1
-          className="hero-animate text-3xl sm:text-4xl font-bold mb-4 tracking-tight"
-          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}
+          className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight"
+          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}
         >
           PDF Guides
         </h1>
-        <p className="hero-animate text-lg mb-10" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
+        <p className="text-lg mb-10" style={{ color: "var(--text-secondary)" }}>
           Step-by-step tutorials for every PDF task. Learn how to split, merge, compress, convert, and edit PDF files — entirely in your browser with no uploads required.
         </p>
 
@@ -83,8 +83,7 @@ export default function Guides() {
             <Link
               key={g.slug}
               href={`/guides/${g.slug}`}
-              className="hero-animate group flex items-start gap-4 p-5 sm:p-6 theme-card"
-              style={{ animationDelay: `${0.1 + i * 0.05}s` }}
+              className="group flex items-start gap-4 p-5 sm:p-6 theme-card"
             >
               <div
                 className="w-1 h-full min-h-[48px] rounded-full shrink-0"

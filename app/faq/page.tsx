@@ -128,18 +128,18 @@ export default function FAQ() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <h1
-          className="hero-animate text-3xl sm:text-4xl font-bold mb-4 tracking-tight"
-          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}
+          className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight"
+          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}
         >
           Frequently Asked Questions
         </h1>
-        <p className="hero-animate text-lg mb-10" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
+        <p className="text-lg mb-10" style={{ color: "var(--text-secondary)" }}>
           Everything you need to know about using PDF Tools.
         </p>
 
         <div className="space-y-6">
           {faqs.slice(0, 9).map((faq, i) => (
-            <div key={i} className="hero-animate theme-section p-5 sm:p-6" style={{ animationDelay: `${0.1 + i * 0.05}s` }}>
+            <div key={i} className="theme-section p-5 sm:p-6">
               <h2 className="font-semibold text-base sm:text-lg mb-2" style={{ color: "var(--text-primary)" }}>
                 {faq.q}
               </h2>
@@ -152,7 +152,7 @@ export default function FAQ() {
           <AdSlot slot="faq-mid" format="rectangle" className="my-6 sm:my-8" />
 
           {faqs.slice(9).map((faq, i) => (
-            <div key={i + 9} className="hero-animate theme-section p-5 sm:p-6" style={{ animationDelay: `${0.1 + (i + 9) * 0.05}s` }}>
+            <div key={i + 9} className="theme-section p-5 sm:p-6">
               <h2 className="font-semibold text-base sm:text-lg mb-2" style={{ color: "var(--text-primary)" }}>
                 {faq.q}
               </h2>

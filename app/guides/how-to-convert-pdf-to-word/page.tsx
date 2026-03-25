@@ -58,10 +58,10 @@ export default function ConvertGuide() {
           <span style={{ color: "var(--text-secondary)" }}>PDF to Word</span>
         </div>
 
-        <h1 className="hero-animate text-3xl sm:text-4xl font-bold mb-4 tracking-tight" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
           How to Convert PDF to Word
         </h1>
-        <p className="hero-animate text-lg mb-8" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
+        <p className="text-lg mb-8" style={{ color: "var(--text-secondary)" }}>
           Need to edit text in a PDF? Converting it to a Word document makes the content editable in Microsoft Word, Google Docs, or any other word processor. Here&apos;s how to do it for free.
         </p>
 

@@ -59,10 +59,10 @@ export default function SplitGuide() {
           <span style={{ color: "var(--text-secondary)" }}>Split PDF</span>
         </div>
 
-        <h1 className="hero-animate text-3xl sm:text-4xl font-bold mb-4 tracking-tight" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
           How to Split a PDF File
         </h1>
-        <p className="hero-animate text-lg mb-8" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
+        <p className="text-lg mb-8" style={{ color: "var(--text-secondary)" }}>
           Splitting a PDF lets you extract specific pages, break a large document into smaller sections, or remove pages you don&apos;t need. Here&apos;s how to do it for free, right in your browser.
         </p>
 

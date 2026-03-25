@@ -59,10 +59,10 @@ export default function CompressGuide() {
           <span style={{ color: "var(--text-secondary)" }}>Compress PDF</span>
         </div>
 
-        <h1 className="hero-animate text-3xl sm:text-4xl font-bold mb-4 tracking-tight" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
           How to Compress a PDF
         </h1>
-        <p className="hero-animate text-lg mb-8" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
+        <p className="text-lg mb-8" style={{ color: "var(--text-secondary)" }}>
           Large PDF files are inconvenient to share, slow to load, and often exceed email attachment limits. Compression reduces file size while keeping your document readable. Here&apos;s how to do it for free.
         </p>
 
