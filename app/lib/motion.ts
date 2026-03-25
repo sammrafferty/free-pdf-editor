@@ -8,6 +8,7 @@ import { type Variants, type Transition } from "framer-motion";
 
 // Signature easing — smooth deceleration with slight overshoot
 export const ease = [0.16, 1, 0.3, 1] as const;
+export const smoothEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 // Spring presets
 export const springGentle: Transition = {
@@ -27,6 +28,19 @@ export const springBouncy: Transition = {
   stiffness: 300,
   damping: 20,
 };
+
+export const entranceTransition: Transition = {
+  duration: 0.5,
+  ease: smoothEase,
+};
+
+export const loopTransition = (duration = 1.4, delay = 1.5): Transition => ({
+  duration,
+  ease: smoothEase,
+  repeat: Infinity,
+  repeatType: "reverse",
+  repeatDelay: delay,
+});
 
 /* ── Reusable Variants ── */
 

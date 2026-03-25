@@ -1,9 +1,28 @@
 "use client";
 
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { springGentle, smoothEase } from "@/app/lib/motion";
+
+const loopEase = smoothEase;
+
 export default function CompressCard() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: false, amount: 0.3 });
+
+  const loopT = {
+    duration: 1.4,
+    ease: loopEase,
+    repeat: Infinity,
+    repeatType: "reverse" as const,
+    repeatDelay: 1.5,
+  };
+
   return (
-    <div
-      className="group"
+    <motion.div
+      ref={ref}
+      whileHover={{ y: -4 }}
+      transition={springGentle}
       style={{
         background: "var(--bg-secondary)",
         border: "1px solid var(--border-primary)",
@@ -13,64 +32,16 @@ export default function CompressCard() {
         flexDirection: "row",
         gap: 32,
         alignItems: "center",
-        transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
         cursor: "default",
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
     >
       <style>{`
         @media (max-width: 768px) {
           .compress2-card-inner { flex-direction: column !important; }
         }
-
-        @keyframes compress2-squish {
-          0%, 22%   { transform: scaleY(1); }
-          30%, 80%  { transform: scaleY(0.82); }
-          90%, 100% { transform: scaleY(1); }
-        }
-        @keyframes compress2-badge-hide {
-          0%, 22%   { opacity: 1; }
-          30%, 100% { opacity: 0; }
-        }
-        @keyframes compress2-badge-show {
-          0%, 22%   { opacity: 0; }
-          30%, 80%  { opacity: 1; }
-          90%, 100% { opacity: 0; }
-        }
-        @keyframes compress2-result-rise {
-          0%, 22%   { opacity: 0; }
-          30%, 80%  { opacity: 1; }
-          90%, 100% { opacity: 0; }
-        }
-
-        .compress2-doc-before {
-          transform-origin: 47px 70px;
-        }
-        .in-view .compress2-doc-before {
-          animation: compress2-squish 3.5s ease-in-out infinite;
-        }
-        .in-view .compress2-badge-large {
-          animation: compress2-badge-hide 3.5s ease-in-out infinite;
-        }
-        .in-view .compress2-badge-small {
-          animation: compress2-badge-show 3.5s ease-in-out infinite;
-        }
-        .in-view .compress2-result {
-          animation: compress2-result-rise 3.5s ease-in-out infinite;
-        }
-
-        .group:hover .compress2-doc-before { animation: none; transform: scaleY(0.82); }
-        .group:hover .compress2-badge-large { animation: none; opacity: 0; }
-        .group:hover .compress2-badge-small { animation: none; opacity: 1; }
-        .group:hover .compress2-result { animation: none; opacity: 1; }
-
-        .compress2-result { opacity: 0; }
-        .compress2-badge-large { opacity: 1; }
-        .compress2-badge-small { opacity: 0; }
       `}</style>
 
-      {/* Left — text */}
+      {/* Left -- text */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <h3 style={{ color: "var(--text-primary)", fontSize: 24, fontWeight: 700, margin: "0 0 12px 0", lineHeight: 1.3 }}>
           Compress Without Compromise
@@ -80,7 +51,7 @@ export default function CompressCard() {
         </p>
       </div>
 
-      {/* Right — illustration */}
+      {/* Right -- illustration */}
       <div className="compress2-card-inner" style={{ flexShrink: 0 }}>
         <svg
           width="240"
@@ -96,35 +67,43 @@ export default function CompressCard() {
             fill="var(--text-muted)" fontFamily="system-ui, sans-serif" opacity="0.6"
             letterSpacing="1">BEFORE</text>
 
-          {/* Left doc — large original (scaleY animates) */}
-          <g className="compress2-doc-before">
+          {/* Left doc -- large original (scaleY animates) */}
+          <motion.g
+            style={{ transformOrigin: "47px 70px" }}
+            animate={inView ? { scaleY: 0.82 } : { scaleY: 1 }}
+            transition={loopT}
+          >
             <rect x="9" y="20" width="76" height="100" rx="6"
               fill="var(--bg-tertiary, var(--bg-secondary))"
               stroke="var(--border-primary)" strokeWidth="1.5" />
-            {/* corner fold */}
             <path d="M73 20 L85 32 L73 32 Z" fill="var(--border-primary)" opacity="0.3" />
-            {/* content lines */}
             <rect x="20" y="36" width="44" height="4" rx="2" fill="var(--text-muted)" opacity="0.4" />
             <rect x="20" y="48" width="36" height="4" rx="2" fill="var(--text-muted)" opacity="0.3" />
             <rect x="20" y="60" width="40" height="4" rx="2" fill="var(--text-muted)" opacity="0.4" />
             <rect x="20" y="72" width="30" height="4" rx="2" fill="var(--text-muted)" opacity="0.3" />
             <rect x="20" y="84" width="42" height="4" rx="2" fill="var(--text-muted)" opacity="0.4" />
             <rect x="20" y="96" width="28" height="4" rx="2" fill="var(--text-muted)" opacity="0.3" />
-          </g>
+          </motion.g>
 
-          {/* "4.2 MB" badge — outside the scaleY group */}
-          <g className="compress2-badge-large">
+          {/* "4.2 MB" badge -- fades out */}
+          <motion.g
+            animate={inView ? { opacity: 0 } : { opacity: 1 }}
+            transition={loopT}
+          >
             <rect x="9" y="128" width="60" height="22" rx="6" fill="var(--accent-primary)" />
             <text x="39" y="143" textAnchor="middle" fill="white"
               fontSize="11" fontWeight="700" fontFamily="system-ui, sans-serif">4.2 MB</text>
-          </g>
+          </motion.g>
 
-          {/* "680 KB" badge — fades in on animation */}
-          <g className="compress2-badge-small">
+          {/* "680 KB" badge -- fades in */}
+          <motion.g
+            animate={inView ? { opacity: 1 } : { opacity: 0 }}
+            transition={loopT}
+          >
             <rect x="9" y="128" width="60" height="22" rx="6" fill="#4ade80" />
             <text x="39" y="143" textAnchor="middle" fill="white"
               fontSize="11" fontWeight="700" fontFamily="system-ui, sans-serif">680 KB</text>
-          </g>
+          </motion.g>
 
           {/* Static center arrow */}
           <line x1="98" y1="70" x2="142" y2="70"
@@ -137,24 +116,25 @@ export default function CompressCard() {
             fill="var(--text-muted)" fontFamily="system-ui, sans-serif" opacity="0.6"
             letterSpacing="1">AFTER</text>
 
-          {/* Right doc — smaller compressed result (fades in) */}
-          <g className="compress2-result">
+          {/* Right doc -- smaller compressed result (fades in) */}
+          <motion.g
+            animate={inView ? { opacity: 1 } : { opacity: 0 }}
+            transition={loopT}
+          >
             <rect x="162" y="30" width="58" height="78" rx="5"
               fill="var(--bg-tertiary, var(--bg-secondary))"
               stroke="#4ade80" strokeWidth="1.5" />
-            {/* content lines */}
             <rect x="172" y="44" width="30" height="3" rx="1.5" fill="var(--text-muted)" opacity="0.4" />
             <rect x="172" y="52" width="24" height="3" rx="1.5" fill="var(--text-muted)" opacity="0.3" />
             <rect x="172" y="60" width="28" height="3" rx="1.5" fill="var(--text-muted)" opacity="0.4" />
             <rect x="172" y="68" width="20" height="3" rx="1.5" fill="var(--text-muted)" opacity="0.3" />
             <rect x="172" y="76" width="26" height="3" rx="1.5" fill="var(--text-muted)" opacity="0.4" />
-            {/* green badge */}
             <rect x="162" y="116" width="58" height="20" rx="5" fill="#4ade80" />
             <text x="191" y="130" textAnchor="middle" fill="white"
               fontSize="10" fontWeight="700" fontFamily="system-ui, sans-serif">680 KB</text>
-          </g>
+          </motion.g>
         </svg>
       </div>
-    </div>
+    </motion.div>
   );
 }
