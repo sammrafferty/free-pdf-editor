@@ -1,14 +1,21 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import { motion, useInView } from "framer-motion";
 import { springGentle, smoothEase } from "@/app/lib/motion";
+import { useCursorGlow } from "@/app/hooks/useCursorGlow";
 
 const loopEase = smoothEase;
 
 export default function SplitCard() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: false, amount: 0.3 });
+  const { ref: glowRef, glowStyle, handlers } = useCursorGlow();
+
+  const combinedRef = useCallback((node: HTMLDivElement | null) => {
+    (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    (glowRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+  }, [glowRef]);
 
   const pageTransition = {
     duration: 1.4,
@@ -20,7 +27,8 @@ export default function SplitCard() {
 
   return (
     <motion.div
-      ref={ref}
+      ref={combinedRef}
+      className="group"
       whileHover={{ y: -4 }}
       transition={springGentle}
       style={{
@@ -32,8 +40,11 @@ export default function SplitCard() {
         flexDirection: "column",
         gap: 32,
         cursor: "default",
+        position: "relative",
       }}
+      {...handlers}
     >
+      <div className="cursor-glow" style={glowStyle} />
       <style>{`
         @media (min-width: 768px) {
           .split-card-inner {

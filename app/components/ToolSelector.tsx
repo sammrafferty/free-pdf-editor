@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { TOOLS, ToolId } from "@/app/lib/toolData";
 import {
   fadeUp,
+  dramaticReveal,
+  diagonalStagger,
   staggerContainer,
   springGentle,
   viewportOnce,
@@ -306,10 +308,10 @@ function CategoryHeader({ label }: { label: string }) {
   );
 }
 
-function ToolCard({ tool }: { tool: ToolDef }) {
+function ToolCard({ tool, index, columns }: { tool: ToolDef; index: number; columns: number }) {
   const slug = toolIdToSlug[tool.id];
   return (
-    <motion.div variants={fadeUp} whileHover={{ y: -3, boxShadow: "var(--shadow-card-hover)", transition: springGentle }}>
+    <motion.div variants={dramaticReveal} transition={{ delay: diagonalStagger(columns)(index) }} whileHover={{ y: -3, boxShadow: "var(--shadow-card-hover)", transition: springGentle }}>
       <Link
         href={`/${slug}`}
         className="group flex items-center gap-3.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
@@ -333,10 +335,10 @@ function ToolCard({ tool }: { tool: ToolDef }) {
   );
 }
 
-function FeaturedCard({ tool }: { tool: ToolDef }) {
+function FeaturedCard({ tool, index, columns }: { tool: ToolDef; index: number; columns: number }) {
   const slug = toolIdToSlug[tool.id];
   return (
-    <motion.div variants={fadeUp} whileHover={{ y: -3, boxShadow: "var(--shadow-card-hover)", transition: springGentle }}>
+    <motion.div variants={dramaticReveal} transition={{ delay: diagonalStagger(columns)(index) }} whileHover={{ y: -3, boxShadow: "var(--shadow-card-hover)", transition: springGentle }}>
       <Link
         href={`/${slug}`}
         className="group flex flex-col items-center text-center p-5 sm:p-6 theme-card-featured cursor-pointer"
@@ -358,13 +360,14 @@ function FeaturedCard({ tool }: { tool: ToolDef }) {
   );
 }
 
-function ConvertCard({ pair }: { pair: ConvertPair }) {
+function ConvertCard({ pair, index }: { pair: ConvertPair; index: number }) {
   const slugA = toolIdToSlug[pair.a.id];
   const slugB = toolIdToSlug[pair.b.id];
   return (
     <motion.div
       className="grid grid-cols-2 gap-2 sm:gap-3"
-      variants={fadeUp}
+      variants={dramaticReveal}
+      transition={{ delay: diagonalStagger(2)(index) }}
     >
       <motion.div whileHover={{ y: -3, boxShadow: "var(--shadow-card-hover)", transition: springGentle }}>
         <Link
@@ -421,8 +424,8 @@ export default function ToolSelector() {
           whileInView="visible"
           viewport={viewportOnce}
         >
-          {popular.map((t) => (
-            <FeaturedCard key={t.id} tool={t} />
+          {popular.map((t, i) => (
+            <FeaturedCard key={t.id} tool={t} index={i} columns={3} />
           ))}
         </motion.div>
       </div>
@@ -437,8 +440,8 @@ export default function ToolSelector() {
           whileInView="visible"
           viewport={viewportOnce}
         >
-          {organize.map((t) => (
-            <ToolCard key={t.id} tool={t} />
+          {organize.map((t, i) => (
+            <ToolCard key={t.id} tool={t} index={i} columns={3} />
           ))}
         </motion.div>
       </div>
@@ -453,8 +456,8 @@ export default function ToolSelector() {
           whileInView="visible"
           viewport={viewportOnce}
         >
-          {edit.map((t) => (
-            <ToolCard key={t.id} tool={t} />
+          {edit.map((t, i) => (
+            <ToolCard key={t.id} tool={t} index={i} columns={4} />
           ))}
         </motion.div>
       </div>
@@ -469,8 +472,8 @@ export default function ToolSelector() {
           whileInView="visible"
           viewport={viewportOnce}
         >
-          {signTools.map((t) => (
-            <ToolCard key={t.id} tool={t} />
+          {signTools.map((t, i) => (
+            <ToolCard key={t.id} tool={t} index={i} columns={3} />
           ))}
         </motion.div>
       </div>
@@ -485,8 +488,8 @@ export default function ToolSelector() {
           whileInView="visible"
           viewport={viewportOnce}
         >
-          {convertPairs.map((pair) => (
-            <ConvertCard key={pair.a.id} pair={pair} />
+          {convertPairs.map((pair, i) => (
+            <ConvertCard key={pair.a.id} pair={pair} index={i} />
           ))}
         </motion.div>
       </div>

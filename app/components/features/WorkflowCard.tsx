@@ -1,14 +1,21 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import { motion, useInView } from "framer-motion";
 import { springGentle, smoothEase } from "@/app/lib/motion";
+import { useCursorGlow } from "@/app/hooks/useCursorGlow";
 
 const loopEase = smoothEase;
 
 export default function WorkflowCard() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: false, amount: 0.3 });
+  const { ref: glowRef, glowStyle, handlers } = useCursorGlow();
+
+  const combinedRef = useCallback((node: HTMLDivElement | null) => {
+    (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    (glowRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+  }, [glowRef]);
 
   /* Each step lights up in sequence, then all fade out, then repeat */
   const stepDelay = (i: number) => ({
@@ -31,7 +38,8 @@ export default function WorkflowCard() {
 
   return (
     <motion.div
-      ref={ref}
+      ref={combinedRef}
+      className="group"
       whileHover={{ y: -4 }}
       transition={springGentle}
       style={{
@@ -40,8 +48,11 @@ export default function WorkflowCard() {
         borderRadius: 16,
         padding: 32,
         cursor: "default",
+        position: "relative",
       }}
+      {...handlers}
     >
+      <div className="cursor-glow" style={glowStyle} />
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         {/* Text */}
         <div>

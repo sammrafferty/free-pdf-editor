@@ -159,3 +159,40 @@ export const hoverScale = {
 
 export const viewportOnce = { once: true, amount: 0.3 } as const;
 export const viewportDefault = { once: true, amount: 0.2 } as const;
+
+/* ── Animation V2 — Endex-inspired premium presets ── */
+
+// Endex-inspired dramatic easing — slow start, fast middle, slow end
+export const dramaticEase = [0.85, 0, 0.15, 1] as const;
+
+// Dramatic reveal variant — for key content reveals
+export const dramaticReveal: Variants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: dramaticEase },
+  },
+};
+
+// Text reveal variants — for word-by-word clip-mask animation
+export const textRevealVariants: Variants = {
+  hidden: { y: "100%" },
+  visible: {
+    y: "0%",
+    transition: { duration: 0.6, ease: dramaticEase },
+  },
+};
+
+// Micro interaction — snappy for UI feedback
+export const microTransition: Transition = {
+  duration: 0.15,
+  ease: "easeOut",
+};
+
+// Diagonal wave stagger — returns delay for 2D grid position
+export const diagonalStagger = (columns: number) => (index: number): number => {
+  const row = Math.floor(index / columns);
+  const col = index % columns;
+  return (row + col) * 0.06;
+};

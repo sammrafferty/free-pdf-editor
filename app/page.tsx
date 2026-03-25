@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import ThemeProvider from "./components/ThemeProvider";
 import ToolSelector from "./components/ToolSelector";
 import AdSlot from "./components/AdSlot";
@@ -11,23 +12,68 @@ import FeatureShowcase from "./components/FeatureShowcase";
 import {
   fadeUp,
   staggerContainer,
+  dramaticReveal,
+  textRevealVariants,
   springGentle,
   viewportDefault,
 } from "@/app/lib/motion";
+
+function TextReveal({ text, className }: { text: string; className?: string }) {
+  return (
+    <span className={className}>
+      {text.split(" ").map((word, i) => (
+        <span key={i} className="text-reveal-mask">
+          <motion.span
+            className="inline-block"
+            variants={textRevealVariants}
+            style={{ marginRight: "0.3em" }}
+          >
+            {word}
+          </motion.span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function ScrollProgressBar() {
+  const { scrollYProgress } = useScroll();
+  return (
+    <motion.div
+      className="scroll-progress-bar"
+      style={{ scaleX: scrollYProgress }}
+    />
+  );
+}
 
 function HomeContent() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const titleY = useTransform(scrollYProgress, [0, 1], [0, -60]);
+  const subtitleY = useTransform(scrollYProgress, [0, 1], [0, -40]);
+  const toolsY = useTransform(scrollYProgress, [0, 1], [0, -20]);
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 640);
+  }, []);
+
   return (
     <main className="min-h-screen grid-bg">
+      <ScrollProgressBar />
       <Navbar onLogoClick={scrollToTop} />
       <div className="navbar-spacer" />
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="py-12 sm:py-20">
+        <div ref={heroRef} className="py-12 sm:py-20">
           {/* Hero */}
           <motion.div
             className="text-center mb-10 sm:mb-14"
@@ -35,20 +81,28 @@ function HomeContent() {
             initial="hidden"
             animate="visible"
           >
-            <motion.h1
-              className="text-3xl sm:text-5xl font-bold mb-3 tracking-tight"
-              style={{ color: "var(--text-primary)" }}
-              variants={fadeUp}
+            <motion.div
+              style={!isMobile ? { y: titleY } : undefined}
             >
-              Free Online PDF Editor & Tools — No Upload Required
-            </motion.h1>
-            <motion.p
-              className="text-sm sm:text-base max-w-md mx-auto leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-              variants={fadeUp}
+              <motion.h1
+                className="text-3xl sm:text-5xl font-bold mb-3 tracking-tight"
+                style={{ color: "var(--text-primary)" }}
+                variants={dramaticReveal}
+              >
+                <TextReveal text="Free Online PDF Editor & Tools — No Upload Required" />
+              </motion.h1>
+            </motion.div>
+            <motion.div
+              style={!isMobile ? { y: subtitleY } : undefined}
             >
-              All the tools you need to work with PDFs. Free, fast, and entirely in your browser — nothing gets uploaded.
-            </motion.p>
+              <motion.p
+                className="text-sm sm:text-base max-w-md mx-auto leading-relaxed"
+                style={{ color: "var(--text-secondary)" }}
+                variants={fadeUp}
+              >
+                All the tools you need to work with PDFs. Free, fast, and entirely in your browser — nothing gets uploaded.
+              </motion.p>
+            </motion.div>
           </motion.div>
 
           {/* Ad: Below hero */}
@@ -59,6 +113,7 @@ function HomeContent() {
             initial="hidden"
             animate="visible"
             transition={{ delay: 0.3 }}
+            style={!isMobile ? { y: toolsY } : undefined}
           >
             <ToolSelector />
           </motion.div>

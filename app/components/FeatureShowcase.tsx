@@ -1,5 +1,6 @@
 "use client";
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { fadeUp, entranceTransition } from "@/app/lib/motion";
 import SplitCard from "./features/SplitCard";
 import MergeCard from "./features/MergeCard";
@@ -17,9 +18,49 @@ const cards = [
   WorkflowCard,
 ];
 
-export default function FeatureShowcase() {
+function ScrollCard({
+  index,
+  scrollYProgress,
+  children,
+}: {
+  index: number;
+  scrollYProgress: MotionValue<number>;
+  children: React.ReactNode;
+}) {
+  const cardScale = useTransform(
+    scrollYProgress,
+    [index * 0.12, index * 0.12 + 0.15, index * 0.12 + 0.3],
+    [0.9, 1, 1]
+  );
+  const cardY = useTransform(
+    scrollYProgress,
+    [index * 0.12, index * 0.12 + 0.15, index * 0.12 + 0.3],
+    [60, 0, 0]
+  );
+  const cardOpacity = useTransform(
+    scrollYProgress,
+    [index * 0.12, index * 0.12 + 0.15],
+    [0, 1]
+  );
+
   return (
-    <section className="mt-16 sm:mt-20 mb-8">
+    <motion.div
+      style={{ scale: cardScale, y: cardY, opacity: cardOpacity }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+export default function FeatureShowcase() {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+
+  return (
+    <section ref={sectionRef} className="mt-16 sm:mt-20 mb-8">
       <div className="text-center mb-10">
         <motion.h2
           className="text-2xl sm:text-3xl font-bold tracking-tight mb-3"
@@ -47,16 +88,9 @@ export default function FeatureShowcase() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {cards.map((Card, i) => (
-          <motion.div
-            key={i}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-            transition={{ ...entranceTransition, delay: 0.15 + i * 0.08 }}
-          >
+          <ScrollCard key={i} index={i} scrollYProgress={scrollYProgress}>
             <Card />
-          </motion.div>
+          </ScrollCard>
         ))}
       </div>
     </section>

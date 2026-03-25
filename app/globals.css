@@ -1035,3 +1035,42 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Thumbnail/processing/dropzone animations — replaced by Framer Motion */
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATION V2 — Endex-inspired premium effects
+   ═══════════════════════════════════════════════════════ */
+
+/* Text reveal clip mask */
+.text-reveal-mask {
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+/* Scroll progress bar */
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-primary);
+  transform-origin: left;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* Cursor glow overlay for feature cards */
+.cursor-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.group:hover .cursor-glow {
+  opacity: 1;
+}

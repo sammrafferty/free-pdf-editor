@@ -1,14 +1,21 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import { motion, useInView } from "framer-motion";
 import { springGentle, smoothEase } from "@/app/lib/motion";
+import { useCursorGlow } from "@/app/hooks/useCursorGlow";
 
 const loopEase = smoothEase;
 
 export default function ConvertCard() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: false, amount: 0.3 });
+  const { ref: glowRef, glowStyle, handlers } = useCursorGlow();
+
+  const combinedRef = useCallback((node: HTMLDivElement | null) => {
+    (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    (glowRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+  }, [glowRef]);
 
   const loopT = {
     duration: 1.4,
@@ -20,7 +27,8 @@ export default function ConvertCard() {
 
   return (
     <motion.div
-      ref={ref}
+      ref={combinedRef}
+      className="group"
       whileHover={{ y: -4 }}
       transition={springGentle}
       style={{
@@ -33,8 +41,11 @@ export default function ConvertCard() {
         alignItems: "center",
         gap: 32,
         cursor: "default",
+        position: "relative",
       }}
+      {...handlers}
     >
+      <div className="cursor-glow" style={glowStyle} />
       <style>{`
         @media (max-width: 768px) {
           .convert2-card-inner { flex-direction: column !important; }
