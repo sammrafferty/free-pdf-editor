@@ -5,8 +5,8 @@ import PageTransition from "./components/PageTransition";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Free PDF Editor — Edit PDFs Online, No Upload Required",
-  description: "Free online PDF editor. Split, merge, compress, convert, rotate, edit, watermark, sign, and redact PDFs — all in your browser. Nothing gets uploaded. 100% private.",
+  title: "Free PDF Editor — Split, Merge, Compress & Convert PDFs Online",
+  description: "Free online PDF editor with 19 tools: split, merge, compress, rotate, delete pages, extract pages, watermark, number pages, crop, redact, sign, convert between PDF and Word, Excel, PowerPoint, and images — all in your browser. Nothing gets uploaded. 100% private.",
   keywords: "free PDF editor, edit PDF online, split PDF, merge PDF, compress PDF, convert PDF, PDF to Word, PDF to Excel, rotate PDF, watermark PDF, sign PDF, free PDF tools, online PDF editor, browser PDF tools",
   icons: {
     icon: "/favicon.svg",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Free PDF Editor — Edit PDFs Online, No Upload Required",
+    title: "Free PDF Editor — Split, Merge, Compress & Convert PDFs Online",
     description: "Split, merge, compress, convert, edit, and sign PDFs — all free, all in your browser. Nothing gets uploaded.",
     url: "/",
     siteName: "Free PDF Editor",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Free PDF Editor — Edit PDFs Online, No Upload Required",
+    title: "Free PDF Editor — Split, Merge, Compress & Convert PDFs Online",
     description: "Split, merge, compress, convert, edit, and sign PDFs — all free, all in your browser.",
     images: ["/og-image.png"],
   },
@@ -62,6 +62,27 @@ const jsonLd = {
   },
   browserRequirements: "Requires JavaScript. Works in Chrome, Firefox, Safari, Edge.",
   url: "https://free-pdf-editor.org",
+  featureList: [
+    "Split PDF",
+    "Merge PDFs",
+    "Compress PDF",
+    "Rotate Pages",
+    "Delete Pages",
+    "Extract Pages",
+    "Watermark",
+    "Number Pages",
+    "Crop PDF",
+    "Redact",
+    "Sign PDF",
+    "Image to PDF",
+    "PDF to Image",
+    "PDF to Word",
+    "Word to PDF",
+    "PDF to Excel",
+    "Excel to PDF",
+    "PDF to PowerPoint",
+    "PowerPoint to PDF",
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -40,7 +40,7 @@ function HomeContent() {
               style={{ color: "var(--text-primary)" }}
               variants={fadeUp}
             >
-              We Make PDF Easy.
+              Free Online PDF Editor & Tools — No Upload Required
             </motion.h1>
             <motion.p
               className="text-sm sm:text-base max-w-md mx-auto leading-relaxed"
@@ -146,6 +146,18 @@ function HomeContent() {
         </div>
       </footer>
 
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Free PDF Editor",
+            "url": "https://free-pdf-editor.org",
+            "logo": "https://free-pdf-editor.org/favicon.svg"
+          })
+        }}
+      />
       <CookieConsent />
     </main>
   );
