@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { springModal } from "@/app/lib/motion";
 import AdSlot from "./AdSlot";
+
+const dots = [0, 1, 2];
 
 export default function ProcessingInterstitial() {
   const [visible, setVisible] = useState(false);
@@ -56,96 +60,110 @@ export default function ProcessingInterstitial() {
       {/* Hidden marker so downloadBlob can detect the interstitial is mounted */}
       <div data-processing-interstitial hidden />
 
-      {visible && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "var(--bg-overlay, rgba(0,0,0,0.6))",
-            animation: "interstitialFadeIn 0.2s ease-out",
-          }}
-        >
-          <div
+      <AnimatePresence>
+        {visible && (
+          <motion.div
+            key="processing-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             style={{
-              background: "var(--bg-elevated)",
-              borderRadius: "1rem",
-              padding: "2rem",
-              maxWidth: "420px",
-              width: "90%",
-              textAlign: "center",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+              position: "fixed",
+              inset: 0,
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "var(--bg-overlay, rgba(0,0,0,0.6))",
             }}
           >
-            {/* Spinner */}
-            <div
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={springModal}
               style={{
-                margin: "0 auto 1rem",
-                width: "40px",
-                height: "40px",
-                border: "3px solid var(--text-muted)",
-                borderTopColor: "var(--accent-primary)",
-                borderRadius: "50%",
-                animation: "interstitialSpin 0.8s linear infinite",
-              }}
-            />
-
-            <p
-              style={{
-                color: "var(--text-primary)",
-                fontSize: "1.125rem",
-                fontWeight: 600,
-                margin: "0 0 0.25rem",
+                background: "var(--bg-elevated)",
+                borderRadius: "1rem",
+                padding: "2rem",
+                maxWidth: "420px",
+                width: "90%",
+                textAlign: "center",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
               }}
             >
-              {statusText}
-            </p>
+              {/* Spinner */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                style={{
+                  margin: "0 auto 1rem",
+                  width: "40px",
+                  height: "40px",
+                  border: "3px solid var(--text-muted)",
+                  borderTopColor: "var(--accent-primary)",
+                  borderRadius: "50%",
+                }}
+              />
 
-            <div className="processing-dots" style={{ margin: "0.75rem 0 0.25rem" }}>
-              <span />
-              <span />
-              <span />
-            </div>
-
-            {filename && (
               <p
                 style={{
-                  color: "var(--text-muted)",
-                  fontSize: "0.85rem",
-                  margin: "0 0 1.25rem",
-                  wordBreak: "break-all",
+                  color: "var(--text-primary)",
+                  fontSize: "1.125rem",
+                  fontWeight: 600,
+                  margin: "0 0 0.25rem",
                 }}
               >
-                {filename}
+                {statusText}
               </p>
-            )}
 
-            <div style={{ marginTop: "1rem" }}>
-              <AdSlot slot="processing-interstitial" format="rectangle" />
-            </div>
-          </div>
-        </div>
-      )}
+              {/* Processing dots */}
+              <div style={{ margin: "0.75rem 0 0.25rem", display: "flex", justifyContent: "center", gap: "6px" }}>
+                {dots.map((i) => (
+                  <motion.span
+                    key={i}
+                    animate={{
+                      scale: [0.6, 1, 0.6],
+                      opacity: [0.4, 1, 0.4],
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 1.2,
+                      ease: "easeInOut",
+                      delay: i * 0.15,
+                    }}
+                    style={{
+                      display: "inline-block",
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      background: "var(--accent-primary)",
+                    }}
+                  />
+                ))}
+              </div>
 
-      {/* Keyframe animations injected once */}
-      <style jsx global>{`
-        @keyframes interstitialFadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        @keyframes interstitialSpin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
+              {filename && (
+                <p
+                  style={{
+                    color: "var(--text-muted)",
+                    fontSize: "0.85rem",
+                    margin: "0 0 1.25rem",
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {filename}
+                </p>
+              )}
+
+              <div style={{ marginTop: "1rem" }}>
+                <AdSlot slot="processing-interstitial" format="rectangle" />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

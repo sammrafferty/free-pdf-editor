@@ -23,6 +23,16 @@ export const springSnappy: Transition = {
   damping: 30,
 };
 
+// Alias used by Dropzone
+export const springSnap = springSnappy;
+
+export const springModal: Transition = {
+  type: "spring",
+  stiffness: 350,
+  damping: 25,
+  mass: 0.8,
+};
+
 export const springBouncy: Transition = {
   type: "spring",
   stiffness: 300,
