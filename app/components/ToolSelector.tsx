@@ -1,6 +1,13 @@
 "use client";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { TOOLS, ToolId } from "@/app/lib/toolData";
+import {
+  fadeUp,
+  staggerContainer,
+  springGentle,
+  viewportOnce,
+} from "@/app/lib/motion";
 
 interface ToolDef {
   id: ToolId;
@@ -287,102 +294,115 @@ function CategoryHeader({ label }: { label: string }) {
       >
         {label}
       </h2>
-      <div className="flex-1 h-px" style={{ background: "var(--border-primary)" }} />
+      <motion.div
+        className="flex-1 h-px"
+        style={{ background: "var(--border-primary)" }}
+        initial={{ scaleX: 0, transformOrigin: "left" }}
+        whileInView={{ scaleX: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        viewport={{ once: true }}
+      />
     </div>
   );
 }
 
-function ToolCard({ tool, index = 0 }: { tool: ToolDef; index?: number }) {
+function ToolCard({ tool }: { tool: ToolDef }) {
   const slug = toolIdToSlug[tool.id];
   return (
-    <Link
-      href={`/${slug}`}
-      className="group flex items-center gap-3.5 p-3.5 sm:p-4 text-left w-full tool-card-enter theme-card cursor-pointer"
-      style={{ animationDelay: `${index * 30}ms` }}
-    >
-      <div
-        className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0 rounded-lg group-hover:scale-110 transition-transform duration-200"
-        style={{ backgroundColor: tool.color + "15", color: tool.color }}
+    <motion.div variants={fadeUp} whileHover={{ y: -3, boxShadow: "var(--shadow-card-hover)", transition: springGentle }}>
+      <Link
+        href={`/${slug}`}
+        className="group flex items-center gap-3.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
       >
-        {tool.icon}
-      </div>
-      <div className="min-w-0">
-        <div className="font-medium text-sm leading-tight" style={{ color: "var(--text-primary)" }}>
+        <div
+          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0 rounded-lg group-hover:scale-110 transition-transform duration-200"
+          style={{ backgroundColor: tool.color + "15", color: tool.color }}
+        >
+          {tool.icon}
+        </div>
+        <div className="min-w-0">
+          <div className="font-medium text-sm leading-tight" style={{ color: "var(--text-primary)" }}>
+            {tool.label}
+          </div>
+          <div className="text-xs leading-snug mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
+            {tool.desc}
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+function FeaturedCard({ tool }: { tool: ToolDef }) {
+  const slug = toolIdToSlug[tool.id];
+  return (
+    <motion.div variants={fadeUp} whileHover={{ y: -3, boxShadow: "var(--shadow-card-hover)", transition: springGentle }}>
+      <Link
+        href={`/${slug}`}
+        className="group flex flex-col items-center text-center p-5 sm:p-6 theme-card-featured cursor-pointer"
+      >
+        <div
+          className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center mb-3 rounded-xl group-hover:scale-110 transition-transform duration-200"
+          style={{ backgroundColor: tool.color + "15", color: tool.color }}
+        >
+          {tool.icon}
+        </div>
+        <div className="font-medium text-sm sm:text-base mb-0.5" style={{ color: "var(--text-primary)" }}>
           {tool.label}
         </div>
-        <div className="text-xs leading-snug mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
+        <div className="text-xs leading-snug" style={{ color: "var(--text-muted)" }}>
           {tool.desc}
         </div>
-      </div>
-    </Link>
+      </Link>
+    </motion.div>
   );
 }
 
-function FeaturedCard({ tool, index = 0 }: { tool: ToolDef; index?: number }) {
-  const slug = toolIdToSlug[tool.id];
-  return (
-    <Link
-      href={`/${slug}`}
-      className="group flex flex-col items-center text-center p-5 sm:p-6 tool-card-enter theme-card-featured cursor-pointer"
-      style={{ animationDelay: `${index * 30}ms` }}
-    >
-      <div
-        className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center mb-3 rounded-xl group-hover:scale-110 transition-transform duration-200"
-        style={{ backgroundColor: tool.color + "15", color: tool.color }}
-      >
-        {tool.icon}
-      </div>
-      <div className="font-medium text-sm sm:text-base mb-0.5" style={{ color: "var(--text-primary)" }}>
-        {tool.label}
-      </div>
-      <div className="text-xs leading-snug" style={{ color: "var(--text-muted)" }}>
-        {tool.desc}
-      </div>
-    </Link>
-  );
-}
-
-function ConvertCard({ pair, index = 0 }: { pair: ConvertPair; index: number }) {
+function ConvertCard({ pair }: { pair: ConvertPair }) {
   const slugA = toolIdToSlug[pair.a.id];
   const slugB = toolIdToSlug[pair.b.id];
   return (
-    <div
-      className="grid grid-cols-2 gap-2 sm:gap-3 tool-card-enter"
-      style={{ animationDelay: `${index * 40}ms` }}
+    <motion.div
+      className="grid grid-cols-2 gap-2 sm:gap-3"
+      variants={fadeUp}
     >
-      <Link
-        href={`/${slugA}`}
-        className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
-      >
-        <div className="shrink-0 group-hover:scale-110 transition-transform duration-200">
-          <FormatDualIcon from={pair.a.from} to={pair.a.to} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="font-medium text-xs sm:text-sm leading-tight flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
-            {pair.a.label}
+      <motion.div whileHover={{ y: -3, boxShadow: "var(--shadow-card-hover)", transition: springGentle }}>
+        <Link
+          href={`/${slugA}`}
+          className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
+        >
+          <div className="shrink-0 group-hover:scale-110 transition-transform duration-200">
+            <FormatDualIcon from={pair.a.from} to={pair.a.to} />
           </div>
-          <div className="text-xs leading-snug mt-0.5 truncate hidden sm:block" style={{ color: "var(--text-muted)" }}>
-            {pair.a.desc}
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-xs sm:text-sm leading-tight flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
+              {pair.a.label}
+            </div>
+            <div className="text-xs leading-snug mt-0.5 truncate hidden sm:block" style={{ color: "var(--text-muted)" }}>
+              {pair.a.desc}
+            </div>
           </div>
-        </div>
-      </Link>
-      <Link
-        href={`/${slugB}`}
-        className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
-      >
-        <div className="shrink-0 group-hover:scale-110 transition-transform duration-200">
-          <FormatDualIcon from={pair.b.from} to={pair.b.to} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="font-medium text-xs sm:text-sm leading-tight flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
-            {pair.b.label}
+        </Link>
+      </motion.div>
+      <motion.div whileHover={{ y: -3, boxShadow: "var(--shadow-card-hover)", transition: springGentle }}>
+        <Link
+          href={`/${slugB}`}
+          className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
+        >
+          <div className="shrink-0 group-hover:scale-110 transition-transform duration-200">
+            <FormatDualIcon from={pair.b.from} to={pair.b.to} />
           </div>
-          <div className="text-xs leading-snug mt-0.5 truncate hidden sm:block" style={{ color: "var(--text-muted)" }}>
-            {pair.b.desc}
+          <div className="min-w-0 flex-1">
+            <div className="font-medium text-xs sm:text-sm leading-tight flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
+              {pair.b.label}
+            </div>
+            <div className="text-xs leading-snug mt-0.5 truncate hidden sm:block" style={{ color: "var(--text-muted)" }}>
+              {pair.b.desc}
+            </div>
           </div>
-        </div>
-      </Link>
-    </div>
+        </Link>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -394,51 +414,81 @@ export default function ToolSelector() {
       {/* Most Popular */}
       <div>
         <CategoryHeader label="Most Popular" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {popular.map((t, i) => (
-            <FeaturedCard key={t.id} tool={t} index={i} />
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+        >
+          {popular.map((t) => (
+            <FeaturedCard key={t.id} tool={t} />
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Organize */}
       <div>
         <CategoryHeader label="Organize" />
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {organize.map((t, i) => (
-            <ToolCard key={t.id} tool={t} index={i} />
+        <motion.div
+          className="grid grid-cols-2 lg:grid-cols-3 gap-3"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+        >
+          {organize.map((t) => (
+            <ToolCard key={t.id} tool={t} />
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Edit */}
       <div>
         <CategoryHeader label="Edit" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {edit.map((t, i) => (
-            <ToolCard key={t.id} tool={t} index={i} />
+        <motion.div
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+        >
+          {edit.map((t) => (
+            <ToolCard key={t.id} tool={t} />
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Sign */}
       <div>
         <CategoryHeader label="Sign" />
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {signTools.map((t, i) => (
-            <ToolCard key={t.id} tool={t} index={i} />
+        <motion.div
+          className="grid grid-cols-2 lg:grid-cols-3 gap-3"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+        >
+          {signTools.map((t) => (
+            <ToolCard key={t.id} tool={t} />
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* Convert */}
       <div>
         <CategoryHeader label="Convert" />
-        <div className="space-y-3">
-          {convertPairs.map((pair, pi) => (
-            <ConvertCard key={pair.a.id} pair={pair} index={pi} />
+        <motion.div
+          className="space-y-3"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOnce}
+        >
+          {convertPairs.map((pair) => (
+            <ConvertCard key={pair.a.id} pair={pair} />
           ))}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
