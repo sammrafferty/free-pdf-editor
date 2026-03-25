@@ -58,20 +58,40 @@ Dark mode is default (no class). Light mode adds `.light` to `<html>`. All color
 
 Component classes: `theme-card`, `theme-input`, `theme-error`, `theme-button-disabled`, etc.
 
-## SEO Requirements
+## SEO & Structured Data
 
-Every page must export `metadata` with: `title`, `description`, `alternates.canonical` (full URL), `openGraph` (title, description, url, siteName, type, locale, images), `twitter` (card, title, description, images). Sitemap at `public/sitemap.xml` must include all routes.
+Every page must export `metadata` with: `title`, `description`, `alternates.canonical` (full URL), `openGraph` (title, description, url, siteName, type, locale, images), `twitter` (card, title, description, images).
+
+- `app/sitemap.ts` — dynamic sitemap generation (all routes with absolute URLs)
+- `app/robots.ts` — robots.txt allowing all crawlers, pointing to sitemap
+- Tool pages include `FaqSchema` (FAQPage JSON-LD) and `BreadcrumbList` JSON-LD
+- Homepage includes `Organization` and `WebApplication` JSON-LD schemas
+- `WebApplication` schema in `app/layout.tsx` has `featureList` array of all 19 tools
 
 ## Build-Time Git Injection
 
 `next.config.ts` injects `NEXT_PUBLIC_COMMIT_HASH` and `NEXT_PUBLIC_COMMIT_DATE` from git at build time. The footer displays these as a subtle version watermark.
+
+## Animations
+
+All animations are pure CSS keyframes and transitions in `globals.css`. No animation library is installed. Key patterns:
+- `.hero-animate` with `heroEntrance` keyframe — staggered entrance via `animationDelay`
+- `.tool-card-enter` with `fadeIn` keyframe — staggered tool card grid entrance
+- Feature showcase cards (`app/components/features/*.tsx`) use `IntersectionObserver` + inline `<style>` CSS keyframes for looping SVG animations
+- Primary easing: `cubic-bezier(0.16, 1, 0.3, 1)` throughout
+- Navbar uses CSS transitions for expand/collapse pill effect
+
+## Deployment
+
+Vercel auto-deploys from `sammrafferty/free-pdf-editor` on push to `main`. Custom domain: `free-pdf-editor.org`. Vercel project ID: `prj_yTShTkzdh9i21OQEUxGehGsYGiXm`, team: `team_5yDnxgbmlijSltm2iVhgtkUw`.
 
 ## Adding a New Tool
 1. Create `app/components/tools/NewTool.tsx` following the tool component pattern above
 2. Add dynamic import in `app/page.tsx`: `const NewTool = dynamic(() => import("./components/tools/NewTool"))`
 3. Add to `toolMeta` and `toolComponents` in `app/page.tsx`
 4. Add to appropriate category in `app/components/ToolSelector.tsx`
-5. Add URL to `public/sitemap.xml`
+5. Add to `app/lib/toolData.ts` with full SEO content (label, slug, intro, howTo, faqs, etc.)
+6. Sitemap updates automatically via `app/sitemap.ts`
 
 ## Rules
 - All file processing must be client-side — never upload to a server
