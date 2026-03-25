@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
 import ThemeProvider from "../components/ThemeProvider";
 import ProcessingInterstitial from "../components/ProcessingInterstitial";
 
@@ -44,13 +43,7 @@ export default function ToolPageClient({ toolId }: Props) {
 
   return (
     <ThemeProvider>
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
-        <ToolComponent />
-      </motion.div>
+      <ToolComponent />
       <ProcessingInterstitial />
     </ThemeProvider>
   );

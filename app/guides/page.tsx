@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import Logo from "@/app/components/Logo";
 import AdSlot from "@/app/components/AdSlot";
 import Navbar from "@/app/components/Navbar";
-import AnimatedSection, { AnimatedItem } from "@/app/components/AnimatedSection";
 
 export const metadata: Metadata = {
   title: "PDF Guides — How to Edit, Convert & Manage PDFs | PDF Tools",
@@ -69,62 +68,56 @@ export default function Guides() {
       <div className="navbar-spacer" />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
-        <AnimatedSection>
-          <h1
-            className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight"
-            style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}
-          >
-            PDF Guides
-          </h1>
-        </AnimatedSection>
-        <AnimatedSection delay={0.1}>
-          <p className="text-lg mb-10" style={{ color: "var(--text-secondary)" }}>
-            Step-by-step tutorials for every PDF task. Learn how to split, merge, compress, convert, and edit PDF files — entirely in your browser with no uploads required.
-          </p>
-        </AnimatedSection>
+        <h1
+          className="hero-animate text-3xl sm:text-4xl font-bold mb-4 tracking-tight"
+          style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif", animationDelay: "0.1s" }}
+        >
+          PDF Guides
+        </h1>
+        <p className="hero-animate text-lg mb-10" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
+          Step-by-step tutorials for every PDF task. Learn how to split, merge, compress, convert, and edit PDF files — entirely in your browser with no uploads required.
+        </p>
 
-        <AnimatedSection stagger className="space-y-4">
-          {guides.map((g) => (
-            <AnimatedItem key={g.slug}>
-              <Link
-                href={`/guides/${g.slug}`}
-                className="group flex items-start gap-4 p-5 sm:p-6 theme-card"
-              >
-                <div
-                  className="w-1 h-full min-h-[48px] rounded-full shrink-0"
-                  style={{ backgroundColor: g.color }}
-                />
-                <div>
-                  <h2 className="text-lg font-semibold mb-1 group-hover:opacity-80 transition-opacity" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
-                    {g.title}
-                  </h2>
-                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>{g.desc}</p>
-                </div>
-              </Link>
-            </AnimatedItem>
+        <div className="space-y-4">
+          {guides.map((g, i) => (
+            <Link
+              key={g.slug}
+              href={`/guides/${g.slug}`}
+              className="hero-animate group flex items-start gap-4 p-5 sm:p-6 theme-card"
+              style={{ animationDelay: `${0.1 + i * 0.05}s` }}
+            >
+              <div
+                className="w-1 h-full min-h-[48px] rounded-full shrink-0"
+                style={{ backgroundColor: g.color }}
+              />
+              <div>
+                <h2 className="text-lg font-semibold mb-1 group-hover:opacity-80 transition-opacity" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {g.title}
+                </h2>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>{g.desc}</p>
+              </div>
+            </Link>
           ))}
-        </AnimatedSection>
+        </div>
 
         <AdSlot slot="guides-content" format="horizontal" className="my-6 sm:my-8" />
 
-        <AnimatedSection delay={0.15}>
-          <div className="theme-section p-6 sm:p-8 mt-12">
-            <h2 className="text-xl font-semibold mb-3" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
-              Why Use Browser-Based PDF Tools?
-            </h2>
-            <div className="space-y-3 text-sm" style={{ color: "var(--text-secondary)" }}>
-              <p>
-                Traditional PDF editors like Adobe Acrobat require expensive subscriptions and heavy software installs. Online alternatives often upload your sensitive documents to remote servers, creating privacy and security risks.
-              </p>
-              <p>
-                Browser-based PDF tools solve both problems. They run entirely on your device using modern web technologies like JavaScript and the Canvas API. Your files are processed locally — nothing is uploaded, stored, or transmitted. This makes them faster (no upload/download wait), more private, and completely free to use.
-              </p>
-              <p>
-                Whether you&apos;re a student organizing coursework, a professional preparing contracts, or anyone who works with PDFs regularly, these guides will help you get the most out of every tool.
-              </p>
-            </div>
+        <div className="theme-section p-6 sm:p-8 mt-12">
+          <h2 className="text-xl font-semibold mb-3" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
+            Why Use Browser-Based PDF Tools?
+          </h2>
+          <div className="space-y-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+            <p>
+              Traditional PDF editors like Adobe Acrobat require expensive subscriptions and heavy software installs. Online alternatives often upload your sensitive documents to remote servers, creating privacy and security risks.
+            </p>
+            <p>
+              Browser-based PDF tools solve both problems. They run entirely on your device using modern web technologies like JavaScript and the Canvas API. Your files are processed locally — nothing is uploaded, stored, or transmitted. This makes them faster (no upload/download wait), more private, and completely free to use.
+            </p>
+            <p>
+              Whether you&apos;re a student organizing coursework, a professional preparing contracts, or anyone who works with PDFs regularly, these guides will help you get the most out of every tool.
+            </p>
           </div>
-        </AnimatedSection>
+        </div>
       </div>
 
       <footer style={{ borderTop: "1px solid var(--border-primary)" }} className="mt-12">

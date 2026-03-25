@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import PostHogProvider from "./components/PostHogProvider";
-import PageTransition from "./components/PageTransition";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -63,25 +62,10 @@ const jsonLd = {
   browserRequirements: "Requires JavaScript. Works in Chrome, Firefox, Safari, Edge.",
   url: "https://free-pdf-editor.org",
   featureList: [
-    "Split PDF",
-    "Merge PDFs",
-    "Compress PDF",
-    "Rotate Pages",
-    "Delete Pages",
-    "Extract Pages",
-    "Watermark",
-    "Number Pages",
-    "Crop PDF",
-    "Redact",
-    "Sign PDF",
-    "Image to PDF",
-    "PDF to Image",
-    "PDF to Word",
-    "Word to PDF",
-    "PDF to Excel",
-    "Excel to PDF",
-    "PDF to PowerPoint",
-    "PowerPoint to PDF",
+    "Split PDF", "Merge PDFs", "Compress PDF", "Rotate Pages", "Delete Pages",
+    "Extract Pages", "Watermark", "Number Pages", "Crop PDF", "Redact",
+    "Sign PDF", "Image to PDF", "PDF to Image", "PDF to Word", "Word to PDF",
+    "PDF to Excel", "Excel to PDF", "PDF to PowerPoint", "PowerPoint to PDF",
   ],
 };
 
@@ -114,9 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen" style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
         <PostHogProvider>
-          <PageTransition>
-            {children}
-          </PageTransition>
+          {children}
         </PostHogProvider>
       </body>
     </html>

@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllSlugs, getToolBySlug } from "../lib/toolData";
 import ToolPageClient from "./ToolPageClient";
-import AnimatedSection from "./AnimatedSection";
 import FaqSchema from "../components/FaqSchema";
 import RelatedTools from "../components/RelatedTools";
 import EmailCapture from "../components/EmailCapture";
@@ -61,39 +60,34 @@ export default async function ToolPage({ params }: PageProps) {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <div className="py-8 sm:py-12 max-w-2xl mx-auto">
           {/* Breadcrumb */}
-          <AnimatedSection className="flex items-center gap-2 text-xs mb-6" style={{ color: "var(--text-muted)" }} delay={0.05}>
+          <nav className="hero-animate flex items-center gap-2 text-xs mb-6" style={{ color: "var(--text-muted)", animationDelay: "0.05s" }}>
             <Link href="/" className="hover:opacity-80 transition-opacity">All Tools</Link>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
             <span className="font-medium" style={{ color: "var(--text-secondary)" }}>{toolData.label}</span>
-          </AnimatedSection>
+          </nav>
 
           {/* Tool header */}
           <div className="text-center mb-8">
-            <AnimatedSection
-              className="inline-flex w-10 h-10 rounded-xl items-center justify-center mb-3"
-              style={{ backgroundColor: toolData.color + "15", color: toolData.color }}
-              delay={0.05}
+            <div
+              className="hero-animate inline-flex w-10 h-10 rounded-xl items-center justify-center mb-3"
+              style={{ backgroundColor: toolData.color + "15", color: toolData.color, animationDelay: "0.05s" }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
               </svg>
-            </AnimatedSection>
-            <AnimatedSection delay={0.15}>
-              <h1
-                className="text-xl sm:text-2xl font-bold mb-1.5"
-                style={{ color: "var(--text-primary)" }}
-              >
-                {toolData.h1}
-              </h1>
-            </AnimatedSection>
-            <AnimatedSection delay={0.25}>
-              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                {toolData.shortDesc}
-              </p>
-            </AnimatedSection>
+            </div>
+            <h1
+              className="hero-animate text-xl sm:text-2xl font-bold mb-1.5"
+              style={{ color: "var(--text-primary)", animationDelay: "0.15s" }}
+            >
+              {toolData.h1}
+            </h1>
+            <p className="hero-animate text-sm" style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}>
+              {toolData.shortDesc}
+            </p>
           </div>
 
           {/* Tool component */}
@@ -105,7 +99,7 @@ export default async function ToolPage({ params }: PageProps) {
           {/* SEO content section */}
           <div className="mt-12 space-y-10">
             {/* Intro */}
-            <AnimatedSection delay={0.1}>
+            <section className="hero-animate" style={{ animationDelay: "0.1s" }}>
               {toolData.introText.split("\n\n").map((paragraph, i) => (
                 <p
                   key={i}
@@ -115,12 +109,12 @@ export default async function ToolPage({ params }: PageProps) {
                   {paragraph}
                 </p>
               ))}
-            </AnimatedSection>
+            </section>
 
             {/* How to Use */}
-            <AnimatedSection
-              className="theme-card rounded-xl p-6"
-              delay={0.2}
+            <section
+              className="hero-animate theme-card rounded-xl p-6"
+              style={{ animationDelay: "0.2s" }}
             >
               <h2
                 className="text-lg font-semibold mb-4"
@@ -139,10 +133,10 @@ export default async function ToolPage({ params }: PageProps) {
                   </li>
                 ))}
               </ol>
-            </AnimatedSection>
+            </section>
 
             {/* Why Use Our Tool */}
-            <AnimatedSection delay={0.3}>
+            <section className="hero-animate" style={{ animationDelay: "0.3s" }}>
               <h2
                 className="text-lg font-semibold mb-3"
                 style={{ color: "var(--text-primary)" }}
@@ -155,12 +149,12 @@ export default async function ToolPage({ params }: PageProps) {
               >
                 {toolData.whyUseContent}
               </p>
-            </AnimatedSection>
+            </section>
 
             {/* Privacy */}
-            <AnimatedSection
-              className="theme-card rounded-xl p-6"
-              delay={0.4}
+            <section
+              className="hero-animate theme-card rounded-xl p-6"
+              style={{ animationDelay: "0.4s" }}
             >
               <h2
                 className="text-lg font-semibold mb-3"
@@ -174,11 +168,11 @@ export default async function ToolPage({ params }: PageProps) {
               >
                 {toolData.privacyBlurb}
               </p>
-            </AnimatedSection>
+            </section>
 
             {/* FAQ Accordion */}
             {toolData.faqs.length > 0 && (
-              <AnimatedSection delay={0.5}>
+              <section className="hero-animate" style={{ animationDelay: "0.5s" }}>
                 <h2
                   className="text-lg font-semibold mb-4"
                   style={{ color: "var(--text-primary)" }}
@@ -218,7 +212,7 @@ export default async function ToolPage({ params }: PageProps) {
                     </details>
                   ))}
                 </div>
-              </AnimatedSection>
+              </section>
             )}
 
             {/* FAQ Schema */}

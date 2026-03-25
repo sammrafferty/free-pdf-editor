@@ -1,36 +1,9 @@
 "use client";
 
-import { useRef, useCallback } from "react";
-import { motion, useInView } from "framer-motion";
-import { springGentle, smoothEase } from "@/app/lib/motion";
-import { useCursorGlow } from "@/app/hooks/useCursorGlow";
-
-const loopEase = smoothEase;
-
 export default function ConvertCard() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: false, amount: 0.3 });
-  const { ref: glowRef, glowStyle, handlers } = useCursorGlow();
-
-  const combinedRef = useCallback((node: HTMLDivElement | null) => {
-    (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
-    (glowRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-  }, [glowRef]);
-
-  const loopT = {
-    duration: 1.4,
-    ease: loopEase,
-    repeat: Infinity,
-    repeatType: "reverse" as const,
-    repeatDelay: 1.5,
-  };
-
   return (
-    <motion.div
-      ref={combinedRef}
+    <div
       className="group"
-      whileHover={{ y: -4 }}
-      transition={springGentle}
       style={{
         background: "var(--bg-secondary)",
         border: "1px solid var(--border-primary)",
@@ -40,23 +13,96 @@ export default function ConvertCard() {
         flexDirection: "row",
         alignItems: "center",
         gap: 32,
+        transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
         cursor: "default",
-        position: "relative",
       }}
-      {...handlers}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-3px)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+      }}
     >
-      <div className="cursor-glow" style={glowStyle} />
       <style>{`
         @media (max-width: 768px) {
-          .convert2-card-inner { flex-direction: column !important; }
+          .convert2-card-inner {
+            flex-direction: column !important;
+          }
         }
         .convert2-card-inner {
-          display: flex; flex-direction: row; align-items: center; gap: 32px; width: 100%;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 32px;
+          width: 100%;
         }
+
+        /* ── keyframes ── */
+        @keyframes convert2-pdf-fade {
+          0%, 18%   { opacity: 1; }
+          22%, 100% { opacity: 0.35; }
+        }
+        @keyframes convert2-word-rise {
+          0%, 18%   { opacity: 0.55; }
+          22%, 78%  { opacity: 1; }
+          90%, 100% { opacity: 0.55; }
+        }
+        /* continuous dash flow — independent of the 4s cycle */
+        @keyframes convert2-arrow-flow {
+          0%   { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: -20; }
+        }
+        @keyframes convert2-shimmer-sweep {
+          0%, 48%  { transform: translateX(-120%); }
+          74%      { transform: translateX(200%); }
+          100%     { transform: translateX(-120%); }
+        }
+        /* one-shot shimmer used on hover */
+        @keyframes convert2-shimmer-sweep-hover {
+          0%   { transform: translateX(-120%); }
+          100% { transform: translateX(200%); }
+        }
+
+        /* ── in-view: start looping animations ── */
+        .in-view .convert2-pdf {
+          animation: convert2-pdf-fade 4s ease-in-out infinite;
+        }
+        .in-view .convert2-word {
+          animation: convert2-word-rise 4s ease-in-out infinite;
+        }
+        /* arrow always flows once in-view */
+        .in-view .convert2-arrow {
+          animation: convert2-arrow-flow 0.8s linear infinite;
+        }
+        .in-view .convert2-shimmer {
+          animation: convert2-shimmer-sweep 4s ease-in-out infinite;
+        }
+
+        /* ── hover overrides ── */
+        .group:hover .convert2-pdf {
+          opacity: 0.35;
+          animation: none;
+        }
+        .group:hover .convert2-word {
+          opacity: 1;
+          animation: none;
+        }
+        /* keep arrow flowing on hover */
+        .group:hover .convert2-arrow {
+          animation: convert2-arrow-flow 0.8s linear infinite;
+        }
+        .group:hover .convert2-shimmer {
+          animation: convert2-shimmer-sweep-hover 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* base states */
+        .convert2-pdf  { opacity: 1; }
+        .convert2-word { opacity: 0.55; }
+        .convert2-shimmer { transform: translateX(-120%); }
       `}</style>
 
       <div className="convert2-card-inner">
-        {/* Left side -- text */}
+        {/* Left side — text */}
         <div style={{ flex: "1 1 0", minWidth: 0 }}>
           <h3
             style={{
@@ -82,7 +128,7 @@ export default function ConvertCard() {
           </p>
         </div>
 
-        {/* Right side -- SVG illustration */}
+        {/* Right side — SVG illustration */}
         <div style={{ flex: "0 0 auto" }}>
           <svg
             width="280"
@@ -92,101 +138,130 @@ export default function ConvertCard() {
             xmlns="http://www.w3.org/2000/svg"
             style={{ display: "block" }}
           >
-            {/* PDF document -- left */}
-            <motion.g
-              animate={inView ? { opacity: 0.35 } : { opacity: 1 }}
-              transition={loopT}
-            >
+            {/* PDF document — left */}
+            <g className="convert2-pdf">
+              {/* page shadow */}
               <rect x="18" y="34" width="90" height="120" rx="6"
                 fill="var(--text-muted)" opacity="0.10" />
+              {/* page body */}
               <rect x="14" y="30" width="90" height="120" rx="6"
                 fill="var(--bg-secondary)"
                 stroke="var(--border-primary)" strokeWidth="1.5" />
+              {/* red accent bar */}
               <rect x="14" y="30" width="90" height="18" rx="6"
                 fill="var(--accent-primary)" />
+              {/* square off bottom corners of accent bar */}
               <rect x="14" y="42" width="90" height="6"
                 fill="var(--accent-primary)" />
+              {/* PDF label */}
               <text x="59" y="43"
-                textAnchor="middle" fill="white"
+                textAnchor="middle"
+                fill="white"
                 fontSize="10" fontWeight="700"
                 fontFamily="system-ui, sans-serif">
                 PDF
               </text>
-              <rect x="26" y="60" width="54" height="4" rx="2" fill="var(--text-muted)" opacity="0.35" />
-              <rect x="26" y="70" width="66" height="4" rx="2" fill="var(--text-muted)" opacity="0.25" />
-              <rect x="26" y="80" width="48" height="4" rx="2" fill="var(--text-muted)" opacity="0.35" />
-              <rect x="26" y="90" width="60" height="4" rx="2" fill="var(--text-muted)" opacity="0.25" />
-              <rect x="26" y="104" width="66" height="28" rx="3" fill="var(--text-muted)" opacity="0.12" />
-              <line x1="26" y1="114" x2="92" y2="114" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
-              <line x1="26" y1="122" x2="92" y2="122" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
-              <line x1="52" y1="104" x2="52" y2="132" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
-            </motion.g>
-
-            {/* Arrow -- flowing dashes */}
-            <g>
-              <motion.line
-                x1="118" y1="90" x2="158" y2="90"
-                stroke="var(--text-muted)" strokeWidth="2"
-                strokeDasharray="6 4" opacity="0.55"
-                animate={inView ? { strokeDashoffset: [0, -20] } : { strokeDashoffset: 0 }}
-                transition={
-                  inView
-                    ? { duration: 0.8, ease: "linear", repeat: Infinity }
-                    : { duration: 0.3 }
-                }
-              />
-              <polygon points="160,90 152,85 152,95" fill="var(--text-muted)" opacity="0.55" />
+              {/* content lines */}
+              <rect x="26" y="60" width="54" height="4" rx="2"
+                fill="var(--text-muted)" opacity="0.35" />
+              <rect x="26" y="70" width="66" height="4" rx="2"
+                fill="var(--text-muted)" opacity="0.25" />
+              <rect x="26" y="80" width="48" height="4" rx="2"
+                fill="var(--text-muted)" opacity="0.35" />
+              <rect x="26" y="90" width="60" height="4" rx="2"
+                fill="var(--text-muted)" opacity="0.25" />
+              {/* small table */}
+              <rect x="26" y="104" width="66" height="28" rx="3"
+                fill="var(--text-muted)" opacity="0.12" />
+              <line x1="26" y1="114" x2="92" y2="114"
+                stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
+              <line x1="26" y1="122" x2="92" y2="122"
+                stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
+              <line x1="52" y1="104" x2="52" y2="132"
+                stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
             </g>
 
-            {/* Word document -- right */}
-            <motion.g
-              animate={inView ? { opacity: 1 } : { opacity: 0.55 }}
-              transition={loopT}
-            >
+            {/* Arrow — flowing dashes, center */}
+            <g>
+              <line
+                className="convert2-arrow"
+                x1="118" y1="90"
+                x2="158" y2="90"
+                stroke="var(--text-muted)"
+                strokeWidth="2"
+                strokeDasharray="6 4"
+                opacity="0.55"
+              />
+              {/* arrowhead (static) */}
+              <polygon
+                points="160,90 152,85 152,95"
+                fill="var(--text-muted)"
+                opacity="0.55"
+              />
+            </g>
+
+            {/* Word document — right */}
+            <g className="convert2-word">
+              {/* page shadow */}
               <rect x="178" y="34" width="90" height="120" rx="6"
                 fill="var(--text-muted)" opacity="0.10" />
+              {/* page body */}
               <rect x="174" y="30" width="90" height="120" rx="6"
                 fill="var(--bg-secondary)"
                 stroke="var(--border-primary)" strokeWidth="1.5" />
-              <rect x="174" y="30" width="90" height="18" rx="6" fill="#4285f4" />
-              <rect x="174" y="42" width="90" height="6" fill="#4285f4" />
+              {/* blue accent bar */}
+              <rect x="174" y="30" width="90" height="18" rx="6"
+                fill="#4285f4" />
+              <rect x="174" y="42" width="90" height="6"
+                fill="#4285f4" />
+              {/* DOCX label */}
               <text x="219" y="43"
-                textAnchor="middle" fill="white"
+                textAnchor="middle"
+                fill="white"
                 fontSize="10" fontWeight="700"
                 fontFamily="system-ui, sans-serif">
                 DOCX
               </text>
-              <rect x="186" y="60" width="54" height="4" rx="2" fill="var(--text-muted)" opacity="0.35" />
-              <rect x="186" y="70" width="66" height="4" rx="2" fill="var(--text-muted)" opacity="0.25" />
-              <rect x="186" y="80" width="48" height="4" rx="2" fill="var(--text-muted)" opacity="0.35" />
-              <rect x="186" y="90" width="60" height="4" rx="2" fill="var(--text-muted)" opacity="0.25" />
-              <rect x="186" y="104" width="66" height="28" rx="3" fill="var(--text-muted)" opacity="0.12" />
-              <line x1="186" y1="114" x2="252" y2="114" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
-              <line x1="186" y1="122" x2="252" y2="122" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
-              <line x1="212" y1="104" x2="212" y2="132" stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
+              {/* content lines */}
+              <rect x="186" y="60" width="54" height="4" rx="2"
+                fill="var(--text-muted)" opacity="0.35" />
+              <rect x="186" y="70" width="66" height="4" rx="2"
+                fill="var(--text-muted)" opacity="0.25" />
+              <rect x="186" y="80" width="48" height="4" rx="2"
+                fill="var(--text-muted)" opacity="0.35" />
+              <rect x="186" y="90" width="60" height="4" rx="2"
+                fill="var(--text-muted)" opacity="0.25" />
+              {/* small table */}
+              <rect x="186" y="104" width="66" height="28" rx="3"
+                fill="var(--text-muted)" opacity="0.12" />
+              <line x1="186" y1="114" x2="252" y2="114"
+                stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
+              <line x1="186" y1="122" x2="252" y2="122"
+                stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
+              <line x1="212" y1="104" x2="212" y2="132"
+                stroke="var(--text-muted)" strokeWidth="0.8" opacity="0.25" />
 
-              {/* Shimmer overlay */}
+              {/* Shimmer overlay — clipped to Word doc */}
               <defs>
                 <clipPath id="convert2-word-clip">
                   <rect x="174" y="30" width="90" height="120" rx="6" />
                 </clipPath>
               </defs>
               <g clipPath="url(#convert2-word-clip)">
-                <motion.rect
-                  x="174" y="30" width="45" height="120"
-                  fill="white" opacity="0.14"
-                  animate={inView ? { x: [54, 320] } : { x: 54 }}
-                  transition={
-                    inView
-                      ? { duration: 2, ease: loopEase, repeat: Infinity, repeatDelay: 2 }
-                      : { duration: 0.3 }
-                  }
+                <rect
+                  className="convert2-shimmer"
+                  x="174"
+                  y="30"
+                  width="45"
+                  height="120"
+                  fill="white"
+                  opacity="0.14"
                 />
               </g>
-            </motion.g>
+            </g>
           </svg>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

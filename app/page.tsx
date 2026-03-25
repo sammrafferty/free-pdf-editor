@@ -1,7 +1,5 @@
 "use client";
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
 import ThemeProvider from "./components/ThemeProvider";
 import ToolSelector from "./components/ToolSelector";
 import AdSlot from "./components/AdSlot";
@@ -9,130 +7,52 @@ import CookieConsent from "./components/CookieConsent";
 import Logo from "./components/Logo";
 import Navbar from "./components/Navbar";
 import FeatureShowcase from "./components/FeatureShowcase";
-import {
-  fadeUp,
-  staggerContainer,
-  dramaticReveal,
-  textRevealVariants,
-  springGentle,
-  viewportDefault,
-} from "@/app/lib/motion";
-
-function TextReveal({ text, className }: { text: string; className?: string }) {
-  return (
-    <span className={className}>
-      {text.split(" ").map((word, i) => (
-        <span key={i} className="text-reveal-mask">
-          <motion.span
-            className="inline-block"
-            variants={textRevealVariants}
-            style={{ marginRight: "0.3em" }}
-          >
-            {word}
-          </motion.span>
-        </span>
-      ))}
-    </span>
-  );
-}
-
-function ScrollProgressBar() {
-  const { scrollYProgress } = useScroll();
-  return (
-    <motion.div
-      className="scroll-progress-bar"
-      style={{ scaleX: scrollYProgress }}
-    />
-  );
-}
 
 function HomeContent() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const titleY = useTransform(scrollYProgress, [0, 1], [0, -60]);
-  const subtitleY = useTransform(scrollYProgress, [0, 1], [0, -40]);
-  const toolsY = useTransform(scrollYProgress, [0, 1], [0, -20]);
-
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    setIsMobile(window.innerWidth < 640);
-  }, []);
-
   return (
     <main className="min-h-screen grid-bg">
-      <ScrollProgressBar />
       <Navbar onLogoClick={scrollToTop} />
       <div className="navbar-spacer" />
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div ref={heroRef} className="py-12 sm:py-20">
+        <div className="py-12 sm:py-20">
           {/* Hero */}
-          <motion.div
-            className="text-center mb-10 sm:mb-14"
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            <motion.div
-              style={!isMobile ? { y: titleY } : undefined}
+          <div className="text-center mb-10 sm:mb-14">
+            <h1
+              className="hero-animate text-3xl sm:text-5xl font-bold mb-3 tracking-tight"
+              style={{ color: "var(--text-primary)", animationDelay: "0.1s" }}
             >
-              <motion.h1
-                className="text-3xl sm:text-5xl font-bold mb-3 tracking-tight"
-                style={{ color: "var(--text-primary)" }}
-                variants={dramaticReveal}
-              >
-                <TextReveal text="Free Online PDF Editor & Tools — No Upload Required" />
-              </motion.h1>
-            </motion.div>
-            <motion.div
-              style={!isMobile ? { y: subtitleY } : undefined}
+              Free Online PDF Editor &amp; Tools — No Upload Required
+            </h1>
+            <p
+              className="hero-animate text-sm sm:text-base max-w-md mx-auto leading-relaxed"
+              style={{ color: "var(--text-secondary)", animationDelay: "0.25s" }}
             >
-              <motion.p
-                className="text-sm sm:text-base max-w-md mx-auto leading-relaxed"
-                style={{ color: "var(--text-secondary)" }}
-                variants={fadeUp}
-              >
-                All the tools you need to work with PDFs. Free, fast, and entirely in your browser — nothing gets uploaded.
-              </motion.p>
-            </motion.div>
-          </motion.div>
+              All the tools you need to work with PDFs. Free, fast, and entirely in your browser — nothing gets uploaded.
+            </p>
+          </div>
 
           {/* Ad: Below hero */}
           <AdSlot slot="hero-banner" format="horizontal" className="my-6 sm:my-8 max-w-3xl mx-auto" />
 
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            transition={{ delay: 0.3 }}
-            style={!isMobile ? { y: toolsY } : undefined}
-          >
+          <div className="hero-animate" style={{ animationDelay: "0.4s" }}>
             <ToolSelector />
-          </motion.div>
+          </div>
 
           {/* Trust pills */}
-          <motion.div
-            className="mt-12 sm:mt-16 flex justify-center"
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            transition={{ delay: 0.45 }}
-          >
+          <div className="hero-animate mt-12 sm:mt-16 flex justify-center" style={{ animationDelay: "0.55s" }}>
             <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
               {[
                 { icon: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>, label: "100% Private" },
                 { icon: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>, label: "No Upload Required" },
                 { icon: <><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" /></>, label: "100% Free" },
               ].map((item) => (
-                <motion.div
+                <div
                   key={item.label}
                   className="trust-pill flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs"
                   style={{
@@ -140,26 +60,18 @@ function HomeContent() {
                     background: "var(--bg-secondary)",
                     border: "1px solid var(--border-primary)",
                   }}
-                  whileHover={{ y: -2, transition: springGentle }}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     {item.icon}
                   </svg>
                   {item.label}
-                </motion.div>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         </div>
 
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          <FeatureShowcase />
-        </motion.div>
+        <FeatureShowcase />
       </div>
 
       {/* Ad: Above footer */}

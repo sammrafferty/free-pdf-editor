@@ -1,7 +1,5 @@
 "use client";
-import { useRef } from "react";
-import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { fadeUp, entranceTransition } from "@/app/lib/motion";
+import { useRef, useEffect } from "react";
 import SplitCard from "./features/SplitCard";
 import MergeCard from "./features/MergeCard";
 import ConvertCard from "./features/ConvertCard";
@@ -9,89 +7,65 @@ import CompressCard from "./features/CompressCard";
 import PrivacyCard from "./features/PrivacyCard";
 import WorkflowCard from "./features/WorkflowCard";
 
-const cards = [
-  SplitCard,
-  MergeCard,
-  ConvertCard,
-  CompressCard,
-  PrivacyCard,
-  WorkflowCard,
-];
-
-function ScrollCard({
-  index,
-  scrollYProgress,
-  children,
-}: {
-  index: number;
-  scrollYProgress: MotionValue<number>;
-  children: React.ReactNode;
-}) {
-  const cardScale = useTransform(
-    scrollYProgress,
-    [index * 0.12, index * 0.12 + 0.15, index * 0.12 + 0.3],
-    [0.9, 1, 1]
-  );
-  const cardY = useTransform(
-    scrollYProgress,
-    [index * 0.12, index * 0.12 + 0.15, index * 0.12 + 0.3],
-    [60, 0, 0]
-  );
-  const cardOpacity = useTransform(
-    scrollYProgress,
-    [index * 0.12, index * 0.12 + 0.15],
-    [0, 1]
-  );
-
-  return (
-    <motion.div
-      style={{ scale: cardScale, y: cardY, opacity: cardOpacity }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 export default function FeatureShowcase() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            section.classList.add("in-view");
+          } else {
+            section.classList.remove("in-view");
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section ref={sectionRef} className="mt-16 sm:mt-20 mb-8">
       <div className="text-center mb-10">
-        <motion.h2
-          className="text-2xl sm:text-3xl font-bold tracking-tight mb-3"
-          style={{ color: "var(--text-primary)" }}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={fadeUp}
-          transition={{ ...entranceTransition, delay: 0.1 }}
+        <h2
+          className="hero-animate text-2xl sm:text-3xl font-bold tracking-tight mb-3"
+          style={{ color: "var(--text-primary)", animationDelay: "0.1s" }}
         >
           Everything You Need
-        </motion.h2>
-        <motion.p
-          className="text-sm sm:text-base max-w-lg mx-auto"
-          style={{ color: "var(--text-secondary)" }}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={fadeUp}
-          transition={{ ...entranceTransition, delay: 0.2 }}
+        </h2>
+        <p
+          className="hero-animate text-sm sm:text-base max-w-lg mx-auto"
+          style={{ color: "var(--text-secondary)", animationDelay: "0.2s" }}
         >
-          Powerful PDF tools that run entirely in your browser. No uploads, no
-          accounts, no limits.
-        </motion.p>
+          Powerful PDF tools that run entirely in your browser. No uploads, no accounts, no limits.
+        </p>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {cards.map((Card, i) => (
-          <ScrollCard key={i} index={i} scrollYProgress={scrollYProgress}>
-            <Card />
-          </ScrollCard>
-        ))}
+        <div className="hero-animate" style={{ animationDelay: "0.3s" }}>
+          <SplitCard />
+        </div>
+        <div className="hero-animate" style={{ animationDelay: "0.35s" }}>
+          <MergeCard />
+        </div>
+        <div className="hero-animate" style={{ animationDelay: "0.4s" }}>
+          <ConvertCard />
+        </div>
+        <div className="hero-animate" style={{ animationDelay: "0.45s" }}>
+          <CompressCard />
+        </div>
+        <div className="hero-animate" style={{ animationDelay: "0.5s" }}>
+          <PrivacyCard />
+        </div>
+        <div className="hero-animate" style={{ animationDelay: "0.55s" }}>
+          <WorkflowCard />
+        </div>
       </div>
     </section>
   );
