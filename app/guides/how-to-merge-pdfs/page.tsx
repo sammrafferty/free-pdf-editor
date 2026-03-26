@@ -49,20 +49,6 @@ export default function MergeGuide() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://free-pdf-editor.org" },
-              { "@type": "ListItem", "position": 2, "name": "Guides", "item": "https://free-pdf-editor.org/guides" },
-              { "@type": "ListItem", "position": 3, "name": "How to Merge PDFs", "item": "https://free-pdf-editor.org/guides/how-to-merge-pdfs" }
-            ]
-          })
-        }}
-      />
       <Navbar />
       <div className="navbar-spacer" />
 
@@ -126,6 +112,29 @@ export default function MergeGuide() {
             </p>
           </div>
 
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Merging PDFs on Different Platforms</h2>
+            <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
+              <p><strong style={{ color: "var(--text-primary)" }}>Mac (using Preview).</strong> macOS includes a built-in way to merge PDFs through Preview. Open the first PDF, show the thumbnail sidebar (View &gt; Thumbnails), then drag additional PDF files into the sidebar at the position where you want them inserted. It works, but it&apos;s limited — you can only drop entire files, not select specific pages, and the interface can be confusing when working with many documents. For a detailed walkthrough, see our <Link href="/guides/how-to-merge-pdfs-on-mac" className="theme-link hover:underline">guide to merging PDFs on Mac</Link>.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Windows.</strong> Windows does not include a built-in PDF merge tool. Microsoft Edge can view PDFs but not combine them. Third-party software like Adobe Acrobat can do it but requires a subscription. The simplest free option is to use our browser-based tool — open it in Chrome, Edge, or Firefox, drop your files in, and merge. No installation needed.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>iPhone and iPad.</strong> On iOS, open Safari and navigate to our Merge PDFs tool. The drag-and-drop interface works with touch — tap to select files from the Files app or iCloud Drive. The merge runs in Safari&apos;s JavaScript engine, so it works even on older devices. The merged file downloads to your Files app where you can share it via email, AirDrop, or any other app.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Chromebook.</strong> Chromebooks have limited local app support, which makes browser-based tools especially valuable. Our merge tool runs entirely in Chrome, so it works perfectly on any Chromebook — even budget models. No Android app or Linux container needed. Just open the site, add your files, and merge.</p>
+            </div>
+          </div>
+
+          <div className="theme-section p-6 sm:p-8 space-y-4">
+            <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Organizing Pages After Merging</h2>
+            <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
+              <p>After merging multiple PDFs into one document, you may find that some pages need adjustments. PDF Tools includes several companion tools that work well in sequence with merging:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong style={{ color: "var(--text-primary)" }}>Fix rotated pages</strong> — If some source documents had different orientations, use the <Link href="/rotate-pdf" className="theme-link hover:underline">Rotate PDF</Link> tool to correct any sideways or upside-down pages in the merged file.</li>
+                <li><strong style={{ color: "var(--text-primary)" }}>Remove unwanted pages</strong> — Maybe one of the source PDFs had a cover page or blank page you don&apos;t need. Use <Link href="/delete-pdf-pages" className="theme-link hover:underline">Delete PDF Pages</Link> to remove them from the merged document.</li>
+                <li><strong style={{ color: "var(--text-primary)" }}>Extract specific sections</strong> — If the merged document is long and you need to pull out a specific section to share separately, use <Link href="/extract-pdf-pages" className="theme-link hover:underline">Extract PDF Pages</Link> to create a new file with just those pages.</li>
+              </ul>
+              <p>These tools all process files locally in your browser, so you can chain them together without uploading anything. Merge first, then refine the result with whatever adjustments are needed.</p>
+            </div>
+          </div>
+
           <AdSlot slot="guide-merge-faq" format="rectangle" className="my-6 sm:my-8" />
 
           <div className="space-y-4">
@@ -142,6 +151,14 @@ export default function MergeGuide() {
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>Can I merge non-PDF files?</h3>
                 <p style={{ color: "var(--text-secondary)" }}>The Merge tool accepts only PDF files. If you need to include images, Word documents, or presentations, first convert them to PDF using the respective conversion tools (Image to PDF, Word to PDF, etc.), then merge the resulting PDFs together.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>Can I merge password-protected PDFs?</h3>
+                <p style={{ color: "var(--text-secondary)" }}>If the PDFs require a password to open (user password), you&apos;ll need to remove the password protection first. PDFs with owner passwords (restricting editing but not viewing) can typically be merged without issues. If you run into an error, try opening each PDF individually and re-saving it as an unprotected copy before merging.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>Does the order I add files matter?</h3>
+                <p style={{ color: "var(--text-secondary)" }}>Yes — the merged document follows the order shown in the file list. The first file&apos;s pages come first, followed by the second file&apos;s pages, and so on. You can drag files to rearrange them before clicking Merge, so take a moment to verify the sequence is correct.</p>
               </div>
             </div>
           </div>

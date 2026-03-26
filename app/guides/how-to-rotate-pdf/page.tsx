@@ -49,20 +49,6 @@ export default function RotateGuide() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://free-pdf-editor.org" },
-              { "@type": "ListItem", "position": 2, "name": "Guides", "item": "https://free-pdf-editor.org/guides" },
-              { "@type": "ListItem", "position": 3, "name": "How to Rotate PDF Pages", "item": "https://free-pdf-editor.org/guides/how-to-rotate-pdf" }
-            ]
-          })
-        }}
-      />
       <Navbar />
       <div className="navbar-spacer" />
 
@@ -123,6 +109,27 @@ export default function RotateGuide() {
             </ul>
           </div>
 
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Why PDFs End Up Rotated</h2>
+            <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
+              <p>Understanding why pages end up at the wrong angle helps you prevent the issue in the future and choose the right fix:</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Scanned at the wrong orientation.</strong> Document scanners with automatic feeders process pages quickly, but they assume a standard orientation. If you feed a landscape-format document (like a check or a wide spreadsheet) through an ADF scanner, it will typically scan it as if it were portrait, resulting in a sideways page. Flatbed scanners have the same issue if you place the document at the wrong angle on the glass.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Phone camera captures in portrait.</strong> When you photograph a document lying on a desk, your phone&apos;s accelerometer determines the image orientation. If the phone is tilted or held at an ambiguous angle, the sensor may record the wrong orientation. This is especially common when photographing documents on cluttered surfaces where you&apos;re holding the phone at an angle to avoid shadows or glare.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Exported from apps with wrong settings.</strong> Some applications set incorrect rotation metadata when exporting to PDF. This happens with certain CAD programs, presentation software, and older print drivers. The content renders correctly within the originating app but appears rotated when opened as a PDF in a different viewer.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Mixed-orientation pages in merged documents.</strong> When you merge multiple PDFs, some source files may have been in landscape while others were portrait. The merged document preserves each page&apos;s individual rotation setting, which can result in a document where you have to keep rotating your view back and forth as you scroll through different sections.</p>
+            </div>
+          </div>
+
+          <div className="theme-section p-6 sm:p-8 space-y-4">
+            <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Rotating vs Cropping</h2>
+            <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
+              <p>Rotation and cropping solve different problems, and it&apos;s worth understanding which tool you actually need:</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Rotation</strong> changes the display angle of the entire page. The content is correct, but it&apos;s facing the wrong direction. Rotation fixes this by turning the page 90, 180, or 270 degrees so the content appears right-side-up. No content is added or removed — just reoriented.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Cropping</strong> removes margins or whitespace from the edges of a page. The content is already facing the right direction, but there&apos;s too much blank space around it — perhaps from scanning with a border, or from a PDF that was generated with oversized margins. If your pages are oriented correctly but have excessive whitespace, use the <Link href="/crop-pdf" className="theme-link hover:underline">Crop PDF</Link> tool instead.</p>
+              <p>Sometimes you need both: rotate first to fix the orientation, then crop to clean up excess margins. Both tools preserve the underlying content quality.</p>
+            </div>
+          </div>
+
           <AdSlot slot="guide-rotate-faq" format="rectangle" className="my-6 sm:my-8" />
 
           <div className="space-y-4">
@@ -139,6 +146,14 @@ export default function RotateGuide() {
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>My PDF looks correct on my computer but sideways on my phone. Why?</h3>
                 <p style={{ color: "var(--text-secondary)" }}>Different PDF viewers interpret rotation metadata differently. Some viewers auto-rotate based on content detection, while others display the raw page orientation. Explicitly setting the rotation with this tool ensures consistent display across all viewers and devices.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>Can I rotate just some pages?</h3>
+                <p style={{ color: "var(--text-secondary)" }}>Yes. You can specify individual page numbers or ranges (e.g., &ldquo;3, 5-7, 12&rdquo;) to rotate only those pages while leaving the rest unchanged. This is especially useful for merged documents where only a few pages from one source file are at the wrong angle.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>Will rotation affect the text content?</h3>
+                <p style={{ color: "var(--text-secondary)" }}>No. Rotation only changes the page&apos;s display angle — it modifies a rotation flag in the PDF&apos;s metadata without touching the actual content. All text remains fully searchable, selectable, and copy-pasteable after rotation. Images, fonts, links, and form fields are also completely unaffected.</p>
               </div>
             </div>
           </div>

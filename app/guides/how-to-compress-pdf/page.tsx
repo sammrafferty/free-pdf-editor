@@ -49,20 +49,6 @@ export default function CompressGuide() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://free-pdf-editor.org" },
-              { "@type": "ListItem", "position": 2, "name": "Guides", "item": "https://free-pdf-editor.org/guides" },
-              { "@type": "ListItem", "position": 3, "name": "How to Compress a PDF", "item": "https://free-pdf-editor.org/guides/how-to-compress-pdf" }
-            ]
-          })
-        }}
-      />
       <Navbar />
       <div className="navbar-spacer" />
 
@@ -126,6 +112,25 @@ export default function CompressGuide() {
             </div>
           </div>
 
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Compression Tips for Specific Use Cases</h2>
+            <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
+              <p><strong style={{ color: "var(--text-primary)" }}>Academic paper submissions.</strong> Many academic journals enforce strict file size limits, typically between 5 and 10 MB per manuscript. If your paper includes high-resolution figures, charts, or microscopy images, the PDF can easily exceed these limits. Use medium compression for the main submission — it reduces image resolution to 100 DPI, which is still perfectly legible on screen and in print reviews. For supplementary materials with detailed figures, consider submitting those as separate files so your main manuscript stays under the limit.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Legal filings and court e-filing.</strong> Court electronic filing systems typically cap uploads at 25 MB, and some state systems are even stricter at 10 MB per document. Legal documents often combine scanned exhibits, signed affidavits, and photocopied evidence — all of which are image-heavy. Light compression works well here because it preserves readability for court clerks while bringing file sizes into compliance. If a filing includes many exhibit pages, compress the exhibits separately before merging them into the final document.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Web publishing and downloads.</strong> If you host PDFs on your website — product catalogs, white papers, annual reports — smaller files mean faster downloads for visitors. A 2 MB PDF loads in about one second on a typical broadband connection, while a 20 MB file can take ten seconds or more. For mobile users on cellular data, the difference is even more dramatic. Medium compression strikes a good balance between visual quality and download speed for web-hosted documents.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Email attachments.</strong> Gmail caps attachments at 25 MB, Outlook at 20 MB, and many corporate email servers set even lower limits (5-10 MB is common). If your PDF is close to the limit, light compression is usually enough to bring it under. For PDFs significantly over the limit, use medium or heavy compression. As an alternative, you can also <Link href="/guides/how-to-reduce-pdf-size-for-email" className="theme-link hover:underline">read our dedicated guide on reducing PDF size for email</Link> for more targeted strategies.</p>
+            </div>
+          </div>
+
+          <div className="theme-section p-6 sm:p-8 space-y-4">
+            <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>How Our Compression Compares</h2>
+            <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
+              <p><strong style={{ color: "var(--text-primary)" }}>vs. Adobe Acrobat:</strong> Adobe&apos;s &ldquo;Reduce File Size&rdquo; and &ldquo;Optimize PDF&rdquo; features are powerful but require a paid Acrobat Pro subscription (around $20/month). Adobe&apos;s online compressor uploads your file to their cloud servers for processing. Our tool is completely free and processes everything locally — your document never leaves your device.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>vs. Smallpdf:</strong> Smallpdf is a popular online compressor, but the free tier limits you to two tasks per day, and all files are uploaded to their servers for processing. While they delete files after a set period, your document is still transmitted over the internet. Our tool has no daily limits and never uploads your file anywhere.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>vs. PDF Tools (this tool):</strong> Our compressor runs entirely in your browser using JavaScript. There are no daily limits, no account required, no file uploads, and no waiting in processing queues. The tradeoff is that very large files (500+ MB) depend on your device&apos;s processing power and available memory, whereas cloud-based tools offload that work to remote servers.</p>
+            </div>
+          </div>
+
           <AdSlot slot="guide-compress-faq" format="rectangle" className="my-6 sm:my-8" />
 
           <div className="space-y-4">
@@ -142,6 +147,18 @@ export default function CompressGuide() {
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>Is there a file size limit?</h3>
                 <p style={{ color: "var(--text-secondary)" }}>Since processing happens in your browser, the limit depends on your device&apos;s available memory. Most modern computers can handle PDFs up to 100–200 MB without issues. Very large files (500+ MB) may cause slower processing or memory errors on devices with limited RAM.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>What&apos;s a good target file size for email?</h3>
+                <p style={{ color: "var(--text-secondary)" }}>Aim for under 10 MB if possible — this works with virtually every email provider and corporate server. Under 5 MB is even better for recipients on slow connections. If your document is mainly text with a few charts, light compression should easily get you there. For image-heavy documents, medium or heavy compression may be needed.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>Does compression work on scanned PDFs?</h3>
+                <p style={{ color: "var(--text-secondary)" }}>Yes, and scanned PDFs are actually where compression makes the biggest difference. Each scanned page is essentially a full-page photograph, so these files tend to be very large. Compression resamples and re-encodes these images, often reducing the file size by 50–70% at medium compression with minimal visible quality loss.</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1" style={{ color: "var(--text-primary)" }}>Can I compress multiple PDFs at once?</h3>
+                <p style={{ color: "var(--text-secondary)" }}>The tool processes one PDF at a time. If you have several files to compress, process them sequentially — each one only takes a few seconds. If you need to compress multiple PDFs and then combine them, consider compressing each file first, then using the <Link href="/guides/how-to-merge-pdfs" className="theme-link hover:underline">Merge PDFs</Link> tool to join them.</p>
               </div>
             </div>
           </div>

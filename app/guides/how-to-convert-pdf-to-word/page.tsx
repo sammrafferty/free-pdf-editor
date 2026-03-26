@@ -48,20 +48,6 @@ export default function ConvertGuide() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://free-pdf-editor.org" },
-              { "@type": "ListItem", "position": 2, "name": "Guides", "item": "https://free-pdf-editor.org/guides" },
-              { "@type": "ListItem", "position": 3, "name": "How to Convert PDF to Word", "item": "https://free-pdf-editor.org/guides/how-to-convert-pdf-to-word" }
-            ]
-          })
-        }}
-      />
       <Navbar />
       <div className="navbar-spacer" />
 
@@ -129,6 +115,27 @@ export default function ConvertGuide() {
               <li>After conversion, review the document in Word and fix any formatting issues before making your edits.</li>
               <li>For forms and fillable PDFs, the form fields may convert as plain text. You may need to recreate form fields in Word.</li>
             </ul>
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Converting on Mobile Devices</h2>
+            <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
+              <p>Our PDF to Word converter works on any device with a modern browser — including iPhones, iPads, and Android phones. The conversion runs in the same JavaScript engine whether you&apos;re on a laptop or a phone, so the quality is identical.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>On iPhone and iPad (Safari):</strong> Open Safari and navigate to the PDF to Word tool. Tap the upload area to select a PDF from your Files app, iCloud Drive, or any connected cloud storage. The conversion runs in Safari&apos;s JavaScript engine, and the resulting .docx file downloads to your Files app. From there you can open it in Microsoft Word for iOS, Google Docs, or Apple Pages. For a detailed mobile walkthrough, see our <Link href="/guides/how-to-convert-pdf-to-word-on-iphone" className="theme-link hover:underline">guide to converting PDF to Word on iPhone</Link>.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>On Android (Chrome):</strong> The process is nearly identical. Open Chrome, navigate to the tool, and tap to upload your PDF. Chrome on Android handles the conversion smoothly, and the downloaded .docx file appears in your Downloads folder. You can open it with Google Docs, Microsoft Word, or any other Android word processor.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Tip:</strong> On smaller screens, use pinch-to-zoom to inspect the conversion preview before downloading. This helps you verify that the layout looks correct, especially for documents with tables or images.</p>
+            </div>
+          </div>
+
+          <div className="theme-section p-6 sm:p-8 space-y-4">
+            <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>What to Expect: Formatting Preservation</h2>
+            <div className="space-y-3" style={{ color: "var(--text-secondary)" }}>
+              <p>Not all PDFs are created equal, and conversion quality depends heavily on how the PDF was originally made:</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Digital-native PDFs</strong> (created by exporting from Word, Google Docs, or similar software) convert the best. The text is stored as actual characters with font and layout information, so the converter can reconstruct paragraphs, headings, and lists with high accuracy.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Scanned PDFs</strong> (created by scanning paper documents) contain page images rather than text data. The converter will embed these images in the Word document, but you won&apos;t get editable text. To extract text from scanned documents, you&apos;d need OCR (optical character recognition) software as a preprocessing step, which is not currently supported by browser-based tools.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Complex multi-column layouts</strong> (newsletters, magazines, academic papers with side-by-side columns) may have columns merged or reordered during conversion. This happens because Word uses a flowing text model that doesn&apos;t map neatly to fixed column positions. Simple two-column layouts usually convert reasonably well; three or more columns may need manual cleanup.</p>
+              <p><strong style={{ color: "var(--text-primary)" }}>Tables</strong> are generally preserved well, especially simple grids with consistent rows and columns. Merged cells and nested tables may need adjustment after conversion. <strong style={{ color: "var(--text-primary)" }}>Images</strong> embedded in the PDF are maintained in the Word document at their original resolution. For a deeper understanding of the differences between these two formats, see our guide on <Link href="/guides/pdf-vs-word-docx-differences" className="theme-link hover:underline">PDF vs Word (DOCX) differences</Link>.</p>
+            </div>
           </div>
 
           <AdSlot slot="guide-convert-faq" format="rectangle" className="my-6 sm:my-8" />
