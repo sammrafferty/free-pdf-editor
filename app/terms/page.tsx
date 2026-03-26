@@ -30,6 +30,19 @@ export const metadata: Metadata = {
 export default function TermsOfService() {
   return (
     <main className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://free-pdf-editor.org" },
+              { "@type": "ListItem", "position": 2, "name": "Terms of Service", "item": "https://free-pdf-editor.org/terms" }
+            ]
+          })
+        }}
+      />
       <Navbar />
       <div className="navbar-spacer" />
 

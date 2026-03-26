@@ -49,6 +49,20 @@ export default function SplitGuide() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://free-pdf-editor.org" },
+              { "@type": "ListItem", "position": 2, "name": "Guides", "item": "https://free-pdf-editor.org/guides" },
+              { "@type": "ListItem", "position": 3, "name": "How to Split a PDF", "item": "https://free-pdf-editor.org/guides/how-to-split-pdf" }
+            ]
+          })
+        }}
+      />
       <Navbar />
       <div className="navbar-spacer" />
 

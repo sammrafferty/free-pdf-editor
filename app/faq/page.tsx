@@ -123,6 +123,19 @@ export default function FAQ() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://free-pdf-editor.org" },
+              { "@type": "ListItem", "position": 2, "name": "FAQ", "item": "https://free-pdf-editor.org/faq" }
+            ]
+          })
+        }}
+      />
       <Navbar />
       <div className="navbar-spacer" />
 
