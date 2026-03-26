@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Logo from "@/app/components/Logo";
 import AdSlot from "@/app/components/AdSlot";
 import Navbar from "@/app/components/Navbar";
+import FeatureShowcase from "@/app/components/FeatureShowcase";
 
 export const metadata: Metadata = {
   title: "PDF Guides — How to Edit, Convert & Manage PDFs | PDF Tools",
@@ -100,6 +101,8 @@ export default function Guides() {
         </div>
 
         <AdSlot slot="guides-content" format="horizontal" className="my-6 sm:my-8" />
+
+        <FeatureShowcase />
 
         <div className="theme-section p-6 sm:p-8 mt-12">
           <h2 className="text-xl font-semibold mb-3" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>
