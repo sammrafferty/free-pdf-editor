@@ -74,11 +74,12 @@ Every page must export `metadata` with: `title`, `description`, `alternates.cano
 
 ## Animations
 
-All animations are pure CSS keyframes and transitions in `globals.css`. No animation library is installed. Key patterns:
-- `.hero-animate` with `heroEntrance` keyframe — staggered entrance via `animationDelay`
-- `.tool-card-enter` with `fadeIn` keyframe — staggered tool card grid entrance
-- Feature showcase cards (`app/components/features/*.tsx`) use `IntersectionObserver` + inline `<style>` CSS keyframes for looping SVG animations
-- Primary easing: `cubic-bezier(0.16, 1, 0.3, 1)` throughout
+Minimal animation approach — content appears immediately, no entrance animations.
+
+- **Framer Motion** installed for two effects only: scroll progress bar (coral line at top) and hero parallax (title/subtitle/tools move at different scroll speeds on desktop, disabled < 640px)
+- `app/lib/motion.ts` — shared easing curve `[0.16, 1, 0.3, 1]`
+- Functional CSS animations kept in `globals.css`: navbar expand/collapse, dropzone feedback (breathe, float, glow, accepted flash), skeleton shimmer, processing dots, tool icon hover micro-interactions
+- Feature showcase cards (`app/components/features/*.tsx`) are static SVG illustrations — no animation
 - Navbar uses CSS transitions for expand/collapse pill effect
 
 ## Deployment
