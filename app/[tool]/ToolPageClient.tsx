@@ -24,6 +24,7 @@ const toolComponentMap: Record<string, React.ComponentType> = {
   exceltopdf: dynamic(() => import("../components/tools/ExcelToPdfTool")),
   pdftopptx: dynamic(() => import("../components/tools/PdfToPptxTool")),
   pptxtopdf: dynamic(() => import("../components/tools/PptxToPdfTool")),
+  edittext: dynamic(() => import("../components/tools/EditTextTool")),
 };
 
 interface Props {

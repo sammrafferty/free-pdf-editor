@@ -99,6 +99,14 @@ const redactIcon = icon(<>
   <line className="icon-redact-line" x1="1" y1="1" x2="23" y2="23" />
 </>);
 
+// Edit text: pencil
+const editTextIcon = icon(<>
+  <g className="icon-edit-text">
+    <path d="M12 20h9"/>
+    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+  </g>
+</>);
+
 // Sign: pen tip / nib
 const signIcon = icon(<>
   <g className="icon-sign">
@@ -170,6 +178,7 @@ const edit: ToolDef[] = [
   { id: "number", label: "Number Pages", desc: "Add page numbers", color: "#a78bfa", icon: numberIcon },
   { id: "crop", label: "Crop PDF", desc: "Trim margins", color: "#5eead4", icon: cropIcon },
   { id: "redact", label: "Redact", desc: "Black out sensitive areas", color: "#94a3b8", icon: redactIcon },
+  { id: "edittext", label: "Edit Text", desc: "Modify text directly in PDF", color: "#f59e0b", icon: editTextIcon },
 ];
 
 const signTools: ToolDef[] = [

@@ -17,7 +17,8 @@ export type ToolId =
   | "pdftoexcel"
   | "exceltopdf"
   | "pdftopptx"
-  | "pptxtopdf";
+  | "pptxtopdf"
+  | "edittext";
 
 export interface ToolPageData {
   slug: string;
@@ -916,6 +917,56 @@ export const TOOLS: Record<string, ToolPageData> = {
       },
     ],
     relatedTools: ["pdf-to-powerpoint", "word-to-pdf", "compress-pdf"],
+  },
+
+  "edit-text": {
+    slug: "edit-text",
+    toolId: "edittext",
+    label: "Edit Text",
+    shortDesc: "Modify text directly in your PDF",
+    color: "#f59e0b",
+    category: "edit",
+    seoTitle: "Edit PDF Text Online for Free — No Upload Required | PDF Tools",
+    seoDescription:
+      "Edit text directly in your PDF without converting to Word. Change dates, fix typos, and update text — all in your browser. Free, private, and no upload needed.",
+    h1: "Edit PDF Text Online — Free PDF Text Editor",
+    keywords:
+      "edit pdf text, modify pdf text, change text in pdf, pdf text editor, edit pdf online free, update pdf text, change date on pdf",
+    introText:
+      "Need to make a quick text change to a PDF? Whether it is fixing a typo, updating a date on a certificate, or changing a name on a form, this tool lets you click on any text in your PDF and edit it directly — no conversion needed.\n\nBecause all processing happens locally on your device, your files are never uploaded to any server. The original PDF structure is preserved — only the text you change is modified. There is nothing to install and no account to create.",
+    howToSteps: [
+      "Open your PDF file using the file picker or drag and drop.",
+      "Click on any text in the PDF to select it for editing.",
+      "Type your changes and adjust font, size, or color if needed.",
+      "Click Apply Edits to download your updated PDF.",
+    ],
+    whyUseContent:
+      "This PDF text editor is completely free, requires no software installation, and works on any device with a modern browser. Unlike other tools that convert your PDF to Word and back, this tool modifies text directly while preserving the rest of your document. Because it runs entirely client-side, your documents stay private — nothing is uploaded or stored on a remote server.",
+    privacyBlurb:
+      "Your files are processed entirely in your browser using client-side JavaScript. No data is sent to any server, no files are stored remotely, and no one else can access your documents. Once you close the tab, the processed data is gone.",
+    faqs: [
+      {
+        question: "Can I edit any text in a PDF?",
+        answer:
+          "You can edit text in any PDF that contains selectable text. Scanned PDFs (which are essentially images) require OCR first and cannot be edited with this tool. The edited text uses standard fonts (Helvetica, Times, Courier) which closely match most common document fonts.",
+      },
+      {
+        question: "Will the rest of my PDF be affected?",
+        answer:
+          "No. Only the text you change is modified. The rest of the document — images, layout, formatting, other text — remains exactly as it was. Unedited pages pass through completely untouched.",
+      },
+      {
+        question: "Does this tool change the original text in the PDF?",
+        answer:
+          "This tool places new text over the original while covering the old text with a matching background. The visual result is a clean edit, but the original text data may remain in the file structure. For sensitive content that must be permanently removed, use our Redact tool first.",
+      },
+      {
+        question: "What fonts are available for edited text?",
+        answer:
+          "Edited text can use three standard PDF font families: Helvetica (sans-serif), Times (serif), and Courier (monospace). Each is available in regular and bold weights. These fonts are universally supported in all PDF viewers.",
+      },
+    ],
+    relatedTools: ["redact-pdf", "sign-pdf", "watermark-pdf"],
   },
 };
 
