@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Logo from "@/app/components/Logo";
 import AdSlot from "@/app/components/AdSlot";
+import AffiliateLink from "@/app/components/AffiliateLink";
 import Navbar from "@/app/components/Navbar";
 import FeatureShowcase from "@/app/components/FeatureShowcase";
 
@@ -161,6 +162,7 @@ export default function Guides() {
         </div>
 
         <AdSlot slot="guides-content" format="horizontal" className="my-6 sm:my-8" />
+        <AffiliateLink className="my-6 sm:my-8" />
 
         <FeatureShowcase />
 

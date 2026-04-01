@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Navbar from "@/app/components/Navbar";
 import AdSlot from "@/app/components/AdSlot";
+import AffiliateLink from "@/app/components/AffiliateLink";
 
 export const metadata: Metadata = {
   title: "How to Password Protect a PDF — Free Methods | PDF Tools",
@@ -201,6 +202,7 @@ export default function PasswordProtectGuide() {
           </div>
 
           <AdSlot slot="guide-password-strength" format="rectangle" className="my-6 sm:my-8" />
+          <AffiliateLink className="my-6 sm:my-8" />
 
           <div className="theme-section p-6 sm:p-8 space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>How Strong Should Your PDF Password Be?</h2>

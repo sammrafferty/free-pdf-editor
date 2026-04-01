@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Navbar from "@/app/components/Navbar";
 import AdSlot from "@/app/components/AdSlot";
+import AffiliateLink from "@/app/components/AffiliateLink";
 
 export const metadata: Metadata = {
   title: "How to Add Watermarks to a PDF for Free | PDF Tools",
@@ -166,6 +167,7 @@ export default function WatermarkGuide() {
           </div>
 
           <AdSlot slot="guide-watermark-faq" format="rectangle" className="my-6 sm:my-8" />
+          <AffiliateLink className="my-6 sm:my-8" />
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Can Watermarks Be Removed?</h2>

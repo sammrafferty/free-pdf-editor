@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Navbar from "@/app/components/Navbar";
 import AdSlot from "@/app/components/AdSlot";
+import AffiliateLink from "@/app/components/AffiliateLink";
 
 export const metadata: Metadata = {
   title: "How to Merge PDFs — Free Online PDF Combiner | PDF Tools",
@@ -136,6 +137,7 @@ export default function MergeGuide() {
           </div>
 
           <AdSlot slot="guide-merge-faq" format="rectangle" className="my-6 sm:my-8" />
+          <AffiliateLink className="my-6 sm:my-8" />
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Frequently Asked Questions</h2>

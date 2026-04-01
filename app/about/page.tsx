@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Logo from "@/app/components/Logo";
 import AdSlot from "@/app/components/AdSlot";
+import AffiliateLink from "@/app/components/AffiliateLink";
 import Navbar from "@/app/components/Navbar";
 
 export const metadata: Metadata = {
@@ -154,6 +155,7 @@ export default function About() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <AdSlot slot="about-content" format="horizontal" className="my-6 sm:my-8" />
+        <AffiliateLink className="my-6 sm:my-8" />
       </div>
 
       <footer style={{ borderTop: "1px solid var(--border-primary)" }} className="mt-12">

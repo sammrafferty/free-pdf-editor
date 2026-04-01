@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Navbar from "@/app/components/Navbar";
 import AdSlot from "@/app/components/AdSlot";
+import AffiliateLink from "@/app/components/AffiliateLink";
 
 export const metadata: Metadata = {
   title: "Best Free PDF Editors in 2026 — Top 8 Compared | PDF Tools",
@@ -331,6 +332,7 @@ export default function BestPdfEditorsGuide() {
           </div>
 
           <AdSlot slot="guide-editors-faq" format="rectangle" className="my-6 sm:my-8" />
+          <AffiliateLink className="my-6 sm:my-8" />
 
           <div className="space-y-4">
             <h2 className="text-xl font-semibold" style={{ color: "var(--text-primary)", fontFamily: "'Space Grotesk', sans-serif" }}>Frequently Asked Questions</h2>

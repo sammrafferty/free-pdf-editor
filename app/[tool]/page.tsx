@@ -7,6 +7,7 @@ import FaqSchema from "../components/FaqSchema";
 import RelatedTools from "../components/RelatedTools";
 import EmailCapture from "../components/EmailCapture";
 import AdSlot from "../components/AdSlot";
+import AffiliateLink from "../components/AffiliateLink";
 import Navbar from "../components/Navbar";
 import CookieConsent from "../components/CookieConsent";
 
@@ -149,6 +150,9 @@ export default async function ToolPage({ params }: PageProps) {
                 {toolData.whyUseContent}
               </p>
             </section>
+
+            {/* Affiliate CTA */}
+            <AffiliateLink className="my-2" />
 
             {/* Privacy */}
             <section

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Logo from "@/app/components/Logo";
 import AdSlot from "@/app/components/AdSlot";
+import AffiliateLink from "@/app/components/AffiliateLink";
 import Navbar from "@/app/components/Navbar";
 
 export const metadata: Metadata = {
@@ -163,6 +164,7 @@ export default function FAQ() {
           ))}
 
           <AdSlot slot="faq-mid" format="rectangle" className="my-6 sm:my-8" />
+          <AffiliateLink className="my-6 sm:my-8" />
 
           {faqs.slice(9).map((faq, i) => (
             <div key={i + 9} className="theme-section p-5 sm:p-6">
