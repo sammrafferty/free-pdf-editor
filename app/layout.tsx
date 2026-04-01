@@ -85,12 +85,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `(function(){try{var t=localStorage.getItem('pdf-tools-theme');if(t==='light')document.documentElement.classList.add('light')}catch(e){}})()`,
           }}
         />
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3111610108271548"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
+        {/* Ezoic Privacy/Consent */}
+        <script src="https://cmp.gatekeeperconsent.com/min.js" data-cfasync="false" />
+        <script src="https://the.gatekeeperconsent.com/cmp.min.js" data-cfasync="false" />
+        {/* Ezoic Main Script */}
+        <Script src="//www.ezojs.com/ezoic/sa.min.js" strategy="beforeInteractive" />
+        <script dangerouslySetInnerHTML={{ __html: `window.ezstandalone = window.ezstandalone || {}; ezstandalone.cmd = ezstandalone.cmd || [];` }} />
+        {/* Ezoic Analytics */}
+        <Script src="//ezoicanalytics.com/analytics.js" strategy="afterInteractive" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -15,6 +15,15 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_COMMIT_HASH: commitHash,
     NEXT_PUBLIC_COMMIT_DATE: commitDate,
   },
+  async redirects() {
+    return [
+      {
+        source: "/ads.txt",
+        destination: "https://srv.adstxtmanager.com/19390/free-pdf-editor.org",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
