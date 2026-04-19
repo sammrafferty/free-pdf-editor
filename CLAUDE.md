@@ -80,6 +80,7 @@ Minimal animation approach — content appears immediately, no entrance animatio
 - `app/lib/motion.ts` — shared easing curve `[0.16, 1, 0.3, 1]`
 - Functional CSS animations kept in `globals.css`: navbar expand/collapse, dropzone feedback (breathe, float, glow, accepted flash), skeleton shimmer, processing dots, tool icon hover micro-interactions
 - Feature showcase cards (`app/components/features/*.tsx`) are static SVG illustrations — no animation
+- Home-page feature section (`app/components/pdf-animations/`) uses looping SVG scenes (merge, edit, split, compress) driven by a shared `requestAnimationFrame` clock in `animation-engine.tsx`. Scenes pause offscreen via IntersectionObserver and freeze on a representative frame when `prefers-reduced-motion` is set
 - Navbar uses CSS transitions for expand/collapse pill effect
 
 ## Deployment
