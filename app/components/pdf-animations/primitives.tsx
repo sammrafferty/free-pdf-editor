@@ -179,7 +179,7 @@ function SceneScaler({
           top: '50%',
           width: designWidth,
           height: designHeight,
-          transform: `translate(-50%, -50%) scale(min(100cqw / ${designWidth}, 100cqh / ${designHeight}))`,
+          transform: `translate(-50%, -50%) scale(min(calc(100cqw / ${designWidth}px), calc(100cqh / ${designHeight}px)))`,
           transformOrigin: 'center',
         }}
       >

@@ -114,26 +114,26 @@ function HomeContent() {
           </div>
         </div>
 
-        {/* Feature animations */}
-        <section className="py-16 sm:py-24">
-          <div className="text-center mb-10 sm:mb-14">
-            <h2
-              className="text-2xl sm:text-4xl font-bold mb-3 tracking-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Built for every PDF job.
-            </h2>
-            <p
-              className="text-sm sm:text-base max-w-xl mx-auto leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Merge, edit, split, and compress — all in one tool, all in your browser.
-            </p>
-          </div>
-          <PdfFeatureGrid />
-        </section>
-
       </div>
+
+      {/* Feature animations */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <div className="text-center mb-10 sm:mb-14">
+          <h2
+            className="text-2xl sm:text-4xl font-bold mb-3 tracking-tight"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Built for every PDF job.
+          </h2>
+          <p
+            className="text-sm sm:text-base max-w-xl mx-auto leading-relaxed"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Merge, edit, split, and compress — all in one tool, all in your browser.
+          </p>
+        </div>
+        <PdfFeatureGrid />
+      </section>
 
       {/* Ad: Above footer */}
       <AdSlot slot="footer-banner" format="horizontal" className="my-6 sm:my-8 max-w-3xl mx-auto px-4" />

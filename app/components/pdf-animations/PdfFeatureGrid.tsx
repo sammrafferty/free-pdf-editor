@@ -14,8 +14,8 @@ export function PdfFeatureGrid({ className = '' }: { className?: string }) {
       className={className}
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(min(420px, 100%), 1fr))',
-        gap: 24,
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(360px, 100%), 1fr))',
+        gap: 16,
         width: '100%',
       }}
     >
