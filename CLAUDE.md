@@ -8,11 +8,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run lint` — ESLint check (0 errors required, warnings acceptable)
 
 ## Project Overview
-Free, browser-based PDF editor suite at **free-pdf-editor.org** (also pdf-tool-pi.vercel.app). 19 PDF tools that run 100% client-side — files never leave the browser. Built with Next.js 16 (App Router), React 19, TypeScript (strict), Tailwind CSS 4. Deployed on Vercel.
+Free, browser-based PDF editor suite at **free-pdf-editor.org** (also pdf-tool-pi.vercel.app). 20 PDF tools that run 100% client-side — files never leave the browser. Built with Next.js 16 (App Router), React 19, TypeScript (strict), Tailwind CSS 4. Deployed on Vercel.
 
 ## Architecture
 
-The app is a single-page tool suite. `app/page.tsx` renders a tool selector and dynamically loads the selected tool component. All 19 tools live in `app/components/tools/` and are imported via `next/dynamic()` for code splitting.
+The app is a single-page tool suite. `app/page.tsx` renders a tool selector and dynamically loads the selected tool component. All 20 tools live in `app/components/tools/` and are imported via `next/dynamic()` for code splitting.
 
 **How tool selection works:**
 1. `ToolSelector` (categories: Popular, Organize, Edit, Sign, Convert) emits a tool type string
@@ -66,7 +66,7 @@ Every page must export `metadata` with: `title`, `description`, `alternates.cano
 - `app/robots.ts` — robots.txt allowing all crawlers, pointing to sitemap
 - Tool pages include `FaqSchema` (FAQPage JSON-LD) and `BreadcrumbList` JSON-LD
 - Homepage includes `Organization` and `WebApplication` JSON-LD schemas
-- `WebApplication` schema in `app/layout.tsx` has `featureList` array of all 19 tools
+- `WebApplication` schema in `app/layout.tsx` has `featureList` array of all 20 tools
 
 ## Build-Time Git Injection
 

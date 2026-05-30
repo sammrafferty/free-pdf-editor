@@ -18,7 +18,8 @@ export type ToolId =
   | "exceltopdf"
   | "pdftopptx"
   | "pptxtopdf"
-  | "edittext";
+  | "edittext"
+  | "pdftomd";
 
 export interface ToolPageData {
   slug: string;
@@ -692,6 +693,56 @@ export const TOOLS: Record<string, ToolPageData> = {
       },
     ],
     relatedTools: ["word-to-pdf", "pdf-to-excel", "compress-pdf"],
+  },
+
+  "pdf-to-markdown": {
+    slug: "pdf-to-markdown",
+    toolId: "pdftomd",
+    label: "PDF to Markdown",
+    shortDesc: "Convert to clean Markdown",
+    color: "#818cf8",
+    category: "convert",
+    seoTitle:
+      "Convert PDF to Markdown Online for Free — No Upload Required | PDF Tools",
+    seoDescription:
+      "Convert any PDF to clean Markdown (.md) instantly in your browser. Headings, lists, links, and tables are detected automatically. Free, private — your files never leave your device.",
+    h1: "Convert PDF to Markdown Online — Free PDF to MD Converter",
+    keywords:
+      "pdf to markdown, pdf to md, convert pdf to markdown, pdf to markdown online free, pdf to md converter, extract markdown from pdf",
+    introText:
+      "Markdown is the format of choice for documentation, note-taking apps, static site generators, READMEs, and AI tooling. Our free PDF to Markdown converter reads the text and structure of your PDF and rebuilds it as clean, portable Markdown — detecting headings from font sizes, preserving bold and italic emphasis, keeping hyperlinks, and turning bullet and numbered lists and tables into proper Markdown syntax.\n\nThe conversion is instant: just drop in a PDF and a .md file is generated and downloaded automatically. Everything runs entirely in your browser, so your documents are never uploaded to a server — ideal for sensitive notes, drafts, and confidential reports.",
+    howToSteps: [
+      "Drag and drop your PDF onto the upload area (or click to browse).",
+      "The tool instantly extracts the text and structure and converts it to Markdown in your browser.",
+      "Your .md file downloads automatically — you can also copy the Markdown or preview it before saving.",
+    ],
+    whyUseContent:
+      "Most PDF to Markdown converters upload your file to a server, add watermarks, or require an account. This tool does none of that. It runs 100% in your browser, converts the moment you drop a file, and intelligently detects headings, lists, links, emphasis, and tables instead of dumping flat text. Because nothing is uploaded, it is safe for confidential documents and works on any device with no installation.",
+    privacyBlurb:
+      "The entire PDF to Markdown conversion happens locally in your browser. Your file is never uploaded, nothing is stored or logged, and no data is transmitted anywhere. Your documents stay completely private on your device.",
+    faqs: [
+      {
+        question: "How does the converter decide what becomes a heading?",
+        answer:
+          "It analyzes the font size of each block of text relative to the document's body text. Larger text is mapped to Markdown heading levels (#, ##, ###), and large bold text is also promoted to a heading. This works without any tags in the original PDF.",
+      },
+      {
+        question: "Does it preserve links, lists, and tables?",
+        answer:
+          "Yes. Hyperlinks are kept as Markdown links, bullet and numbered lists are rebuilt as Markdown lists, and detected tables are converted to GitHub-Flavored Markdown tables. Bold and italic text is preserved as **bold** and *italic*.",
+      },
+      {
+        question: "Can I convert a scanned PDF to Markdown?",
+        answer:
+          "No. This tool reads the selectable text inside a PDF. A scanned document is just images of text and contains no selectable characters, so it would need OCR (optical character recognition) first, which is not included in this browser-based tool.",
+      },
+      {
+        question: "Is the conversion really instant and private?",
+        answer:
+          "Yes. As soon as you drop a PDF, it is processed on your own device and the Markdown file downloads automatically. Your file never leaves your browser and is not sent to any server.",
+      },
+    ],
+    relatedTools: ["pdf-to-word", "pdf-to-excel", "split-pdf"],
   },
 
   "word-to-pdf": {

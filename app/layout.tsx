@@ -66,6 +66,7 @@ const jsonLd = {
     "Extract Pages", "Watermark", "Number Pages", "Crop PDF", "Redact",
     "Sign PDF", "Image to PDF", "PDF to Image", "PDF to Word", "Word to PDF",
     "PDF to Excel", "Excel to PDF", "PDF to PowerPoint", "PowerPoint to PDF",
+    "PDF to Markdown",
   ],
 };
 

@@ -187,7 +187,7 @@ const signTools: ToolDef[] = [
 
 /* ── Format mini-icons for convert cards ──────────────── */
 
-type FormatType = "pdf" | "word" | "excel" | "ppt" | "image";
+type FormatType = "pdf" | "word" | "excel" | "ppt" | "image" | "markdown";
 
 const formatStyles: Record<FormatType, { bg: string; color: string }> = {
   pdf:   { bg: "rgba(239,68,68,0.15)", color: "#f87171" },
@@ -195,6 +195,7 @@ const formatStyles: Record<FormatType, { bg: string; color: string }> = {
   excel: { bg: "rgba(34,197,94,0.15)", color: "#4ade80" },
   ppt:   { bg: "rgba(249,115,22,0.15)", color: "#fb923c" },
   image: { bg: "rgba(139,92,246,0.15)", color: "#a78bfa" },
+  markdown: { bg: "rgba(129,140,248,0.15)", color: "#818cf8" },
 };
 
 const miniIcon = (children: React.ReactNode) => (
@@ -229,6 +230,12 @@ const formatIcons: Record<FormatType, React.ReactNode> = {
     <rect x="3" y="3" width="18" height="18" rx="2"/>
     <circle cx="8.5" cy="8.5" r="1.5"/>
     <polyline points="21 15 16 10 5 21"/>
+  </>),
+  markdown: miniIcon(<>
+    <rect x="2" y="5" width="20" height="14" rx="2"/>
+    <path d="M6 15V9l2.5 3L11 9v6"/>
+    <path d="M15 9v4.5"/>
+    <path d="M13 12.5l2 2 2-2"/>
   </>),
 };
 
@@ -283,6 +290,10 @@ const convertPairs: ConvertPair[] = [
     a: { id: "pdftoexcel", label: "PDF to Excel", desc: "Extract tables to spreadsheet", color: "#4ade80", from: "pdf", to: "excel" },
     b: { id: "exceltopdf", label: "Excel to PDF", desc: "Convert spreadsheet to PDF", color: "#4ade80", from: "excel", to: "pdf" },
   },
+];
+
+const convertSingles: ConvertToolDef[] = [
+  { id: "pdftomd", label: "PDF to Markdown", desc: "Convert to clean Markdown (.md)", color: "#818cf8", from: "pdf", to: "markdown" },
 ];
 
 /* ── Components ───────────────────────────────────────── */
@@ -392,6 +403,28 @@ function ConvertCard({ pair, index = 0 }: { pair: ConvertPair; index: number }) 
   );
 }
 
+function ConvertSingleCard({ tool }: { tool: ConvertToolDef }) {
+  const slug = toolIdToSlug[tool.id];
+  return (
+    <Link
+      href={`/${slug}`}
+      className="group flex items-center gap-2.5 p-3.5 sm:p-4 text-left w-full theme-card cursor-pointer"
+    >
+      <div className="shrink-0 group-hover:scale-110 transition-transform duration-200">
+        <FormatDualIcon from={tool.from} to={tool.to} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-medium text-xs sm:text-sm leading-tight flex items-center gap-1.5" style={{ color: "var(--text-primary)" }}>
+          {tool.label}
+        </div>
+        <div className="text-xs leading-snug mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
+          {tool.desc}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 /* ── Main ─────────────────────────────────────────────── */
 
 export default function ToolSelector() {
@@ -443,6 +476,9 @@ export default function ToolSelector() {
         <div className="space-y-3">
           {convertPairs.map((pair, pi) => (
             <ConvertCard key={pair.a.id} pair={pair} index={pi} />
+          ))}
+          {convertSingles.map((t) => (
+            <ConvertSingleCard key={t.id} tool={t} />
           ))}
         </div>
       </div>
