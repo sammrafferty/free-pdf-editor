@@ -20,7 +20,8 @@ export type ToolId =
   | "pptxtopdf"
   | "edittext"
   | "pdftomd"
-  | "mdtopdf";
+  | "mdtopdf"
+  | "exceltomd";
 
 export interface ToolPageData {
   slug: string;
@@ -744,6 +745,56 @@ export const TOOLS: Record<string, ToolPageData> = {
       },
     ],
     relatedTools: ["pdf-to-word", "pdf-to-excel", "split-pdf"],
+  },
+
+  "excel-to-markdown": {
+    slug: "excel-to-markdown",
+    toolId: "exceltomd",
+    label: "Excel to Markdown",
+    shortDesc: "Convert spreadsheets to MD tables",
+    color: "#16a34a",
+    category: "convert",
+    seoTitle:
+      "Convert Excel to Markdown Online for Free — No Upload Required | PDF Tools",
+    seoDescription:
+      "Convert Excel and CSV spreadsheets to clean Markdown tables instantly in your browser. Every sheet becomes a GitHub-Flavored Markdown table. Free, private — your files never leave your device.",
+    h1: "Convert Excel to Markdown Online — Free XLSX to MD Converter",
+    keywords:
+      "excel to markdown, xlsx to markdown, csv to markdown, spreadsheet to markdown table, convert excel to md, excel to markdown table online free",
+    introText:
+      "Markdown tables are the cleanest way to put spreadsheet data into documentation, READMEs, GitHub issues, wikis, static sites, and AI prompts. Our free Excel to Markdown converter reads every sheet in your workbook and rebuilds it as a tidy GitHub-Flavored Markdown table — headers, rows, and all — using the values exactly as they appear in Excel.\n\nThe conversion is instant: just drop in an .xlsx, .xls, or .csv file and a .md file is generated and downloaded automatically. Workbooks with multiple sheets become multiple tables, each introduced by its sheet name as a heading. Everything runs entirely in your browser, so your spreadsheets are never uploaded to a server — ideal for financial data, internal reports, and anything confidential.",
+    howToSteps: [
+      "Drag and drop your spreadsheet onto the upload area (or click to browse).",
+      "The tool instantly reads each sheet and converts it to a Markdown table in your browser.",
+      "Your .md file downloads automatically — you can also copy the Markdown or preview it before saving.",
+    ],
+    whyUseContent:
+      "Most spreadsheet-to-Markdown converters upload your file to a server, mangle multi-sheet workbooks, or require an account. This tool does none of that. It runs 100% in your browser, converts the moment you drop a file, formats every sheet as a proper GitHub-Flavored Markdown table, and preserves the displayed values including dates, currency, and percentages. Because nothing is uploaded, it is safe for confidential financial data and works on any device with no installation.",
+    privacyBlurb:
+      "The entire Excel to Markdown conversion happens locally in your browser. Your file is never uploaded, nothing is stored or logged, and no data is transmitted anywhere. Your spreadsheets stay completely private on your device.",
+    faqs: [
+      {
+        question: "How are multiple sheets handled?",
+        answer:
+          "Each sheet in the workbook is converted into its own Markdown table. When a workbook has more than one sheet, every table is introduced by a heading containing the sheet's name so the output stays organized and easy to navigate.",
+      },
+      {
+        question: "Which file formats can I convert?",
+        answer:
+          "You can convert modern Excel files (.xlsx), legacy Excel files (.xls), and comma-separated value files (.csv). The first row of each sheet is used as the table header.",
+      },
+      {
+        question: "Are dates, currency, and percentages preserved?",
+        answer:
+          "Yes. The converter uses the values as they are displayed in the spreadsheet, so formatted numbers like dates, currency, and percentages appear in the Markdown table the same way you see them in Excel.",
+      },
+      {
+        question: "Is the conversion really instant and private?",
+        answer:
+          "Yes. As soon as you drop a spreadsheet, it is processed on your own device and the Markdown file downloads automatically. Your file never leaves your browser and is not sent to any server.",
+      },
+    ],
+    relatedTools: ["pdf-to-markdown", "pdf-to-excel", "excel-to-pdf"],
   },
 
   "word-to-pdf": {

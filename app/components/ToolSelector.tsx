@@ -296,7 +296,9 @@ const convertPairs: ConvertPair[] = [
   },
 ];
 
-const convertSingles: ConvertToolDef[] = [];
+const convertSingles: ConvertToolDef[] = [
+  { id: "exceltomd", label: "Excel to Markdown", desc: "Convert spreadsheets to Markdown tables", color: "#16a34a", from: "excel", to: "markdown" },
+];
 
 /* ── Components ───────────────────────────────────────── */
 
