@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { downloadBlob } from "@/app/lib/pdfHelpers";
 
 /* ──────────────────────────────────────────────────────────
@@ -932,6 +932,26 @@ export default function MarkdownToPdfTool() {
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const previewWrapRef = useRef<HTMLDivElement | null>(null);
+  const [previewWidth, setPreviewWidth] = useState(PREVIEW_PAGE_WIDTH);
+
+  // Keep the simulated sheet of paper within its column. The preview column is
+  // often narrower than PREVIEW_PAGE_WIDTH (e.g. the 2-up desktop layout), so we
+  // measure the available width and cap the paper to it. Without this the paper
+  // overflowed and `justify-center` clipped the unscrollable left edge of every
+  // line, hiding the start of each heading/paragraph.
+  useEffect(() => {
+    const el = previewWrapRef.current;
+    if (!el) return;
+    const measure = () => {
+      const inner = el.clientWidth - 32; // minus container p-4 (16px each side)
+      if (inner > 0) setPreviewWidth(Math.min(PREVIEW_PAGE_WIDTH, inner));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const blocks = useMemo(() => parseBlocks(markdown), [markdown]);
 
@@ -939,7 +959,7 @@ export default function MarkdownToPdfTool() {
   // page: px-per-point derived from the real sheet width, then applied to the
   // body font, margins, and page height alike.
   const pageDims = PAGE_PT[page];
-  const previewScale = PREVIEW_PAGE_WIDTH / pageDims.w;
+  const previewScale = previewWidth / pageDims.w;
   const previewBasePx = size * previewScale;
   const previewPadPx = MARGIN_PT[margin] * previewScale;
   const previewPageHeight = pageDims.h * previewScale;
@@ -1189,6 +1209,7 @@ export default function MarkdownToPdfTool() {
             PDF preview
           </label>
           <div
+            ref={previewWrapRef}
             className="rounded-xl border p-4 overflow-auto flex justify-center"
             style={{
               minHeight: 460,
@@ -1207,10 +1228,10 @@ export default function MarkdownToPdfTool() {
                 padding: previewPadPx,
                 borderRadius: 2,
                 boxShadow: "0 2px 10px rgba(0,0,0,0.28)",
-                width: PREVIEW_PAGE_WIDTH,
-                minWidth: PREVIEW_PAGE_WIDTH,
+                width: previewWidth,
                 minHeight: previewPageHeight,
                 height: "max-content",
+                flexShrink: 0,
                 alignSelf: "flex-start",
                 boxSizing: "border-box",
               }}
