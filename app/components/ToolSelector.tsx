@@ -290,11 +290,13 @@ const convertPairs: ConvertPair[] = [
     a: { id: "pdftoexcel", label: "PDF to Excel", desc: "Extract tables to spreadsheet", color: "#4ade80", from: "pdf", to: "excel" },
     b: { id: "exceltopdf", label: "Excel to PDF", desc: "Convert spreadsheet to PDF", color: "#4ade80", from: "excel", to: "pdf" },
   },
+  {
+    a: { id: "pdftomd", label: "PDF to Markdown", desc: "Convert to clean Markdown (.md)", color: "#818cf8", from: "pdf", to: "markdown" },
+    b: { id: "mdtopdf", label: "Markdown to PDF", desc: "Build a clean PDF from .md", color: "#818cf8", from: "markdown", to: "pdf" },
+  },
 ];
 
-const convertSingles: ConvertToolDef[] = [
-  { id: "pdftomd", label: "PDF to Markdown", desc: "Convert to clean Markdown (.md)", color: "#818cf8", from: "pdf", to: "markdown" },
-];
+const convertSingles: ConvertToolDef[] = [];
 
 /* ── Components ───────────────────────────────────────── */
 

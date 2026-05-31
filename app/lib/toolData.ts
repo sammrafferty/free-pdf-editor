@@ -19,7 +19,8 @@ export type ToolId =
   | "pdftopptx"
   | "pptxtopdf"
   | "edittext"
-  | "pdftomd";
+  | "pdftomd"
+  | "mdtopdf";
 
 export interface ToolPageData {
   slug: string;
@@ -1018,6 +1019,56 @@ export const TOOLS: Record<string, ToolPageData> = {
       },
     ],
     relatedTools: ["redact-pdf", "sign-pdf", "watermark-pdf"],
+  },
+
+  "markdown-to-pdf": {
+    slug: "markdown-to-pdf",
+    toolId: "mdtopdf",
+    label: "Markdown to PDF",
+    shortDesc: "Build a clean PDF from Markdown",
+    color: "#818cf8",
+    category: "convert",
+    seoTitle:
+      "Markdown to PDF Converter — Free, Private, No Upload | PDF Tools",
+    seoDescription:
+      "Turn Markdown into a clean, professional PDF right in your browser. Paste your Markdown or load a .md file, adjust the font and spacing in a live preview, then download. Free and 100% private — nothing is uploaded.",
+    h1: "Convert Markdown to PDF Online — Free Markdown to PDF Maker",
+    keywords:
+      "markdown to pdf, md to pdf, convert markdown to pdf, markdown to pdf online free, md to pdf converter, markdown pdf generator",
+    introText:
+      "Markdown is fast to write, but it is not a format you can hand to someone to read, print, or sign. This free Markdown to PDF converter turns your Markdown into a clean, typeset PDF with a simple, professional font — headings, bold and italic text, bullet and numbered lists, blockquotes, code blocks, links, and tables are all rendered properly.\n\nPaste your Markdown straight into the editor or load a .md file, then fine-tune the look in a live preview: choose a sans-serif, serif, or monospace font, set the text size, line spacing, page size, and margins, and watch the page update as you type. When it looks right, download the PDF. Everything runs entirely in your browser — your Markdown is never uploaded to a server.",
+    howToSteps: [
+      "Paste your Markdown into the editor, or click Upload .md to load a file (you can also drag and drop a .md file).",
+      "Adjust the font, text size, line spacing, page size, and margins — the live preview shows exactly how the PDF will look.",
+      "Click Download PDF and your clean, formatted PDF is generated in your browser and saved to your device.",
+    ],
+    whyUseContent:
+      "Most Markdown to PDF tools require a command-line setup, a paid app, or uploading your text to a website. This one runs 100% in your browser with a live preview, so you see the result before you export and nothing ever leaves your device. It renders real Markdown — headings, emphasis, nested lists, code blocks, blockquotes, links, and GitHub-style tables — using clean, universally supported fonts, and lets you control typography and page layout. Because there is no upload, it is safe for private notes, drafts, and confidential documents, and it works on any device with no installation.",
+    privacyBlurb:
+      "The entire Markdown to PDF conversion happens locally in your browser. Your Markdown text and any .md file you load are never uploaded, stored, or logged, and no data is sent anywhere. Your content stays completely private on your device.",
+    faqs: [
+      {
+        question: "What Markdown features are supported?",
+        answer:
+          "Headings (# through ######), bold, italic, strikethrough, inline code, links, bullet and numbered lists (including nested lists), blockquotes, fenced code blocks, horizontal rules, and GitHub-Flavored Markdown tables are all rendered into the PDF.",
+      },
+      {
+        question: "Can I change the font and layout?",
+        answer:
+          "Yes. You can pick a sans-serif, serif, or monospace font, set the text size and line spacing, and choose the page size (Letter or A4) and margins. A live preview updates as you change settings so you can see the result before downloading.",
+      },
+      {
+        question: "Do I have to upload a file?",
+        answer:
+          "No. You can paste Markdown directly into the editor, or optionally load a .md file from your device. Either way, the text is processed locally and never sent to a server.",
+      },
+      {
+        question: "Is the PDF generated privately?",
+        answer:
+          "Yes. The PDF is built entirely in your browser using a client-side PDF engine. Your Markdown never leaves your device, and the finished PDF is saved directly to your computer.",
+      },
+    ],
+    relatedTools: ["pdf-to-markdown", "word-to-pdf", "compress-pdf"],
   },
 };
 
